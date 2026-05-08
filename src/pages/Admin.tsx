@@ -13,7 +13,7 @@ export default function Admin() {
   return (
     <div className="flex min-h-screen bg-admin-bg text-admin-text">
       <AdminSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex-1 flex flex-col ml-64">
         <AdminTopbar />
         <main className="flex-1 overflow-y-auto px-10 py-10">
           <div className="mx-auto max-w-[1320px]">
