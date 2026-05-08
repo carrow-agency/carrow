@@ -15,6 +15,10 @@ export const list = query({
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== "admin") {
+      throw new Error("Admin access required");
+    }
     const works = await ctx.db.query("works").collect();
     return works;
   },
