@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
+type Variant = "primary" | "secondary" | "ghost" | "outline";
 type Size = "sm" | "md" | "lg";
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,11 +9,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary:   "bg-white text-black hover:bg-white/90 active:bg-white/80",
-  secondary: "bg-admin-surface2 text-white border border-admin-border hover:bg-[#222]",
-  ghost:     "bg-transparent text-admin-muted hover:text-white hover:bg-white/5",
-  danger:    "bg-transparent text-admin-danger border border-admin-danger/30 hover:bg-admin-danger/10",
-  outline:   "bg-transparent text-white border border-admin-border hover:border-white/40",
+  primary:   "bg-gray-900 text-white hover:bg-gray-800",
+  secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
+  ghost:     "bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100",
+  outline:   "bg-transparent text-gray-700 border border-gray-300 hover:border-gray-400 hover:bg-gray-50",
 };
 
 const sizes: Record<Size, string> = {
@@ -28,7 +27,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   return (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center gap-2 rounded-md font-medium tracking-tight transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
       {...rest}
     />
   );

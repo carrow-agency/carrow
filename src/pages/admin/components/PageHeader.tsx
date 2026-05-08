@@ -6,17 +6,16 @@ interface Props {
   description?: string;
   actions?: ReactNode;
 }
+
 export function PageHeader({ eyebrow, title, description, actions }: Props) {
   return (
-    <div className="flex flex-col gap-6 border-b border-admin-border pb-8 md:flex-row md:items-end md:justify-between">
-      <div className="max-w-2xl">
+    <div className="flex flex-col gap-2 pb-6 md:flex-row md:items-end md:justify-between">
+      <div>
         {eyebrow && (
-          <span className="mb-3 inline-block text-[11px] font-medium uppercase tracking-[0.22em] text-admin-muted">
-            {eyebrow}
-          </span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{eyebrow}</span>
         )}
-        <h1 className="font-display text-4xl font-semibold tracking-tight text-white md:text-5xl">{title}</h1>
-        {description && <p className="mt-3 max-w-xl text-sm leading-relaxed text-admin-muted">{description}</p>}
+        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+        {description && <p className="text-gray-500 mt-1">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}
     </div>

@@ -12,12 +12,12 @@ import ProfilePanel from "./ProfilePanel";
 
 export default function Admin() {
   return (
-    <div className="flex min-h-screen bg-admin-bg text-admin-text">
+    <div className="flex min-h-screen bg-gray-50 text-gray-900">
       <AdminSidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col ml-64">
         <AdminTopbar />
-        <main className="flex-1 overflow-y-auto px-10 py-10">
-          <div className="mx-auto max-w-[1320px]">
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-5xl mx-auto">
             <Routes>
               <Route index element={<Dashboard />} />
               <Route path="users" element={<UsersPanel />} />

@@ -1,33 +1,22 @@
 import { ReactNode } from "react";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 interface Props {
   label: string;
   value: string;
-  delta?: number;
   hint?: string;
   icon?: ReactNode;
   className?: string;
 }
 
-export function StatsCard({ label, value, delta, hint, icon, className }: Props) {
-  const positive = (delta ?? 0) >= 0;
+export function StatsCard({ label, value, hint, icon, className }: Props) {
   return (
-    <div className={`group relative overflow-hidden rounded-xl border border-admin-border bg-admin-surface p-6 transition-colors hover:border-white/20 ${className || ''}`}>
-      <div className="flex items-start justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-admin-muted">{label}</span>
-        {icon && <span className="text-admin-muted">{icon}</span>}
+    <div className={`bg-white p-6 rounded-xl border border-gray-200 ${className || ''}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm text-gray-500">{label}</span>
+        {icon && <span className="text-gray-400">{icon}</span>}
       </div>
-      <div className="mt-6 flex items-end justify-between">
-        <span className="font-display text-4xl font-semibold tracking-tight text-white">{value}</span>
-        {typeof delta === "number" && (
-          <span className={`inline-flex items-center gap-1 text-xs font-medium ${positive ? "text-admin-success" : "text-admin-danger"}`}>
-            {positive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-            {Math.abs(delta)}%
-          </span>
-        )}
-      </div>
-      {hint && <p className="mt-3 text-xs text-admin-muted">{hint}</p>}
+      <p className="text-3xl font-bold text-gray-900">{value}</p>
+      {hint && <p className="text-xs text-gray-500 mt-1">{hint}</p>}
     </div>
   );
 }

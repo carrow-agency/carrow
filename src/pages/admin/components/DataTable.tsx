@@ -16,16 +16,16 @@ interface Props<T> {
 
 export function DataTable<T>({ columns, data, empty = "No records." }: Props<T>) {
   return (
-    <div className="overflow-hidden rounded-xl border border-admin-border bg-admin-surface">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
       <div className="overflow-x-auto">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-admin-border">
+            <tr className="border-b border-gray-200 bg-gray-50">
               {columns.map((c) => (
                 <th
                   key={c.key}
                   style={{ width: c.width }}
-                  className={`px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-admin-muted ${
+                  className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider ${
                     c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left"
                   }`}
                 >
@@ -37,17 +37,17 @@ export function DataTable<T>({ columns, data, empty = "No records." }: Props<T>)
           <tbody>
             {data.length === 0 && (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-16 text-center text-sm text-admin-muted">
+                <td colSpan={columns.length} className="px-4 py-8 text-center text-sm text-gray-500">
                   {empty}
                 </td>
               </tr>
             )}
             {data.map((row, idx) => (
-              <tr key={idx} className="border-b border-admin-border/60 last:border-b-0 transition-colors hover:bg-white/[0.015]">
+              <tr key={idx} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50">
                 {columns.map((c) => (
                   <td
                     key={c.key}
-                    className={`px-6 py-5 text-sm text-white/90 ${
+                    className={`px-4 py-3 text-sm text-gray-700 ${
                       c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "text-left"
                     }`}
                   >
