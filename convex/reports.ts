@@ -1,11 +1,15 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin } from "./access";
+import { requireAdmin, getCurrentUser, requireAuth } from "./access";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const reports = await ctx.db.query("reports").order("desc").collect();
+    const isAdmin = await requireAdmin(ctx);
+    if (!isAdmin) {
+      throw new Error("Admin access required");
+    }
+    const reports = await ctx.db.query("reports").order("desc").take(500);
     return reports;
   },
 });
@@ -13,11 +17,31 @@ export const list = query({
 export const getByClient = query({
   args: { clientId: v.id("users") },
   handler: async (ctx, args) => {
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error("Authentication required");
+    }
+    if (currentUser.role !== "admin" && currentUser._id !== args.clientId) {
+      throw new Error("Unauthorized access");
+    }
     const reports = await ctx.db
       .query("reports")
-      .filter(q => q.eq(q.field("clientId"), args.clientId))
-      .collect();
+      .withIndex("by_clientId_and_period", (q) => q.eq("clientId", args.clientId))
+      .order("desc")
+      .take(500);
     return reports;
+  },
+});
+
+export const getMine = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    return await ctx.db
+      .query("reports")
+      .withIndex("by_clientId_and_period", (q) => q.eq("clientId", userId))
+      .order("desc")
+      .take(500);
   },
 });
 

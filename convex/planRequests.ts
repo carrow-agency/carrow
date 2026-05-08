@@ -9,17 +9,22 @@ export const list = query({
     if (!isAdmin) {
       throw new Error("Admin access required");
     }
-    return await ctx.db.query("planRequests").order("desc").collect();
+    return await ctx.db.query("planRequests").order("desc").take(500);
   },
 });
 
 export const getPending = query({
   args: {},
   handler: async (ctx) => {
+    const isAdmin = await requireAdmin(ctx);
+    if (!isAdmin) {
+      throw new Error("Admin access required");
+    }
     const requests = await ctx.db
       .query("planRequests")
-      .filter(q => q.eq(q.field("status"), "pending"))
-      .collect();
+      .withIndex("by_status_and_createdAt", (q) => q.eq("status", "pending"))
+      .order("desc")
+      .take(500);
     return requests;
   },
 });

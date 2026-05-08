@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "convex/react";
+import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { api } from "./generated/api";
-import { useState } from "react";
 
 export function usePlans() {
   const plans = useQuery(api.plans.list);
@@ -57,6 +57,20 @@ export function useOrders() {
   }));
 }
 
+export function useMyOrders() {
+  const orders = useQuery(api.orders.listMine);
+  if (!orders) return null;
+  return orders.map(o => ({
+    id: o._id,
+    clientId: o.clientId,
+    clientName: o.clientName,
+    clientEmail: o.clientEmail,
+    plan: o.plan,
+    date: o.date,
+    status: o.status as "Pending" | "Active" | "Cancelled",
+  }));
+}
+
 export function useUsers() {
   const users = useQuery(api.users.list);
   if (!users) return null;
@@ -82,6 +96,12 @@ export function useUpdateSettings() {
 
 export function useClientFiles(userId?: string) {
   const files = useQuery(api.files.getClientFiles, userId ? { userId: userId as any } : "skip");
+  if (!files) return null;
+  return files;
+}
+
+export function useMyFiles() {
+  const files = useQuery(api.files.getClientFiles, {});
   if (!files) return null;
   return files;
 }
@@ -161,6 +181,10 @@ export function useContractsByClient(clientId?: string) {
   return useQuery(api.contracts.getByClient, clientId ? { clientId: clientId as any } : "skip");
 }
 
+export function useMyContracts() {
+  return useQuery(api.contracts.getMine);
+}
+
 export function useCreateContract() {
   return useMutation(api.contracts.create);
 }
@@ -179,6 +203,10 @@ export function useReports() {
 
 export function useReportsByClient(clientId: string) {
   return useQuery(api.reports.getByClient, { clientId: clientId as any });
+}
+
+export function useMyReports() {
+  return useQuery(api.reports.getMine);
 }
 
 export function useCreateReport() {
@@ -214,52 +242,55 @@ export function useDeletePlanRequest() {
 }
 
 export const useAuthFunctions = () => {
-  const signInMutation = useMutation(api.auth.signIn);
-  const signUpMutation = useMutation(api.auth.signUp);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-  
+  const { signIn: authSignIn, signOut: authSignOut } = useAuthActions();
+
   const signIn = async (email: string, password: string) => {
     try {
-      const result = await signInMutation({ email, password });
-      if (result.success) {
-        localStorage.setItem("carrow_user_id", result.userId);
-        setCurrentUser(result.userId);
-        return { success: true, error: undefined };
+      const result = await authSignIn("password", { flow: "signIn", email, password });
+      if (!result.signingIn && !result.redirect) {
+        return { success: false, error: "Unable to complete sign in" };
       }
-      return { success: false, error: "Invalid credentials" };
+      return { success: true, error: undefined };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Sign in failed" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Sign in failed",
+      };
     }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const result = await signUpMutation({ email, password, name });
-      if (result.success) {
-        localStorage.setItem("carrow_user_id", result.userId);
-        setCurrentUser(result.userId);
-        return { success: true, error: undefined };
+      const result = await authSignIn("password", {
+        flow: "signUp",
+        email,
+        password,
+        name,
+      });
+      if (!result.signingIn && !result.redirect) {
+        return { success: false, error: "Unable to complete sign up" };
       }
-      return { success: false, error: "Registration failed" };
+      return { success: true, error: undefined };
     } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : "Sign up failed" };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Sign up failed",
+      };
     }
   };
 
   const signOut = async () => {
-    localStorage.removeItem("carrow_user_id");
-    setCurrentUser(null);
-    window.location.reload();
+    await authSignOut();
   };
 
   return { signIn, signUp, signOut };
 };
 
 export const useCurrentUser = () => {
-  const userId = typeof window !== 'undefined' ? localStorage.getItem("carrow_user_id") : null;
-  return { 
-    isAuthenticated: !!userId, 
-    isLoading: false 
+  const auth = useConvexAuth();
+  return {
+    isAuthenticated: auth.isAuthenticated,
+    isLoading: auth.isLoading,
   };
 };
 
@@ -267,15 +298,20 @@ export function useWorksByClient(clientId?: string) {
   return useQuery(api.works.getByClient, clientId ? { clientId: clientId as any } : "skip");
 }
 
+export function useMyWorks() {
+  return useQuery(api.works.getMine);
+}
+
 export function useCurrentUserFromConvex() {
-  const users = useQuery(api.users.list);
-  const userId = typeof window !== 'undefined' ? localStorage.getItem("carrow_user_id") : null;
-  
-  if (!users || !userId) return null;
-  
-  const user = users.find(u => u._id === userId);
-  if (!user) return null;
-  
+  const auth = useConvexAuth();
+  const user = useQuery(api.users.current);
+
+  if (auth.isLoading || user === undefined) {
+    return undefined;
+  }
+
+  if (!auth.isAuthenticated || !user) return null;
+
   return {
     id: user._id,
     name: user.name ?? "",

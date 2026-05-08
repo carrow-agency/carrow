@@ -1,14 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-async function simpleHash(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'carrow-salt-2024');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 export interface PlanData {
   id: string;
   name: string;
@@ -110,7 +102,7 @@ const defaultSettings: AppSettings = {
   home: { h1: 'Digital Marketing Studio.', h2: 'Scaling ambitious brands.', cta1: 'View Services', cta2: 'Our Work' }
 };
 
-const hash同步 = (str: string): string => {
+const hashSync = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
@@ -147,7 +139,7 @@ export const useAppStore = create<AppState>()(
       setOrders: (orders) => set({ orders }),
 
       login: (email: string, password: string) => {
-        const hashedInput = hash同步(password + 'carrow-salt-2024');
+        const hashedInput = hashSync(password + 'carrow-salt-2024');
         const user = get().users.find(u => u.email === email);
         if (!user) {
           return { success: false, error: 'No account found with this email.' };
@@ -164,7 +156,7 @@ export const useAppStore = create<AppState>()(
         if (existingUser) {
           return { success: false, error: 'An account with this email already exists.' };
         }
-        const hashedPassword = hash同步(password + 'carrow-salt-2024');
+        const hashedPassword = hashSync(password + 'carrow-salt-2024');
         const newUser: UserAccount = {
           id: `user-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
           name,

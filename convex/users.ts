@@ -1,13 +1,14 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { requireAdmin, requireAuth, getCurrentUser } from "./access";
+import { requireAdmin, getCurrentUser, requireAuth } from "./access";
 
 export const current = query({
   args: {},
   handler: async (ctx) => {
-    const user = await getCurrentUser(ctx);
+    const userId = await requireAuth(ctx);
+    const user = await ctx.db.get(userId);
     if (!user) return null;
-    const { passwordHash, ...safeUser } = user as any;
+    const { passwordHash, ...safeUser } = user;
     return safeUser;
   },
 });
@@ -17,11 +18,11 @@ export const list = query({
   handler: async (ctx) => {
     const isAdmin = await requireAdmin(ctx);
     if (!isAdmin) {
-      throw new Error(" unauthorized");
+      throw new Error("Unauthorized");
     }
-    const users = await ctx.db.query("users").collect();
+    const users = await ctx.db.query("users").order("desc").take(500);
     return users.map(user => {
-      const { passwordHash, ...safeUser } = user as any;
+      const { passwordHash, ...safeUser } = user;
       return safeUser;
     });
   },
@@ -81,7 +82,7 @@ export const update = mutation({
     id: v.id("users"),
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
-    planId: v.optional(v.string()),
+    planId: v.optional(v.id("plans")),
     planStatus: v.optional(v.union(v.literal("none"), v.literal("pending"), v.literal("active"))),
   },
   handler: async (ctx, args) => {
@@ -122,7 +123,7 @@ export const update = mutation({
     
     const updated = await ctx.db.get(id);
     if (!updated) return null;
-    const { passwordHash, ...safeUser } = updated as any;
+    const { passwordHash, ...safeUser } = updated;
     return safeUser;
   },
 });

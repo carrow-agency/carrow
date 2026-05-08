@@ -16,7 +16,7 @@ interface FileData {
   name: string;
   type: string;
   size?: number;
-  url?: string;
+  url?: string | null;
   createdAt?: string;
 }
 
@@ -86,7 +86,7 @@ export default function FilesPanel() {
       
       await saveClientFile({
         storageId,
-        userId: users?.[0]?._id as any,
+        userId: users?.[0]?.id as any,
         type: fileType,
         name: file.name,
         size: file.size,
@@ -179,9 +179,15 @@ export default function FilesPanel() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Button size="sm" variant="ghost" as="a" href={f.url} download={f.name} target="_blank">
+                  <a
+                    href={f.url ?? undefined}
+                    download={f.name}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                  >
                     <Download size={13} />
-                  </Button>
+                  </a>
                   <Button 
                     size="sm" 
                     variant="ghost" 

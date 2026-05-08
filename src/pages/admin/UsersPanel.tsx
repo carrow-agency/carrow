@@ -69,7 +69,7 @@ export default function UsersPanel() {
         id: open.id as any,
         name: formData.name,
         phone: formData.phone,
-        planId: formData.planId || undefined,
+        planId: formData.planId ? (formData.planId as any) : undefined,
         planStatus: formData.planStatus as any,
       });
       setEditing(false);

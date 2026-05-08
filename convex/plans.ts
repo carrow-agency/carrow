@@ -1,13 +1,15 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, requireAuth, getCurrentUser } from "./access";
+import { requireAdmin } from "./access";
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    const plans = await ctx.db.query("plans")
-      .filter(q => q.eq(q.field("visibility"), true))
-      .collect();
+    const plans = await ctx.db
+      .query("plans")
+      .withIndex("by_visibility", (q) => q.eq("visibility", true))
+      .order("desc")
+      .take(100);
     return plans;
   },
 });

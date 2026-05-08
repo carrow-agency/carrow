@@ -2,8 +2,8 @@
 /// <reference types="react-dom" />
 
 interface ImportMetaEnv {
-  readonly VITE_ADMIN_EMAIL: string;
-  readonly VITE_ADMIN_PASSWORD_HASH: string;
+  readonly VITE_CONVEX_URL: string;
+  readonly VITE_CONVEX_SITE_URL: string;
 }
 
 interface ImportMeta {

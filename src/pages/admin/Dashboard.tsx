@@ -155,7 +155,7 @@ export default function Dashboard() {
           >
             <option value="">Select a client...</option>
             {users?.map((user: any) => (
-              <option key={user._id} value={user._id}>{user.name} — {user.email}</option>
+              <option key={user.id} value={user.id}>{user.name} — {user.email}</option>
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-2">Select a client to view details, works, contracts, and reports.</p>

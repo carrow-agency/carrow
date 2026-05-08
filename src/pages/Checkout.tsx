@@ -22,6 +22,14 @@ export default function Checkout() {
     city: '',
   });
 
+  if (currentUser === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-sans text-brand-mid-grey">Loading...</p>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     setAuthOpen(true);
     return <Navigate to="/" replace />;
@@ -36,11 +44,7 @@ export default function Checkout() {
         const requestedPlan = plans.find(p => p.name === item.planName);
         if (requestedPlan && requestedPlan.id) {
           await createOrder({
-            clientId: currentUser.id as any,
-            clientName: formData.name,
-            clientEmail: currentUser.email,
             planId: requestedPlan.id as any,
-            planName: requestedPlan.name,
           });
         }
       }

@@ -1,22 +1,23 @@
-import * as Sentry from "@sentry/node";
+type LogLevel = "info" | "warning" | "error";
 
 export function initSentry() {
-  Sentry.init({
-    dsn: "https://6f93c220f2264854e4ad82800431b98f@o4511353759006720.ingest.de.sentry.io/4511353767133264",
-    environment: process.env.CONVEX_ENV || "development",
-    tracesSampleRate: 0.1,
-  });
+  return null;
 }
 
-export function captureError(error: Error, context?: Record<string, any>) {
-  Sentry.captureException(error, {
-    extra: context,
-  });
+export function captureError(error: Error, context?: Record<string, unknown>) {
+  console.error("[convex-error]", error.message, context ?? {});
 }
 
-export function captureMessage(message: string, level: "info" | "warning" | "error" = "error") {
-  Sentry.captureMessage(message, level);
+export function captureMessage(message: string, level: LogLevel = "error") {
+  if (level === "error") {
+    console.error("[convex-message]", message);
+    return;
+  }
+  if (level === "warning") {
+    console.warn("[convex-message]", message);
+    return;
+  }
+  console.info("[convex-message]", message);
 }
 
-// Auto-init on module load
 initSentry();

@@ -1,10 +1,10 @@
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useContext, useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import React from 'react';
 
 import { useAppStore } from '../../lib/store';
-import { useCurrentUserFromConvex, useAuthFunctions } from '../../lib/useConvex';
-import { ShoppingBag, X, Menu, Instagram, Linkedin, Youtube, MessageCircle } from 'lucide-react';
+import { useCurrentUserFromConvex } from '../../lib/useConvex';
+import { ShoppingBag, X, Menu } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Footer from './Footer';
 
@@ -14,7 +14,6 @@ function Navbar() {
   const navigate = useNavigate();
   const { setAuthOpen, cart } = useAppStore();
   const auth = useCurrentUserFromConvex();
-  const { signOut } = useAuthFunctions();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
@@ -74,7 +73,7 @@ function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center space-x-6">
-            {!auth ? (
+            {!auth || auth === undefined ? (
               <button onClick={() => setAuthOpen(true)} className="text-sm font-medium text-brand-dark-grey hover:text-brand-black">Login</button>
             ) : (
               <div className="flex items-center gap-6">
@@ -97,7 +96,7 @@ function Navbar() {
           </div>
 
           <div className="md:hidden flex items-center space-x-4">
-            {auth && (
+            {auth && auth !== undefined && (
                <button className="relative" onClick={() => navigate('/checkout')}>
                  <ShoppingBag size={20} className="text-brand-black" />
                  {cart.length ? (
@@ -144,7 +143,7 @@ function Navbar() {
                 )
               })}
               <div className="pt-8 flex flex-col items-center space-y-4">
-                {!auth ? (
+                {!auth || auth === undefined ? (
                   <button 
                     onClick={() => { setMobileMenuOpen(false); setAuthOpen(true); }} 
                     className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg"

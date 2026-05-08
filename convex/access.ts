@@ -1,32 +1,51 @@
 import { QueryCtx, MutationCtx } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Doc, Id } from "./_generated/dataModel";
 
-export async function requireAdmin(ctx: QueryCtx | MutationCtx): Promise<boolean> {
-  return true;
+type Ctx = QueryCtx | MutationCtx;
+
+async function getUserFromCtx(ctx: Ctx): Promise<Doc<"users"> | null> {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) return null;
+  return await ctx.db.get(userId as Id<"users">);
 }
 
-export async function requireAuth(ctx: QueryCtx | MutationCtx): Promise<string> {
+export async function requireAdmin(ctx: Ctx): Promise<boolean> {
+  const user = await getUserFromCtx(ctx);
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return user.email?.toLowerCase() === (process.env.ADMIN_EMAIL ?? "admin@carrow.com").toLowerCase();
+}
+
+export async function requireAuth(ctx: Ctx): Promise<Id<"users">> {
   const userId = await getAuthUserId(ctx);
   if (!userId) {
     throw new Error("Authentication required");
   }
-  return userId;
+  return userId as Id<"users">;
 }
 
-export async function getCurrentUserId(ctx: QueryCtx | MutationCtx): Promise<string | null> {
-  try {
-    return await getAuthUserId(ctx);
-  } catch {
-    return null;
-  }
-}
-
-export async function getCurrentUser(ctx: QueryCtx | MutationCtx) {
+export async function getCurrentUserId(ctx: Ctx): Promise<Id<"users"> | null> {
   try {
     const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
-    return await ctx.db.get(userId);
+    return userId as Id<"users"> | null;
   } catch {
     return null;
   }
+}
+
+export async function getCurrentUser(ctx: Ctx): Promise<Doc<"users"> | null> {
+  try {
+    return await getUserFromCtx(ctx);
+  } catch {
+    return null;
+  }
+}
+
+export async function requireAdminUser(ctx: Ctx): Promise<Doc<"users">> {
+  const user = await getUserFromCtx(ctx);
+  if (!user || user.role !== "admin") {
+    throw new Error("Admin access required");
+  }
+  return user;
 }

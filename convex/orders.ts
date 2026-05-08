@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, requireAuth, getCurrentUser } from "./access";
+import { requireAdmin, requireAuth } from "./access";
 
 export const list = query({
   args: {},
@@ -9,45 +9,51 @@ export const list = query({
     if (!isAdmin) {
       throw new Error("Admin access required");
     }
-    const orders = await ctx.db.query("orders").order("desc").collect();
+    const orders = await ctx.db.query("orders").order("desc").take(500);
     return orders;
+  },
+});
+
+export const listMine = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    return await ctx.db
+      .query("orders")
+      .withIndex("by_clientId_and_date", (q) => q.eq("clientId", userId))
+      .order("desc")
+      .take(200);
   },
 });
 
 export const create = mutation({
   args: {
-    clientId: v.id("users"),
-    clientName: v.string(),
-    clientEmail: v.string(),
     planId: v.id("plans"),
-    planName: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    
-    if (args.clientId !== userId) {
-      throw new Error("Can only create orders for yourself");
+
+    const user = await ctx.db.get(userId);
+    if (!user || !user.email) {
+      throw new Error("User profile is incomplete");
     }
-    
+
     const plan = await ctx.db.get(args.planId);
     if (!plan) {
       throw new Error("Plan not found");
     }
-    
+
     const orderId = await ctx.db.insert("orders", {
-      clientId: args.clientId,
-      clientName: args.clientName,
-      clientEmail: args.clientEmail,
-      plan: args.planName,
+      clientId: userId,
+      clientName: user.name ?? "Unknown",
+      clientEmail: user.email,
+      plan: plan.name,
       date: new Date().toISOString().split("T")[0] || "2024-01-01",
       status: "Pending",
     });
-    
-    await ctx.db.patch(args.clientId, {
-      planId: args.planId,
-      planStatus: "pending",
-    });
-    
+
+    await ctx.db.patch(userId, { planId: args.planId, planStatus: "pending" });
+
     return orderId;
   },
 });
@@ -69,17 +75,17 @@ export const updateStatus = mutation({
     }
     
     await ctx.db.patch(args.id, { status: args.status });
-    
+
     if (args.status === "Active") {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 30);
-      
-      await ctx.db.patch(order.clientId as any, {
+
+      await ctx.db.patch(order.clientId, {
         planStatus: "active",
         planExpiry: expiryDate.toISOString().split("T")[0],
       });
     } else if (args.status === "Cancelled") {
-      await ctx.db.patch(order.clientId as any, {
+      await ctx.db.patch(order.clientId, {
         planStatus: "none",
         planExpiry: "",
       });
@@ -113,18 +119,25 @@ export const getStats = query({
       throw new Error("Admin access required");
     }
     
-    const allOrders = await ctx.db.query("orders").collect();
-    
-    const totalOrders = allOrders.length;
-    const pendingOrders = allOrders.filter(o => o.status === "Pending").length;
-    const activeOrders = allOrders.filter(o => o.status === "Active").length;
-    const cancelledOrders = allOrders.filter(o => o.status === "Cancelled").length;
-    
+    const allOrders = await ctx.db.query("orders").take(2000);
+    const pendingOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_status_and_date", (q) => q.eq("status", "Pending"))
+      .take(2000);
+    const activeOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_status_and_date", (q) => q.eq("status", "Active"))
+      .take(2000);
+    const cancelledOrders = await ctx.db
+      .query("orders")
+      .withIndex("by_status_and_date", (q) => q.eq("status", "Cancelled"))
+      .take(2000);
+
     return {
-      totalOrders,
-      pendingOrders,
-      activeOrders,
-      cancelledOrders,
+      totalOrders: allOrders.length,
+      pendingOrders: pendingOrders.length,
+      activeOrders: activeOrders.length,
+      cancelledOrders: cancelledOrders.length,
     };
   },
 });

@@ -9,7 +9,7 @@ export const clearAll = mutation({
       throw new Error("Admin access required");
     }
     
-    const users = await ctx.db.query("users" as any).collect();
+    const users = await ctx.db.query("users").take(1000);
     for (const doc of users) {
       await ctx.db.delete(doc._id);
     }

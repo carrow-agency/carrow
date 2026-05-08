@@ -49,7 +49,7 @@ export const listUnresolvedErrors = query({
     }
     
     const logs = await ctx.db.query("errorLogs")
-      .filter(q => q.eq(q.field("resolved"), false))
+      .withIndex("by_resolved_and_timestamp", (q) => q.eq("resolved", false))
       .order("desc")
       .take(100);
     
@@ -91,12 +91,25 @@ export const getErrorStats = query({
       throw new Error("Admin access required");
     }
     
-    const allLogs = await ctx.db.query("errorLogs").collect();
-    const total = allLogs.length;
-    const unresolved = allLogs.filter(l => !l.resolved).length;
-    const frontend = allLogs.filter(l => l.source === "frontend").length;
-    const backend = allLogs.filter(l => l.source === "backend").length;
-    
-    return { total, unresolved, frontend, backend };
+    const allLogs = await ctx.db.query("errorLogs").take(2000);
+    const unresolvedLogs = await ctx.db
+      .query("errorLogs")
+      .withIndex("by_resolved_and_timestamp", (q) => q.eq("resolved", false))
+      .take(2000);
+    const frontendLogs = await ctx.db
+      .query("errorLogs")
+      .withIndex("by_source_and_timestamp", (q) => q.eq("source", "frontend"))
+      .take(2000);
+    const backendLogs = await ctx.db
+      .query("errorLogs")
+      .withIndex("by_source_and_timestamp", (q) => q.eq("source", "backend"))
+      .take(2000);
+
+    return {
+      total: allLogs.length,
+      unresolved: unresolvedLogs.length,
+      frontend: frontendLogs.length,
+      backend: backendLogs.length,
+    };
   },
 });

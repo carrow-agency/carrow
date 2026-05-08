@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthFunctions, useCurrentUser, useUsers } from "../../lib/useConvex";
+import { useAuthFunctions } from "../../lib/useConvex";
 import { Button } from "./components/Button";
 import { Input } from "./components/Input";
 import { Eye, EyeOff, AlertCircle } from "lucide-react";
@@ -8,8 +8,6 @@ import { Eye, EyeOff, AlertCircle } from "lucide-react";
 export default function AdminLogin() {
   const navigate = useNavigate();
   const { signIn } = useAuthFunctions();
-  const auth = useCurrentUser();
-  const convexUsers = useUsers();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,13 +29,6 @@ export default function AdminLogin() {
     
     if (!result.success) {
       setError(result.error || "Invalid credentials. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    const currentUser = convexUsers?.find(u => u.email === email);
-    if (!currentUser || currentUser.role !== "admin") {
-      setError("Access denied. Admin credentials required.");
       setLoading(false);
       return;
     }

@@ -64,7 +64,7 @@ export const getAllFiles = query({
       throw new Error("Admin access required");
     }
     
-    const files = await ctx.db.query("clientFiles").collect();
+    const files = await ctx.db.query("clientFiles").order("desc").take(1000);
     
     const filesWithUrls = await Promise.all(
       files.map(async (f) => {
@@ -85,19 +85,17 @@ export const getClientFiles = query({
       throw new Error("Authentication required");
     }
     
-    let targetUserId = args.userId;
-    if (!targetUserId) {
-      targetUserId = currentUser._id;
-    }
-    
+    const targetUserId = args.userId ?? currentUser._id;
+
     if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
       throw new Error("Unauthorized to view this user's files");
     }
     
     let files = await ctx.db
       .query("clientFiles")
-      .withIndex("by_user", (q) => q.eq("userId", targetUserId!))
-      .collect();
+      .withIndex("by_user", (q) => q.eq("userId", targetUserId))
+      .order("desc")
+      .take(500);
       
     if (args.type) {
       files = files.filter(f => f.type === args.type);
@@ -131,7 +129,11 @@ export const deleteClientFile = mutation({
       if (file.userId !== currentUser._id && currentUser.role !== "admin") {
         throw new Error("Unauthorized to delete this file");
       }
-      
+
+      if (file.storageId !== args.storageId) {
+        throw new Error("File storage reference mismatch");
+      }
+
       await ctx.storage.delete(args.storageId);
       await ctx.db.delete(args.id);
     } catch (error) {

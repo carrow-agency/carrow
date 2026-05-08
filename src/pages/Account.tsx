@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useOrders, useWorksByClient, useContractsByClient, useReportsByClient, useCreatePlanRequest } from '../lib/useConvex';
+import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyContracts, useMyReports, useCreatePlanRequest } from '../lib/useConvex';
 import { useAppStore } from '../lib/store';
-import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, AlertCircle, Download, Eye, ChevronRight, Package, FolderOpen, X, Send } from 'lucide-react';
+import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
@@ -51,15 +51,23 @@ export default function Account() {
   const currentUser = useCurrentUserFromConvex();
   const plans = usePlans() ?? [];
   const settings = useSettings();
-  const orders = useOrders();
+  const orders = useMyOrders();
   const { signOut } = useAuthFunctions();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('overview');
 
-  const myWorks = useWorksByClient(currentUser?.id);
-  const myContracts = useContractsByClient(currentUser?.id);
-  const myReports = useReportsByClient(currentUser?.id);
+  const myWorks = useMyWorks();
+  const myContracts = useMyContracts();
+  const myReports = useMyReports();
+
+  if (currentUser === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-500">Loading account...</p>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <Navigate to="/" replace />;
@@ -67,7 +75,7 @@ export default function Account() {
 
   const activePlan = plans.find(p => p.id === currentUser.planId) || null;
   const waNumber = settings?.general?.whatsapp || storeWhatsapp;
-  const userOrders = orders?.filter(o => o.clientEmail === currentUser.email) ?? [];
+  const userOrders = orders ?? [];
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },

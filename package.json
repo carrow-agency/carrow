@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build",
-    "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "build": "vite build --outDir dist-build",
+    "preview": "vite preview --outDir dist-build",
+    "clean": "rm -rf dist-build",
     "lint": "tsc --noEmit",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy"

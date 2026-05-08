@@ -1,12 +1,13 @@
 # Carrow — Digital Marketing Agency Website
 
-A modern React + TypeScript website for a digital marketing agency featuring public pages, client accounts, checkout flow, and a full admin dashboard.
+A modern React + TypeScript website for a digital marketing agency featuring public pages, authenticated client accounts, a checkout flow, and a full admin dashboard backed by Convex.
 
 ## Tech Stack
 
 - **React 19** + **TypeScript** + **Vite 6**
 - **Tailwind CSS 4** with custom design system
 - **Zustand** for state management
+- **Convex** for database, auth, file storage, and backend functions
 - **Framer Motion** for animations
 - **Recharts** for analytics charts
 - **React Router 7** for navigation
@@ -71,12 +72,11 @@ npm run preview
 npm run lint
 ```
 
-## Demo Credentials
+## Authentication
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@carrow.com` | `Carrow@Admin2025` |
-| User | `client@demo.com` | `demo1234` |
+- Authentication is powered by Convex Auth with password provider.
+- Admin privileges are role-based and enforced server-side.
+- Admin routes in the UI are additionally guarded by authenticated user role.
 
 ## Project Structure
 
@@ -96,16 +96,18 @@ src/
                     Admin, and admin sub-pages
 ```
 
-## API Keys
+## Environment Variables
 
 Create a `.env.local` file for sensitive configuration:
 
 ```env
-VITE_ADMIN_EMAIL=admin@carrow.com
-VITE_ADMIN_PASSWORD_HASH=<hashed-password>
+VITE_CONVEX_URL=https://your-project.convex.cloud
+VITE_CONVEX_SITE_URL=https://your-project.convex.site
+ADMIN_EMAIL=admin@carrow.com
+SENTRY_AUTH_TOKEN=<build-token>
 ```
 
-> **Note:** Password hashes are generated using a simple hash function. For production, use bcrypt and server-side validation.
+Never commit secret values to git.
 
 ## Design System
 
@@ -124,18 +126,15 @@ VITE_ADMIN_PASSWORD_HASH=<hashed-password>
 
 ## Known Limitations
 
-- All data is stored client-side in localStorage (no backend database)
-- Authentication is client-side only (no JWT/server validation)
-- WhatsApp links use placeholder number — update in store defaults
+- Checkout still finalizes onboarding over WhatsApp (no integrated payment gateway yet)
+- WhatsApp links require valid business number in settings
 - No real payment processing — checkout redirects to WhatsApp
 
 
 ## Future Improvements
 
-- [ ] Backend API with database (PostgreSQL/MongoDB)
-- [ ] Proper JWT authentication with refresh tokens
+- [ ] Payment integration (Stripe)
 - [ ] Email verification for sign-up
-- [ ] Real payment integration (Stripe)
 - [ ] Email notifications for order status changes
 - [ ] File upload with cloud storage (S3/Cloudinary)
 - [ ] Real-time admin notifications

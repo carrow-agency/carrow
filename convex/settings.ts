@@ -53,6 +53,18 @@ export const update = mutation({
       await ctx.db.patch(settings._id, updateData);
       return settings._id;
     }
-    return null;
+
+    const createdId = await ctx.db.insert("settings", {
+      general: {
+        siteName: args.general?.siteName ?? "Carrow",
+        tagline: args.general?.tagline,
+        email: args.general?.email,
+        whatsapp: args.general?.whatsapp,
+      },
+      home: args.home,
+      seoTitle: args.seoTitle,
+      seoDescription: args.seoDescription,
+    });
+    return createdId;
   },
 });

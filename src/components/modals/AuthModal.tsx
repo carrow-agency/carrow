@@ -3,14 +3,13 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../lib/store';
-import { useAuthFunctions, useCurrentUser } from '../../lib/useConvex';
+import { useAuthFunctions } from '../../lib/useConvex';
 
 
 export function AuthModal() {
   const navigate = useNavigate();
   const { setAuthOpen, cart } = useAppStore();
   const { signIn, signUp } = useAuthFunctions();
-  const auth = useCurrentUser();
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');

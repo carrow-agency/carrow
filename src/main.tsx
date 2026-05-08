@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ConvexProvider } from 'convex/react';
 import { ConvexReactClient } from 'convex/react';
+import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import './index.css';
@@ -26,9 +26,9 @@ const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <StrictMode>
-    <ConvexProvider client={convex}>
+    <ConvexAuthProvider client={convex}>
       <App />
-    </ConvexProvider>
+    </ConvexAuthProvider>
   </StrictMode>
 );
 

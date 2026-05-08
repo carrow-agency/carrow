@@ -14,7 +14,7 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
     passwordHash: v.optional(v.string()),
-    planId: v.optional(v.string()),
+    planId: v.optional(v.id("plans")),
     planStatus: v.optional(v.string()),
     planExpiry: v.optional(v.string()),
     registered: v.optional(v.string()),
@@ -30,7 +30,9 @@ export default defineSchema({
     plan: v.string(),
     date: v.string(),
     status: v.string(),
-  }),
+  })
+    .index("by_clientId_and_date", ["clientId", "date"])
+    .index("by_status_and_date", ["status", "date"]),
 
   plans: defineTable({
     name: v.string(),
@@ -39,7 +41,7 @@ export default defineSchema({
     isPopular: v.optional(v.boolean()),
     visibility: v.optional(v.boolean()),
     tagline: v.optional(v.string()),
-  }),
+  }).index("by_visibility", ["visibility"]),
 
   works: defineTable({
     url: v.string(),
@@ -48,7 +50,9 @@ export default defineSchema({
     client: v.optional(v.string()),
     clientId: v.optional(v.id("users")),
     published: v.optional(v.boolean()),
-  }),
+  })
+    .index("by_published", ["published"])
+    .index("by_clientId", ["clientId"]),
 
   settings: defineTable({
     general: v.object({
@@ -68,12 +72,14 @@ export default defineSchema({
   }),
 
   clientFiles: defineTable({
-    userId: v.string(),
+    userId: v.id("users"),
     storageId: v.id("_storage"),
     type: v.string(),
     name: v.string(),
     size: v.optional(v.number()),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_type", ["type"]),
 
   contracts: defineTable({
     title: v.string(),
@@ -81,7 +87,9 @@ export default defineSchema({
     fileUrl: v.string(),
     clientId: v.optional(v.id("users")),
     createdAt: v.string(),
-  }),
+  })
+    .index("by_clientId_and_createdAt", ["clientId", "createdAt"])
+    .index("by_createdAt", ["createdAt"]),
 
   reports: defineTable({
     title: v.string(),
@@ -89,7 +97,7 @@ export default defineSchema({
     trend: v.optional(v.number()),
     period: v.string(),
     clientId: v.id("users"),
-  }),
+  }).index("by_clientId_and_period", ["clientId", "period"]),
 
   planRequests: defineTable({
     userId: v.id("users"),
@@ -98,7 +106,9 @@ export default defineSchema({
     previousPlan: v.optional(v.string()),
     status: v.string(),
     createdAt: v.string(),
-  }),
+  })
+    .index("by_userId_and_createdAt", ["userId", "createdAt"])
+    .index("by_status_and_createdAt", ["status", "createdAt"]),
 
   errorLogs: defineTable({
     message: v.string(),
@@ -108,5 +118,8 @@ export default defineSchema({
     userId: v.optional(v.id("users")),
     timestamp: v.string(),
     resolved: v.optional(v.boolean()),
-  }).index("by_timestamp", ["timestamp"]),
+  })
+    .index("by_timestamp", ["timestamp"])
+    .index("by_resolved_and_timestamp", ["resolved", "timestamp"])
+    .index("by_source_and_timestamp", ["source", "timestamp"]),
 });
