@@ -62,28 +62,28 @@ export default function Home() {
       {/* Brands Section */}
       <section id="brands" className="py-[140px] bg-brand-off-white overflow-hidden">
         <div className="max-w-[1280px] mx-auto px-6 md:px-12 text-center">
-           <FadeIn>
-             <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Our Clients</p>
-             <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Trusted by the World's Boldest Brands.</h2>
-           </FadeIn>
-           
-           <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:-space-x-12 mb-[100px]">
-             {['Nike', 'Zara', 'Adidas'].map((brand, i) => (
-                <span key={i} className="font-serif font-bold text-[60px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none">{brand}</span>
-             ))}
-           </div>
-        </div>
+<FadeIn>
+              <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Our Clients</p>
+              <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Powering Industry-Leading Brands.</h2>
+            </FadeIn>
+            
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:-space-x-12 mb-[100px]">
+              {['Rumis', 'Shawok', 'Croustile'].map((brand, i) => (
+                 <span key={i} className="font-serif font-bold text-[60px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none">{brand}</span>
+              ))}
+            </div>
+         </div>
 
-        <div className="h-[80px] mb-[100px] flex items-center relative mask-image-[linear-gradient(to_right,transparent,black_20%,black_80%,transparent)]">
-          <motion.div 
-            animate={{ x: [0, -1000] }} 
-            transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-            className="flex whitespace-nowrap gap-16 px-8"
-          >
-            {Array(4).fill(['Nike', 'Zara', 'H&M', 'Adidas', 'Spotify', 'Airbnb', 'Red Bull', 'Apple', 'Netflix', 'Puma']).flat().map((b, i) => (
-               <span key={i} className="font-sans font-bold text-[18px] text-brand-black">{b}</span>
-            ))}
-          </motion.div>
+         <div className="h-[80px] mb-[100px] flex items-center relative mask-image-[linear-gradient(to_right,transparent,black_20%,black_80%,transparent)]">
+           <motion.div 
+             animate={{ x: [0, -1000] }} 
+             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+             className="flex whitespace-nowrap gap-16 px-8"
+           >
+             {Array(4).fill(['Emis', 'Rumis', 'Shawok', 'Croustile', 'Smash Foundation']).flat().map((b, i) => (
+                <span key={i} className="font-sans font-bold text-[18px] text-brand-black">{b}</span>
+             ))}
+           </motion.div>
         </div>
       </section>
 
