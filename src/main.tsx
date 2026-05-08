@@ -12,8 +12,7 @@ Sentry.init({
   dsn: "https://6f93c220f2264854e4ad82800431b98f@o4511353759006720.ingest.de.sentry.io/4511353767133264",
   sendDefaultPii: true,
   integrations: [
-    Sentry.browserTracing(),
-    Sentry.replay(),
+    Sentry.reactRouterV6BrowserTracingIntegration(),
   ],
   tracesSampleRate: 0.1,
   replaysSessionSampleRate: 0.1,
