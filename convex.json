@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/convex/schemas/convex.schema.json",
+  "functions": "convex/",
+  "node": {
+    "externalPackages": [
+      "react",
+      "react-dom",
+      "react-router-dom",
+      "zustand",
+      "bcryptjs"
+    ]
+  },
+  "aiFiles": {
+    "enabled": true
+  }
+}
