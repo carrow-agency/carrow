@@ -99,4 +99,14 @@ export default defineSchema({
     status: v.string(),
     createdAt: v.string(),
   }),
+
+  errorLogs: defineTable({
+    message: v.string(),
+    stack: v.optional(v.string()),
+    source: v.string(),
+    url: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
+    timestamp: v.string(),
+    resolved: v.optional(v.boolean()),
+  }).index("by_timestamp", ["timestamp"]),
 });

@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
-  LayoutGrid, Users, ShoppingBag, Layers, Image, FolderOpen, Settings, LogOut,
+  LayoutGrid, Users, ShoppingBag, Layers, Image, FolderOpen, Settings, AlertCircle,
 } from "lucide-react";
 
 const items = [
@@ -11,6 +11,7 @@ const items = [
   { to: "/admin/portfolio",  label: "Portfolio", icon: Image },
   { to: "/admin/files",      label: "Files",     icon: FolderOpen },
   { to: "/admin/settings",  label: "Settings",  icon: Settings },
+  { to: "/admin/errors",   label: "Error Logs",icon: AlertCircle },
 ];
 
 export function AdminSidebar() {

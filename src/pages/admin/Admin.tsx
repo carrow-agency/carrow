@@ -8,6 +8,7 @@ import PlansPanel from "./PlansPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import FilesPanel from "./FilesPanel";
 import SettingsPanel from "./SettingsPanel";
+import ErrorsPanel from "./ErrorsPanel";
 
 export default function Admin() {
   return (
@@ -25,6 +26,7 @@ export default function Admin() {
               <Route path="portfolio" element={<PortfolioPanel />} />
               <Route path="files" element={<FilesPanel />} />
               <Route path="settings" element={<SettingsPanel />} />
+              <Route path="errors" element={<ErrorsPanel />} />
             </Routes>
           </div>
         </main>

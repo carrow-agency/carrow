@@ -15,6 +15,21 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
   return bcrypt.compare(password, hash);
 }
 
+async function logError(ctx: any, message: string, stack: string, source: string, url?: string) {
+  try {
+    await ctx.db.insert("errorLogs", {
+      message,
+      stack,
+      source,
+      url,
+      timestamp: new Date().toISOString(),
+      resolved: false,
+    });
+  } catch (e) {
+    console.error("Failed to log error:", e);
+  }
+}
+
 export const signUp = mutation({
   args: {
     email: v.string(),
@@ -50,6 +65,7 @@ export const signUp = mutation({
       
       return { success: true, userId };
     } catch (error) {
+      await logError(ctx, (error as Error).message, (error as Error).stack || "", "backend", "auth.signUp");
       captureError(error as Error, { email: args.email, action: "signUp" });
       throw error;
     }
@@ -86,6 +102,7 @@ export const signIn = mutation({
       
       return { success: true, userId: user._id };
     } catch (error) {
+      await logError(ctx, (error as Error).message, (error as Error).stack || "", "backend", "auth.signIn");
       captureError(error as Error, { email: args.email, action: "signIn" });
       throw error;
     }

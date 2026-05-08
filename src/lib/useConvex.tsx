@@ -288,3 +288,33 @@ export function useCurrentUserFromConvex() {
     role: user.role ?? "user",
   };
 }
+
+export function useErrorLogs() {
+  const logs = useQuery(api.errorLogs.listErrorLogs);
+  if (!logs) return null;
+  return logs.map(l => ({
+    id: l._id,
+    message: l.message,
+    stack: l.stack ?? "",
+    source: l.source,
+    url: l.url ?? "",
+    timestamp: l.timestamp,
+    resolved: l.resolved ?? false,
+  }));
+}
+
+export function useErrorStats() {
+  return useQuery(api.errorLogs.getErrorStats);
+}
+
+export function useLogError() {
+  return useMutation(api.errorLogs.logError);
+}
+
+export function useResolveError() {
+  return useMutation(api.errorLogs.resolveError);
+}
+
+export function useDeleteError() {
+  return useMutation(api.errorLogs.deleteError);
+}
