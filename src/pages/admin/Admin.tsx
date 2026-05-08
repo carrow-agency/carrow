@@ -11,9 +11,9 @@ import SettingsPanel from "./SettingsPanel";
 
 export default function Admin() {
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
-      <div className="flex min-w-0 flex-1 flex-col ml-64">
+      <div className="flex-1 flex flex-col ml-64">
         <AdminTopbar />
         <main className="flex-1 overflow-y-auto p-8">
           <div className="max-w-5xl mx-auto">
