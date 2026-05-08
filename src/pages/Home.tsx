@@ -64,7 +64,7 @@ export default function Home() {
         <div className="max-w-[1280px] mx-auto px-6 md:px-12 text-center">
 <FadeIn>
               <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Our Clients</p>
-              <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Powering Industry-Leading Brands.</h2>
+              <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Brands Who Trust Us.</h2>
             </FadeIn>
             
             <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:-space-x-12 mb-[100px]">
