@@ -13,9 +13,16 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+      body { margin: 0; background: #0A0A0A; font-family: system-ui, -apple-system, sans-serif; }
+      #root { min-height: 100vh; }
+      .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #666; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="loading">Loading...</div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
