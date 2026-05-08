@@ -35,9 +35,8 @@ export default defineConfig(({mode}) => {
     server: {
       hmr: process.env.DISABLE_HMR === 'true' ? false : { overlay: true },
     },
-    build: {
-      outDir: "dist-new",
-      emptyOutDir: true,
+build: {
+      outDir: "dist",
       sourcemap: mode === 'development',
       minify: mode === 'production',
       rollupOptions: {
