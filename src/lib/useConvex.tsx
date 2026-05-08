@@ -304,7 +304,7 @@ export function useMyWorks() {
 
 export function useCurrentUserFromConvex() {
   const auth = useConvexAuth();
-  const user = useQuery(api.users.current);
+  const user = useQuery(api.users.current, auth.isAuthenticated ? {} : "skip");
 
   if (auth.isLoading || user === undefined) {
     return undefined;

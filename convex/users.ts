@@ -1,12 +1,11 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { requireAdmin, getCurrentUser, requireAuth } from "./access";
+import { requireAdmin, getCurrentUser } from "./access";
 
 export const current = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
-    const user = await ctx.db.get(userId);
+    const user = await getCurrentUser(ctx);
     if (!user) return null;
     const { passwordHash, ...safeUser } = user;
     return safeUser;
