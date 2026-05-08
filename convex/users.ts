@@ -108,6 +108,10 @@ export const update = mutation({
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) {
         if (key === "role" && !isAdmin) continue;
+        if (key === "planId" && !isAdmin) continue;
+        if (key === "planStatus" && !isAdmin) continue;
+        if (key === "phone" && !isSelf) continue;
+        if (key === "email" && !isAdmin) continue;
         actualUpdates[key] = value;
       }
     }

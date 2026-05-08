@@ -90,4 +90,13 @@ export default defineSchema({
     period: v.string(),
     clientId: v.id("users"),
   }),
+
+  planRequests: defineTable({
+    userId: v.id("users"),
+    type: v.string(),
+    planName: v.optional(v.string()),
+    previousPlan: v.optional(v.string()),
+    status: v.string(),
+    createdAt: v.string(),
+  }),
 });

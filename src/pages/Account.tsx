@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useOrders, useWorksByClient, useContractsByClient, useReportsByClient } from '../lib/useConvex';
+import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useOrders, useWorksByClient, useContractsByClient, useReportsByClient, useCreatePlanRequest } from '../lib/useConvex';
 import { useAppStore } from '../lib/store';
-import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, AlertCircle, Download, Eye, ChevronRight, Package, FolderOpen, X } from 'lucide-react';
+import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, AlertCircle, Download, Eye, ChevronRight, Package, FolderOpen, X, Send } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
@@ -82,6 +82,31 @@ export default function Account() {
     await signOut();
     navigate('/');
   };
+
+  const createPlanRequest = useCreatePlanRequest();
+  const [requestType, setRequestType] = useState<'renewal' | 'upgrade' | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [requesting, setRequesting] = useState(false);
+
+  const handleRequest = async () => {
+    if (!requestType || !currentUser) return;
+    setRequesting(true);
+    try {
+      await createPlanRequest({
+        type: requestType,
+        planName: requestType === 'upgrade' ? selectedPlan : undefined,
+        previousPlan: activePlan?.name,
+      });
+      setRequestType(null);
+      setSelectedPlan('');
+      alert('Request submitted! Admin will review it.');
+    } catch (e) {
+      alert('Failed to submit request');
+    }
+    setRequesting(false);
+  };
+
+  const otherPlans = plans?.filter(p => p.id !== currentUser.planId) || [];
 
   return (
     <div className="min-h-screen bg-[#f8f8f8] flex">
@@ -226,6 +251,55 @@ export default function Account() {
                       ))}
                     </ul>
                   </div>
+
+                  {/* Request Buttons */}
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Actions</h4>
+                    <div className="flex gap-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setRequestType('renewal')}
+                        disabled={!currentUser.planExpiry}
+                      >
+                        Request Renewal
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => setRequestType('upgrade')}
+                      >
+                        Request Upgrade
+                      </Button>
+                    </div>
+
+                    {/* Request Form */}
+                    {requestType && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-medium mb-2">
+                          {requestType === 'renewal' ? 'Request Plan Renewal' : 'Select Plan to Upgrade'}
+                        </p>
+                        {requestType === 'upgrade' && (
+                          <select
+                            value={selectedPlan}
+                            onChange={(e) => setSelectedPlan(e.target.value)}
+                            className="w-full mb-3 px-3 py-2 border border-gray-300 rounded-lg"
+                          >
+                            <option value="">Select a plan...</option>
+                            {otherPlans.map(plan => (
+                              <option key={plan.id} value={plan.name}>{plan.name}</option>
+                            ))}
+                          </select>
+                        )}
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={handleRequest} disabled={requesting}>
+                            {requesting ? 'Submitting...' : 'Submit Request'}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setRequestType(null)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
@@ -340,8 +414,9 @@ export default function Account() {
                     type="email"
                     defaultValue={currentUser.email}
                     disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   />
+                  <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
                 </div>
                 <Button className="mt-4">Save Changes</Button>
               </div>

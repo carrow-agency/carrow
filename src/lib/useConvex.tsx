@@ -173,6 +173,26 @@ export function useDeleteReport() {
   return useMutation(api.reports.remove);
 }
 
+export function usePlanRequests() {
+  return useQuery(api.planRequests.list);
+}
+
+export function usePendingPlanRequests() {
+  return useQuery(api.planRequests.getPending);
+}
+
+export function useCreatePlanRequest() {
+  return useMutation(api.planRequests.create);
+}
+
+export function useUpdatePlanRequestStatus() {
+  return useMutation(api.planRequests.updateStatus);
+}
+
+export function useDeletePlanRequest() {
+  return useMutation(api.planRequests.remove);
+}
+
 export const useAuthFunctions = () => {
   const signInMutation = useMutation(api.auth.signIn);
   const signUpMutation = useMutation(api.auth.signUp);

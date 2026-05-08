@@ -14,6 +14,7 @@ import type * as contracts from "../contracts.js";
 import type * as files from "../files.js";
 import type * as init from "../init.js";
 import type * as orders from "../orders.js";
+import type * as planRequests from "../planRequests.js";
 import type * as plans from "../plans.js";
 import type * as reports from "../reports.js";
 import type * as reset from "../reset.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   init: typeof init;
   orders: typeof orders;
+  planRequests: typeof planRequests;
   plans: typeof plans;
   reports: typeof reports;
   reset: typeof reset;
