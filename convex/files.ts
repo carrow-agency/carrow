@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, getCurrentUser } from "./access";
+import { captureError } from "./sentry";
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -19,34 +20,39 @@ export const saveClientFile = mutation({
     size: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const currentUser = await getCurrentUser(ctx);
-    if (!currentUser) {
-      throw new Error("Authentication required");
+    try {
+      const currentUser = await getCurrentUser(ctx);
+      if (!currentUser) {
+        throw new Error("Authentication required");
+      }
+      
+      const targetUserId = args.userId || currentUser._id;
+      
+      if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
+        throw new Error("Unauthorized to save files for this user");
+      }
+      
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+      if (!allowedTypes.includes(args.type)) {
+        throw new Error("File type not allowed. Use JPEG, PNG, WebP, or PDF.");
+      }
+      
+      const maxSize = 10 * 1024 * 1024;
+      if (args.size && args.size > maxSize) {
+        throw new Error("File too large. Maximum 10MB allowed.");
+      }
+      
+      await ctx.db.insert("clientFiles", {
+        storageId: args.storageId,
+        userId: targetUserId,
+        type: args.type,
+        name: args.name,
+        size: args.size,
+      });
+    } catch (error) {
+      captureError(error as Error, { fileName: args.name, action: "saveClientFile" });
+      throw error;
     }
-    
-    const targetUserId = args.userId || currentUser._id;
-    
-    if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
-      throw new Error("Unauthorized to save files for this user");
-    }
-    
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!allowedTypes.includes(args.type)) {
-      throw new Error("File type not allowed. Use JPEG, PNG, WebP, or PDF.");
-    }
-    
-    const maxSize = 10 * 1024 * 1024;
-    if (args.size && args.size > maxSize) {
-      throw new Error("File too large. Maximum 10MB allowed.");
-    }
-    
-    await ctx.db.insert("clientFiles", {
-      storageId: args.storageId,
-      userId: targetUserId,
-      type: args.type,
-      name: args.name,
-      size: args.size,
-    });
   },
 });
 
@@ -111,21 +117,26 @@ export const getClientFiles = query({
 export const deleteClientFile = mutation({
   args: { id: v.id("clientFiles"), storageId: v.id("_storage") },
   handler: async (ctx, args) => {
-    const currentUser = await getCurrentUser(ctx);
-    if (!currentUser) {
-      throw new Error("Authentication required");
+    try {
+      const currentUser = await getCurrentUser(ctx);
+      if (!currentUser) {
+        throw new Error("Authentication required");
+      }
+      
+      const file = await ctx.db.get(args.id);
+      if (!file) {
+        throw new Error("File not found");
+      }
+      
+      if (file.userId !== currentUser._id && currentUser.role !== "admin") {
+        throw new Error("Unauthorized to delete this file");
+      }
+      
+      await ctx.storage.delete(args.storageId);
+      await ctx.db.delete(args.id);
+    } catch (error) {
+      captureError(error as Error, { fileId: args.id, action: "deleteClientFile" });
+      throw error;
     }
-    
-    const file = await ctx.db.get(args.id);
-    if (!file) {
-      throw new Error("File not found");
-    }
-    
-    if (file.userId !== currentUser._id && currentUser.role !== "admin") {
-      throw new Error("Unauthorized to delete this file");
-    }
-    
-    await ctx.storage.delete(args.storageId);
-    await ctx.db.delete(args.id);
   },
 });

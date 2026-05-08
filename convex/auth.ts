@@ -2,6 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import bcrypt from "bcryptjs";
+import { captureError } from "./sentry";
 
 const ADMIN_EMAIL = "admin@carrow.com";
 const SALT_ROUNDS = 12;
@@ -21,32 +22,37 @@ export const signUp = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
-    if (!args.email || !args.email.includes("@")) {
-      throw new Error("Invalid email address");
+    try {
+      if (!args.email || !args.email.includes("@")) {
+        throw new Error("Invalid email address");
+      }
+      if (!args.password || args.password.length < 6) {
+        throw new Error("Password must be at least 6 characters");
+      }
+      
+      const existing = await ctx.db.query("users")
+        .filter(q => q.eq(q.field("email"), args.email))
+        .first();
+      
+      if (existing) {
+        throw new Error("Email already registered");
+      }
+      
+      const passwordHash = await hashPassword(args.password);
+      
+      const userId = await ctx.db.insert("users", {
+        name: args.name,
+        email: args.email,
+        passwordHash,
+        role: args.email === ADMIN_EMAIL ? "admin" : "user",
+        planStatus: "none",
+      });
+      
+      return { success: true, userId };
+    } catch (error) {
+      captureError(error as Error, { email: args.email, action: "signUp" });
+      throw error;
     }
-    if (!args.password || args.password.length < 6) {
-      throw new Error("Password must be at least 6 characters");
-    }
-    
-    const existing = await ctx.db.query("users")
-      .filter(q => q.eq(q.field("email"), args.email))
-      .first();
-    
-    if (existing) {
-      throw new Error("Email already registered");
-    }
-    
-    const passwordHash = await hashPassword(args.password);
-    
-    const userId = await ctx.db.insert("users", {
-      name: args.name,
-      email: args.email,
-      passwordHash,
-      role: args.email === ADMIN_EMAIL ? "admin" : "user",
-      planStatus: "none",
-    });
-    
-    return { success: true, userId };
   },
 });
 
@@ -56,28 +62,33 @@ export const signIn = mutation({
     password: v.string(),
   },
   handler: async (ctx, args) => {
-    if (!args.email || !args.password) {
-      throw new Error("Email and password are required");
+    try {
+      if (!args.email || !args.password) {
+        throw new Error("Email and password are required");
+      }
+      
+      const user = await ctx.db.query("users")
+        .filter(q => q.eq(q.field("email"), args.email))
+        .first();
+      
+      if (!user) {
+        throw new Error("No account found with this email");
+      }
+      
+      if (!user.passwordHash) {
+        throw new Error("Account password not set. Please use password reset.");
+      }
+      
+      const isValid = await verifyPassword(args.password, user.passwordHash);
+      if (!isValid) {
+        throw new Error("Incorrect password. Please try again.");
+      }
+      
+      return { success: true, userId: user._id };
+    } catch (error) {
+      captureError(error as Error, { email: args.email, action: "signIn" });
+      throw error;
     }
-    
-    const user = await ctx.db.query("users")
-      .filter(q => q.eq(q.field("email"), args.email))
-      .first();
-    
-    if (!user) {
-      throw new Error("No account found with this email");
-    }
-    
-    if (!user.passwordHash) {
-      throw new Error("Account password not set. Please use password reset.");
-    }
-    
-    const isValid = await verifyPassword(args.password, user.passwordHash);
-    if (!isValid) {
-      throw new Error("Incorrect password. Please try again.");
-    }
-    
-    return { success: true, userId: user._id };
   },
 });
 
