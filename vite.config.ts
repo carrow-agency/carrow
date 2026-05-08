@@ -7,9 +7,8 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
 
-  if (!env.VITE_CONVEX_URL && mode !== 'production') {
-    console.warn('[Carrow] VITE_CONVEX_URL not set — Convex backend will not work.');
-  }
+  const convexUrl = env.VITE_CONVEX_URL || 'https://mellow-dragon-917.convex.cloud';
+  const convexSiteUrl = env.VITE_CONVEX_SITE_URL || 'https://mellow-dragon-917.convex.site';
 
   return {
     plugins: [
@@ -19,13 +18,11 @@ export default defineConfig(({mode}) => {
         org: "kenz-bilal",
         project: "carrow",
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        sourcemaps: {
-          filesToDeleteAfterUpload: ["./**/*.map"],
-        },
       }),
     ],
     define: {
-      'import.meta.env.VITE_CONVEX_URL': JSON.stringify(env.VITE_CONVEX_URL),
+      'import.meta.env.VITE_CONVEX_URL': JSON.stringify(convexUrl),
+      'import.meta.env.VITE_CONVEX_SITE_URL': JSON.stringify(convexSiteUrl),
     },
     resolve: {
       alias: {
@@ -38,7 +35,7 @@ export default defineConfig(({mode}) => {
 build: {
       outDir: "dist",
       sourcemap: false,
-      minify: false,
+      minify: true,
       rollupOptions: {
         output: {
           manualChunks: {
