@@ -25,7 +25,7 @@ export default function PlansPanel() {
   const [list, setList] = useState<PlanData[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [features, setFeatures] = useState<string[]>([]);
-  const [formData, setFormData] = useState({ name: "", price: "", tagline: "", isPopular: false });
+  const [formData, setFormData] = useState({ name: "", price: "", tagline: "", isPopular: false, visibility: true });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -41,14 +41,15 @@ export default function PlansPanel() {
       price: plan?.price || "",
       tagline: plan?.tagline || "",
       isPopular: plan?.isPopular || false,
+      visibility: plan?.visibility ?? true,
     });
     setFeatures(plan?.features?.slice() || []);
     setEditing(i);
   };
 
   const openNew = () => {
-    setFormData({ name: "", price: "", tagline: "", isPopular: false });
-    setFeatures([""]);
+    setFormData({ name: "", price: "", tagline: "", isPopular: false, visibility: true });
+    setFeatures([]);
     setEditing(list.length);
   };
 
@@ -61,7 +62,7 @@ export default function PlansPanel() {
         tagline: formData.tagline,
         features: features.filter(f => f.trim()),
         isPopular: formData.isPopular,
-        visibility: true,
+        visibility: formData.visibility,
       };
       
       const existingPlan = editing !== null && editing < list.length ? list[editing] : null;
@@ -206,7 +207,11 @@ export default function PlansPanel() {
             onChange={(v) => setFormData({...formData, isPopular: v})} 
             label="Mark as most popular" 
           />
-          <Toggle checked={true} onChange={() => {}} label="Visible on pricing page" />
+          <Toggle 
+            checked={formData.visibility} 
+            onChange={(v) => setFormData({...formData, visibility: v})} 
+            label="Visible on pricing page" 
+          />
         </div>
       </Modal>
     </div>

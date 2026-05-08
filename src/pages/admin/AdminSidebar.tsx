@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
-  LayoutGrid, Users, ShoppingBag, Layers, Image, FolderOpen, Settings, UserCircle2, LogOut,
+  LayoutGrid, Users, ShoppingBag, Layers, Image, FolderOpen, Settings, LogOut,
 } from "lucide-react";
 
 const items = [
@@ -9,8 +9,8 @@ const items = [
   { to: "/admin/orders",     label: "Orders",    icon: ShoppingBag },
   { to: "/admin/plans",      label: "Plans",     icon: Layers },
   { to: "/admin/portfolio",  label: "Portfolio", icon: Image },
-  { to: "/admin/settings",   label: "Settings",  icon: Settings },
-  { to: "/admin/profile",    label: "Profile",   icon: UserCircle2 },
+  { to: "/admin/files",      label: "Files",     icon: FolderOpen },
+  { to: "/admin/settings",  label: "Settings",  icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -46,7 +46,7 @@ export function AdminSidebar() {
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-sm font-semibold text-white">AK</div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-gray-900">Admin</p>
-            <p className="truncate text-xs text-gray-500">Administrator</p>
+            <p className="truncate text-xs text-gray-500">admin@carrow.studio</p>
           </div>
         </div>
       </div>

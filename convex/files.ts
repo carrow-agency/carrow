@@ -13,7 +13,7 @@ export const generateUploadUrl = mutation({
 export const saveClientFile = mutation({
   args: {
     storageId: v.id("_storage"),
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")),
     type: v.string(),
     name: v.string(),
     size: v.optional(v.number()),
@@ -24,7 +24,9 @@ export const saveClientFile = mutation({
       throw new Error("Authentication required");
     }
     
-    if (args.userId !== currentUser._id && currentUser.role !== "admin") {
+    const targetUserId = args.userId || currentUser._id;
+    
+    if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
       throw new Error("Unauthorized to save files for this user");
     }
     
@@ -40,11 +42,32 @@ export const saveClientFile = mutation({
     
     await ctx.db.insert("clientFiles", {
       storageId: args.storageId,
-      userId: args.userId,
+      userId: targetUserId,
       type: args.type,
       name: args.name,
       size: args.size,
     });
+  },
+});
+
+export const getAllFiles = query({
+  args: {},
+  handler: async (ctx) => {
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser || currentUser.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+    
+    const files = await ctx.db.query("clientFiles").collect();
+    
+    const filesWithUrls = await Promise.all(
+      files.map(async (f) => {
+        const url = await ctx.storage.getUrl(f.storageId);
+        return { ...f, url };
+      })
+    );
+    
+    return filesWithUrls;
   },
 });
 

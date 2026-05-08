@@ -12,6 +12,14 @@ export const list = query({
   },
 });
 
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const works = await ctx.db.query("works").collect();
+    return works;
+  },
+});
+
 export const getByClient = query({
   args: { clientId: v.optional(v.id("users")) },
   handler: async (ctx, args) => {

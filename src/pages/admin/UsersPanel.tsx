@@ -94,11 +94,11 @@ export default function UsersPanel() {
     { key: "user", header: "User", render: (u) => (
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full border border-admin-border bg-admin-surface2 text-xs font-semibold uppercase">
-          {u.name.split(" ").map(p => p[0]).slice(0,2).join("")}
+          {u.name ? u.name.split(" ").map(p => p[0]).slice(0,2).join("") : "?"}
         </div>
         <div>
-          <p className="font-medium text-white">{u.name}</p>
-          <p className="text-xs text-admin-muted">{u.email}</p>
+          <p className="font-medium text-white">{u.name || "Unknown"}</p>
+          <p className="text-xs text-admin-muted">{u.email || "—"}</p>
         </div>
       </div>
     )},

@@ -42,11 +42,11 @@ export default function Dashboard() {
     { key: "client", header: "Client", render: (r) => (
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold uppercase">
-          {r.clientName.split(" ").map(p => p[0]).slice(0,2).join("")}
+          {r.clientName ? r.clientName.split(" ").map(p => p[0]).slice(0,2).join("") : "?"}
         </div>
         <div>
-          <p className="font-medium text-gray-900">{r.clientName}</p>
-          <p className="text-xs text-gray-500">{r.clientEmail}</p>
+          <p className="font-medium text-gray-900">{r.clientName || "Unknown"}</p>
+          <p className="text-xs text-gray-500">{r.clientEmail || "—"}</p>
         </div>
       </div>
     )},

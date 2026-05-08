@@ -29,6 +29,20 @@ export function useWorks() {
   }));
 }
 
+export function useWorksAll() {
+  const works = useQuery(api.works.listAll);
+  if (!works) return null;
+  return works.map(w => ({
+    id: w._id,
+    url: w.url,
+    title: w.title,
+    category: w.category,
+    client: w.client ?? "",
+    clientId: w.clientId ?? null,
+    published: w.published ?? true,
+  }));
+}
+
 export function useOrders() {
   const orders = useQuery(api.orders.list);
   if (!orders) return null;
@@ -68,6 +82,12 @@ export function useUpdateSettings() {
 
 export function useClientFiles(userId?: string) {
   const files = useQuery(api.files.getClientFiles, userId ? { userId: userId as any } : "skip");
+  if (!files) return null;
+  return files;
+}
+
+export function useAllFiles() {
+  const files = useQuery(api.files.getAllFiles);
   if (!files) return null;
   return files;
 }
