@@ -1,0 +1,1 @@
+import{j as n,m as r}from"./motion-IwA7fmQg.js";import{u as s}from"./index-BEUcajC4.js";function p({children:t,delay:i=0,className:e=""}){const[o,a]=s({triggerOnce:!0,threshold:.1});return n.jsx(r.div,{ref:o,initial:{opacity:0,y:32},animate:a?{opacity:1,y:0}:{opacity:0,y:32},transition:{duration:.6,ease:"easeOut",delay:i},className:e,children:t})}export{p as F};
