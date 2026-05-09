@@ -18,6 +18,8 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Account = lazy(() => import('./pages/Account'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Checkout = lazy(() => import('./pages/Checkout'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -80,6 +82,8 @@ export default function App() {
         <ScrollToTop />
         <Suspense fallback={<Loading />}>
           <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route path="/account" element={<Account />} />
             <Route path="/admin/*" element={<AdminWrapper />} />
             <Route element={<Layout />}>

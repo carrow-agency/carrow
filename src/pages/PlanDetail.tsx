@@ -48,7 +48,7 @@ export default function PlanDetail() {
     window.scrollTo(0, 0);
   }, [planId]);
 
-  const { whatsappNumber, setAuthOpen, addToCart } = useAppStore();
+  const { whatsappNumber, addToCart } = useAppStore();
   const currentUser = useCurrentUserFromConvex();
   const plans = useConvexPlans() ?? [];
   const settings = useSettings();
@@ -75,11 +75,9 @@ export default function PlanDetail() {
 
   const handleAddToCart = () => {
     addToCart({ planName: plan?.name ?? 'Unknown Plan', price: plan?.price ?? 'Contact Us', addedAt: Date.now(), userId: currentUser?.id ?? null });
-    
+
     if (!currentUser) {
-      setTimeout(() => {
-        setAuthOpen(true);
-      }, 500);
+      navigate('/signup?next=/checkout');
       return;
     }
 
@@ -87,7 +85,7 @@ export default function PlanDetail() {
     setTimeout(() => {
       setAdded(false);
       navigate('/checkout');
-    }, 1000);
+    }, 900);
   };
 
   const handleWhatsApp = () => {
