@@ -18,7 +18,7 @@ const ProcessPhase: React.FC<{ step: any, i: number, processProgress: any }> = (
       style={{ opacity, x }} 
       className="group relative pb-20 last:pb-0"
     >
-      <div className="absolute inset-0 -mx-6 md:-mx-10 -my-8 bg-brand-white/[0.02] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+      <div className="absolute inset-0 mx-0 md:mx-0 -my-8 bg-brand-white/[0.02] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
       <div 
         id={`phase-${i}`}

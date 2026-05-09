@@ -162,7 +162,7 @@ export default function Account() {
               <p className="text-[11px] text-gray-500">Client Dashboard</p>
             </div>
           </div>
-          <div className="flex overflow-x-auto gap-1 pb-3 -mx-4 px-4 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-1 pb-3 px-4 scrollbar-hide">
             {tabs.map(tab => (
               <button
                 key={tab.id}

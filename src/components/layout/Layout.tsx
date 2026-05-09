@@ -50,7 +50,7 @@ function Navbar() {
   return (
     <>
       <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navVisible ? 'translate-y-0' : '-translate-y-full'} ${scrolled ? 'bg-brand-white border-b border-brand-border h-[72px]' : 'bg-brand-black h-[72px]'} flex flex-col justify-center`}>
-        <div className="max-w-[1280px] w-full mx-auto px-6 md:px-12 flex justify-between items-center">
+        <div className="max-w-[1280px] w-full mx-auto px-4 md:px-12 flex justify-between items-center">
           <Link to="/" className="font-serif font-bold text-2xl text-brand-white">Carrow</Link>
           
           <div className="hidden md:flex items-center space-x-8">

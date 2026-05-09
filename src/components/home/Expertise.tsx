@@ -36,7 +36,7 @@ export default function Expertise() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-16 md:py-[180px] bg-brand-white px-6 md:px-12 max-w-[1400px] mx-auto">
+    <section className="py-16 md:py-[180px] bg-brand-white px-6 md:px-12 max-w-[1400px] mx-auto overflow-hidden">
       <FadeIn>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 md:mb-24 gap-8">
           <div>
