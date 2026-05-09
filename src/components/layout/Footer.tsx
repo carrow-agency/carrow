@@ -60,7 +60,7 @@ export default function Footer() {
                 <li><Link to="/work" className="font-sans text-[15px] text-brand-mid-grey hover:text-brand-white transition-colors">Work</Link></li>
                 <li><Link to="/services" className="font-sans text-[15px] text-brand-mid-grey hover:text-brand-white transition-colors">Services</Link></li>
                 <li><button onClick={() => goToHash('#process')} className="font-sans text-[15px] text-brand-mid-grey hover:text-brand-white transition-colors">Process</button></li>
-                <li><button onClick={() => goToHash('#brands')} className="font-sans text-[15px] text-brand-mid-grey hover:text-brand-white transition-colors">Brands</button></li>
+                <li><button onClick={() => goToHash('#brands')} className="font-sans text-[15px] text-brand-mid-grey hover:text-brand-white transition-colors">Clients</button></li>
               </ul>
             </div>
             <div>

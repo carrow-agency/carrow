@@ -42,38 +42,50 @@ function Navbar() {
     if (location.pathname !== '/') {
       navigate('/' + hash);
     } else {
-      const el = document.querySelector(hash);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
+      const id = hash.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        const headerOffset = 100;
+        const elementPosition = el.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      }
     }
   };
+
+  const navItems = [
+    { name: 'Work', path: '/work', type: 'link' },
+    { name: 'Services', path: '/services', type: 'link' },
+    { name: 'Process', path: '#process', type: 'hash' },
+    { name: 'Clients', path: '#brands', type: 'hash' },
+    { name: 'Plans', path: '#plans', type: 'hash' },
+    { name: 'FAQ', path: '#faq', type: 'hash' },
+    { name: 'About', path: '/brands', type: 'link' },
+  ];
 
   return (
     <>
       <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navVisible ? 'translate-y-0' : '-translate-y-full'} ${scrolled ? 'bg-brand-white border-b border-brand-border h-[72px]' : 'bg-brand-black h-[72px]'} flex flex-col justify-center`}>
         <div className="max-w-[1280px] w-full mx-auto px-4 md:px-12 flex justify-between items-center">
-          <Link to="/" className="font-serif font-bold text-2xl text-brand-white">Carrow</Link>
+          <Link to="/" className={`font-serif font-bold text-2xl transition-colors ${scrolled ? 'text-brand-black' : 'text-brand-white'}`}>Carrow</Link>
           
           <div className="hidden md:flex items-center space-x-8">
-            {['Work', 'Services', 'Process', 'Brands', 'Plans', 'FAQ'].map(item => {
-              const isHash = ['Process', 'Brands', 'Plans', 'FAQ'].includes(item);
-              const path = isHash ? '/#' + item.toLowerCase() : '/' + item.toLowerCase();
-              return (
-                <button 
-                  key={item} 
-                  onClick={() => isHash ? navigateToHash('#' + item.toLowerCase()) : navigate(path)}
-                  className={`text-sm font-medium transition-colors border-b pb-0.5 ${
-                    isLinkActive(path)
-                      ? scrolled ? 'text-brand-black border-brand-black' : 'text-brand-white border-brand-white'
-                      : scrolled
-                        ? 'text-brand-dark-grey border-transparent hover:text-brand-black hover:border-brand-black'
-                        : 'text-brand-white/50 border-transparent hover:text-brand-white hover:border-brand-white'
-                  }`}
-                  aria-current={isLinkActive(path) ? 'page' : undefined}
-                >
-                  {item}
-                </button>
-              )
-            })}
+            {navItems.map(item => (
+              <button 
+                key={item.name} 
+                onClick={() => item.type === 'hash' ? navigateToHash(item.path) : navigate(item.path)}
+                className={`text-sm font-medium transition-colors border-b pb-0.5 ${
+                  isLinkActive(item.path)
+                    ? scrolled ? 'text-brand-black border-brand-black' : 'text-brand-white border-brand-white'
+                    : scrolled
+                      ? 'text-brand-dark-grey border-transparent hover:text-brand-black hover:border-brand-black'
+                      : 'text-brand-white/50 border-transparent hover:text-brand-white hover:border-brand-white'
+                }`}
+                aria-current={isLinkActive(item.path) ? 'page' : undefined}
+              >
+                {item.name}
+              </button>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center space-x-6">
@@ -87,7 +99,7 @@ function Navbar() {
                 <button className="relative" onClick={() => navigate('/checkout')}>
                   <ShoppingBag size={20} className={scrolled ? 'text-brand-black' : 'text-brand-white'} />
                   {cart.length ? (
-<span className={`absolute -top-1 -right-2 ${scrolled ? 'bg-brand-black' : 'bg-brand-white'} ${scrolled ? 'text-brand-white' : 'text-brand-black'} text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold`}>
+                    <span className={`absolute -top-1 -right-2 ${scrolled ? 'bg-brand-black text-brand-white' : 'bg-brand-white text-brand-black'} text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold`}>
                       {cart.length}
                     </span>
                   ) : null}
@@ -133,19 +145,15 @@ function Navbar() {
               <X size={32} />
             </button>
             <div className="flex flex-col items-center space-y-6 text-brand-white">
-              {['Home', 'Work', 'Services', 'Process', 'Brands', 'Plans', 'FAQ'].map(item => {
-                const isHash = ['Process', 'Brands', 'Plans', 'FAQ'].includes(item);
-                const path = item === 'Home' ? '/' : isHash ? '/#' + item.toLowerCase() : '/' + item.toLowerCase();
-                return (
-                  <button 
-                    key={item} 
-                    onClick={() => { setMobileMenuOpen(false); isHash ? navigateToHash('#' + item.toLowerCase()) : navigate(path); }}
-                    className="font-serif text-4xl"
-                  >
-                    {item}
-                  </button>
-                )
-              })}
+              {[{ name: 'Home', path: '/', type: 'link' }, ...navItems].map(item => (
+                <button 
+                  key={item.name} 
+                  onClick={() => { setMobileMenuOpen(false); item.type === 'hash' ? navigateToHash(item.path) : navigate(item.path); }}
+                  className="font-serif text-4xl"
+                >
+                  {item.name}
+                </button>
+              ))}
               <div className="pt-8 flex flex-col items-center space-y-4">
                 {!auth || auth === undefined ? (
                   <button 

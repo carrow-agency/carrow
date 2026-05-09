@@ -40,7 +40,7 @@ export default function Home() {
       <Process />
 
       {/* Our Work - Masonry/Carousel */}
-      <section className="py-16 md:py-[140px] bg-brand-white px-6 md:px-12 max-w-[1280px] mx-auto">
+      <section id="work" className="py-16 md:py-[140px] bg-brand-white px-6 md:px-12 max-w-[1280px] mx-auto">
         <FadeIn>
           <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Our Work</p>
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-16 gap-4 md:gap-6">
