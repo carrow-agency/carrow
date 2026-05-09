@@ -91,11 +91,7 @@ const defaultPlans: PlanData[] = [
   { id: '3', name: 'Enterprise', features: ['Everything in Pro', 'Unlimited platforms', '50+ content pieces', 'Dedicated manager'], visibility: true, tagline: 'Full dominance', price: 'Contact Us' },
 ];
 
-const defaultWorks: WorkImage[] = [
-  { id: '1', url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe', title: 'Aura Skincare', category: 'Brand Identity', published: true },
-  { id: '2', url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71', title: 'TechFlow', category: 'Web Design', published: true },
-  { id: '3', url: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0', title: 'Glow Up', category: 'Social Media', published: true },
-];
+const defaultWorks: WorkImage[] = [];
 
 const defaultSettings: AppSettings = {
   general: { siteName: 'Carrow', tagline: 'We Build Brands That Stand Out', email: 'hello@carrow.com', whatsapp: '+919999999999' },

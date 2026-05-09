@@ -23,13 +23,7 @@ export default function WorkDetail() {
     window.scrollTo(0, 0);
   }, [companyId]);
 
-  const defaultProjects: Project[] = [
-    { title: 'Project One', category: 'Brand Identity', client: 'Aura Beauty', url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2370&auto=format&fit=crop" },
-    { title: 'Project Two', category: 'Social Media', client: 'TechFlow Inc', url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2370&auto=format&fit=crop" },
-    { title: 'Project Three', category: 'Campaigns', client: 'Glow Up Co', url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2699&auto=format&fit=crop" },
-  ];
-
-  const allWorks = works.length > 3 ? works : [...works, ...defaultProjects];
+  const allWorks = works;
 
   // Find all works belonging to this company slug
   const companyWorks = allWorks.filter(w => {

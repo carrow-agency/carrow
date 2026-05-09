@@ -1,24 +1,11 @@
 import { useState } from "react";
 import { useWorks } from "../../lib/useConvex";
 
-const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2370&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2370&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2699&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=2224&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=2370&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=2370&auto=format&fit=crop",
-  "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=2370&auto=format&fit=crop",
-];
-
 const ExpandOnHover = () => {
   const [expandedImage, setExpandedImage] = useState(3);
   
   const worksData = useWorks();
-  const dbImages = worksData?.works?.map(w => w.url).filter(url => url) || [];
-  
-  // Mix DB images with fallbacks to always have exactly 6 images for UI layout
-  const images = [...dbImages, ...FALLBACK_IMAGES].slice(0, 6);
+  const images = worksData?.works?.map(w => w.url).filter(url => url).slice(0, 6) || [];
 
   const getImageWidth = (index: number) =>
     index === expandedImage ? "24rem" : "5rem";
