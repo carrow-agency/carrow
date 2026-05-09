@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AdminSidebar } from "./admin/AdminSidebar";
 import { AdminTopbar } from "./admin/AdminTopbar";
@@ -10,12 +11,14 @@ import FilesPanel from "./admin/FilesPanel";
 import SettingsPanel from "./admin/SettingsPanel";
 
 export default function Admin() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen bg-admin-bg text-admin-text">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col ml-64">
-        <AdminTopbar />
-        <main className="flex-1 overflow-y-auto px-10 py-10">
+      <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="flex-1 flex flex-col md:ml-64">
+        <AdminTopbar onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 overflow-y-auto px-4 md:px-10 py-6 md:py-10">
           <div className="mx-auto max-w-[1320px]">
             <Routes>
               <Route index element={<Dashboard />} />

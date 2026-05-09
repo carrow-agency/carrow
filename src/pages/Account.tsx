@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyContracts, useMyReports, useCreatePlanRequest } from '../lib/useConvex';
+import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest } from '../lib/useConvex';
 import { useAppStore } from '../lib/store';
 import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import { OverviewChart } from './admin/components/Charts';
+
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -62,8 +62,7 @@ export default function Account() {
   const [requesting, setRequesting] = useState(false);
 
   const myWorks = useMyWorks();
-  const myContracts = useMyContracts();
-  const myReports = useMyReports();
+  const myFiles = useMyFiles();
   const createPlanRequest = useCreatePlanRequest();
 
   if (currentUser === undefined) {
@@ -90,8 +89,7 @@ export default function Account() {
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'plan', label: 'My Plan', icon: Package },
     { id: 'works', label: 'My Works', icon: FolderOpen },
-    { id: 'contracts', label: 'Contracts', icon: FileText },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
+    { id: 'files', label: 'My Files', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -382,25 +380,37 @@ export default function Account() {
             </div>
           )}
 
-          {/* CONTRACTS TAB */}
-          {activeTab === 'contracts' && (
-            <div>
-              {myContracts && myContracts.length > 0 ? (
-                <div className="space-y-4">
-                  {myContracts.map(contract => (
-                    <div key={contract._id} className="bg-white p-4 rounded-xl border border-gray-200 flex justify-between items-center">
-                      <div className="flex items-center gap-4">
-                        <FileText size={24} className="text-gray-400" />
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{contract.title}</h4>
-                          <p className="text-sm text-gray-500 capitalize">{contract.type}</p>
+          {/* FILES TAB */}
+          {activeTab === 'files' && (
+            <div className="space-y-8">
+              {myFiles && myFiles.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {myFiles.map(file => (
+                    <div key={file._id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500">
+                            {file.type === "Contract" ? <FileText size={20} /> :
+                             file.type === "Report" ? <BarChart3 size={20} /> :
+                             <FolderOpen size={20} />}
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{file.type}</span>
+                            <p className="text-xs text-gray-400 mt-0.5">{new Date(file._creationTime).toLocaleDateString()}</p>
+                          </div>
                         </div>
+                        <h4 className="font-semibold text-gray-900 mb-2 truncate" title={file.name}>{file.name}</h4>
+                        {file.size && (
+                          <p className="text-xs text-gray-500 mb-4">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        )}
                       </div>
                       <a
-                        href={contract.fileUrl}
+                        href={file.url || undefined}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+                        className="flex items-center justify-center gap-2 w-full px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
                       >
                         <Download size={16} />
                         Download
@@ -410,46 +420,11 @@ export default function Account() {
                 </div>
               ) : (
                 <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
-                  <p className="text-gray-500">No contracts available.</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* REPORTS TAB */}
-          {activeTab === 'reports' && (
-            <div className="space-y-8">
-              {myReports && myReports.length > 0 ? (
-                <>
-                  <div className="bg-white p-6 rounded-xl border border-gray-200">
-                    <h4 className="font-semibold text-gray-900 mb-6">Performance Trend</h4>
-                    <OverviewChart data={myReports.map(r => ({ name: r.period, value: r.value }))} height={350} />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {myReports.map(report => (
-                      <div key={report._id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
-                        <h4 className="text-sm text-gray-500 mb-1">{report.title}</h4>
-                        <div className="flex items-baseline gap-2">
-                          <p className="text-3xl font-bold text-gray-900">{report.value.toLocaleString()}</p>
-                          {report.trend !== undefined && (
-                            <span className={`text-sm font-medium ${report.trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                              {report.trend >= 0 ? '↑' : '↓'}{Math.abs(report.trend)}%
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gray-400 mt-1">{report.period}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
                   <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <BarChart3 className="text-gray-400" size={32} />
+                    <FolderOpen className="text-gray-400" size={32} />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900">No Reports Yet</h3>
-                  <p className="text-gray-500 mt-1">Check back later for your performance updates.</p>
+                  <h3 className="text-lg font-medium text-gray-900">No Files Available</h3>
+                  <p className="text-gray-500 mt-1">Your assigned files and reports will appear here.</p>
                 </div>
               )}
             </div>

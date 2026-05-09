@@ -51,7 +51,7 @@ export default function Dashboard() {
       }
     });
     return Object.entries(months).map(([key, value]) => ({
-      name: monthNames[parseInt(key.split("-")[1]) - 1],
+      name: monthNames[parseInt(key.split("-")[1] || "1") - 1] || "",
       value,
     }));
   }, [orders]);

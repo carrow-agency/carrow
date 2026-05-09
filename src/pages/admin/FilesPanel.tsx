@@ -19,7 +19,7 @@ const formatSize = (b?: number) => {
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 };
 
-const formatDate = (s?: string) =>
+const formatDate = (s?: string | number) =>
   s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
 
 export default function FilesPanel() {
@@ -93,134 +93,153 @@ export default function FilesPanel() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 h-full flex flex-col">
       <PageHeader
         eyebrow="Storage"
         title="Files"
         description="Documents, contracts and media shared across client engagements."
         actions={
-          <>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
-              onChange={handleUpload}
-            />
-            <Button
-              onClick={() => {
-                if (!selectedUserId) {
-                  alert("Select a client below before uploading.");
-                  return;
-                }
-                fileInputRef.current?.click();
-              }}
-              disabled={uploading}
-            >
-              <Upload size={14} />
-              {uploading ? "Uploading…" : "Upload file"}
-            </Button>
-          </>
+          selectedUserId ? (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                onChange={handleUpload}
+              />
+              <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                <Upload size={14} />
+                {uploading ? "Uploading…" : "Upload file"}
+              </Button>
+            </>
+          ) : null
         }
       />
 
-      {/* Client selector for upload */}
-      <div className="rounded-xl border border-admin-border bg-admin-surface p-5">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-admin-muted">
-          Upload destination
-        </p>
-        <div className="max-w-sm">
-          <Select
-            label=""
-            value={selectedUserId}
-            onChange={e => setSelectedUserId(e.target.value)}
-          >
-            <option value="">— Select client for upload —</option>
-            {users?.map(u => (
-              <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
-            ))}
-          </Select>
-        </div>
-        {!selectedUserId && (
-          <p className="mt-2 text-xs text-amber-400">⚠ Select a client before uploading a file</p>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard label="Total files" value={String(stats.total)}     icon={<FolderOpen size={15}/>}   iconColor="text-white/30" />
-        <StatsCard label="Contracts"   value={String(stats.contracts)} icon={<FileText size={15}/>}     iconColor="text-blue-400" />
-        <StatsCard label="Reports"     value={String(stats.reports)}   icon={<FileBarChart size={15}/>} iconColor="text-green-400" />
-        <StatsCard label="Media"       value={String(stats.media)}     icon={<ImageIcon size={15}/>}    iconColor="text-purple-400" />
-      </div>
-
-      {/* Type tabs */}
-      <div className="flex items-center gap-2">
-        {TYPE_TABS.map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-all ${
-              tab === t
-                ? "border-white bg-white text-admin-bg"
-                : "border-admin-border bg-admin-surface text-admin-muted hover:text-white hover:border-white/20"
-            }`}
-          >
-            {t === "All" ? "All files" : `${t}s`}
-          </button>
-        ))}
-      </div>
-
-      {/* File grid */}
-      {filtered.length === 0 ? (
-        <div className="rounded-xl border border-admin-border bg-admin-surface p-12 text-center">
-          <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
-          <p className="text-sm text-admin-muted">No files found</p>
-        </div>
-      ) : (
-        <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map(f => {
-            const Icon = iconFor(f.type);
-            return (
-              <article
-                key={f._id}
-                className="flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface p-4 hover:border-white/20 transition-colors"
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-[600px]">
+        {/* Left Pane: Clients List */}
+        <div className="lg:col-span-1 border border-admin-border bg-admin-surface rounded-xl overflow-hidden flex flex-col h-full">
+          <div className="p-4 border-b border-admin-border bg-admin-surface2">
+            <h3 className="text-sm font-semibold text-white">Clients</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            {users?.map((u) => (
+              <button
+                key={u.id}
+                onClick={() => setSelectedUserId(u.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                  selectedUserId === u.id
+                    ? "bg-white/10 text-white"
+                    : "text-admin-muted hover:bg-white/5 hover:text-white"
+                }`}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2 text-admin-muted">
-                  <Icon size={16} />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white uppercase">
+                  {u.name ? u.name.split(" ").map(p => p[0]).slice(0, 2).join("") : "?"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-white">{f.name}</p>
-                  <p className="text-xs text-admin-muted mt-0.5">
-                    {f.type} · {formatSize(f.size)} · {formatDate(f.createdAt)}
-                  </p>
+                  <p className="truncate text-sm font-medium leading-tight">{u.name || "Unknown"}</p>
+                  <p className="truncate text-xs text-white/40 mt-0.5">{u.email}</p>
                 </div>
-                <div className="flex flex-col gap-1 shrink-0">
-                  {f.url && (
-                    <a
-                      href={f.url}
-                      download={f.name}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors"
-                      title="Download"
-                    >
-                      <Download size={13} />
-                    </a>
-                  )}
+              </button>
+            ))}
+            {users?.length === 0 && (
+              <p className="text-center text-xs text-admin-muted py-8">No clients found</p>
+            )}
+          </div>
+        </div>
+
+        {/* Right Pane: Files Area */}
+        <div className="lg:col-span-3 flex flex-col space-y-6">
+          {!selectedUserId ? (
+            <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface flex items-center justify-center p-12 text-center">
+              <div>
+                <FolderOpen size={48} className="mx-auto text-white/10 mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">Select a Client</h3>
+                <p className="text-sm text-admin-muted">Choose a client from the sidebar to view and upload their files.</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Stats */}
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                <StatsCard label="Total files" value={String(stats.total)}     icon={<FolderOpen size={15}/>}   iconColor="text-white/30" />
+                <StatsCard label="Contracts"   value={String(stats.contracts)} icon={<FileText size={15}/>}     iconColor="text-blue-400" />
+                <StatsCard label="Reports"     value={String(stats.reports)}   icon={<FileBarChart size={15}/>} iconColor="text-green-400" />
+                <StatsCard label="Media"       value={String(stats.media)}     icon={<ImageIcon size={15}/>}    iconColor="text-purple-400" />
+              </div>
+
+              {/* Type tabs */}
+              <div className="flex items-center gap-2">
+                {TYPE_TABS.map(t => (
                   <button
-                    onClick={() => setDeleteTarget({ id: f._id, storageId: f.storageId, name: f.name })}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-admin-danger/10 hover:text-admin-danger transition-colors"
-                    title="Delete"
+                    key={t}
+                    onClick={() => setTab(t)}
+                    className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-all ${
+                      tab === t
+                        ? "border-white bg-white text-admin-bg"
+                        : "border-admin-border bg-admin-surface text-admin-muted hover:text-white hover:border-white/20"
+                    }`}
                   >
-                    <Trash2 size={13} />
+                    {t === "All" ? "All files" : `${t}s`}
                   </button>
+                ))}
+              </div>
+
+              {/* File grid */}
+              {filtered.filter(f => f.userId === selectedUserId).length === 0 ? (
+                <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface p-12 text-center flex flex-col justify-center">
+                  <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
+                  <p className="text-sm text-admin-muted">No files uploaded for this client in this category.</p>
                 </div>
-              </article>
-            );
-          })}
-        </section>
-      )}
+              ) : (
+                <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  {filtered.filter(f => f.userId === selectedUserId).map(f => {
+                    const Icon = iconFor(f.type);
+                    return (
+                      <article
+                        key={f._id}
+                        className="flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface p-4 hover:border-white/20 transition-colors"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2 text-admin-muted">
+                          <Icon size={16} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-white">{f.name}</p>
+                          <p className="text-xs text-admin-muted mt-0.5">
+                            {f.type} · {formatSize(f.size)} · {formatDate(f._creationTime)}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-1 shrink-0">
+                          {f.url && (
+                            <a
+                              href={f.url}
+                              download={f.name}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors"
+                              title="Download"
+                            >
+                              <Download size={13} />
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setDeleteTarget({ id: f._id, storageId: f.storageId, name: f.name })}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-admin-danger/10 hover:text-admin-danger transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </section>
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
       <ConfirmDialog
         open={!!deleteTarget}

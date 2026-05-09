@@ -92,7 +92,7 @@ export default function PortfolioPanel() {
           id: editingId as any,
           title: formData.title,
           client: formData.client,
-          category: formData.category,
+          category: formData.category || "",
           published: formData.published,
           ...(storageId ? { url: storageId } : {}),
         });
@@ -100,7 +100,7 @@ export default function PortfolioPanel() {
         await createWork({
           title: formData.title,
           client: formData.client,
-          category: formData.category,
+          category: formData.category || "",
           url: storageId!,
           published: formData.published,
         });

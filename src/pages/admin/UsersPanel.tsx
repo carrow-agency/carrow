@@ -31,7 +31,7 @@ export default function UsersPanel() {
   const [filter, setFilter]   = useState("All");
   const [open, setOpen]       = useState<UserData | null>(null);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: "", phone: "", planId: "", planStatus: "" });
+  const [formData, setFormData] = useState({ name: "", phone: "" });
   const [saving, setSaving]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -51,7 +51,7 @@ export default function UsersPanel() {
   );
 
   const handleView = (u: UserData) => {
-    setFormData({ name: u.name, phone: u.phone, planId: u.planId || "", planStatus: u.planStatus });
+    setFormData({ name: u.name, phone: u.phone });
     setOpen(u);
     setEditing(false);
   };
@@ -64,8 +64,6 @@ export default function UsersPanel() {
         id: open.id as any,
         name: formData.name,
         phone: formData.phone,
-        planId: formData.planId ? (formData.planId as any) : undefined,
-        planStatus: formData.planStatus as any,
       });
       setEditing(false);
       setOpen(null);
@@ -197,25 +195,18 @@ export default function UsersPanel() {
             onChange={e => setFormData({...formData, phone: e.target.value})}
             disabled={!editing}
           />
-          <Select
-            label="Plan"
-            value={editing ? formData.planId : open?.planId || ""}
-            onChange={e => setFormData({...formData, planId: e.target.value})}
-            disabled={!editing}
-          >
-            <option value="">— No Plan —</option>
-            {plans?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </Select>
-          <Select
-            label="Plan Status"
-            value={editing ? formData.planStatus : open?.planStatus || ""}
-            onChange={e => setFormData({...formData, planStatus: e.target.value})}
-            disabled={!editing}
-          >
-            <option value="none">None</option>
-            <option value="pending">Pending</option>
-            <option value="active">Active</option>
-          </Select>
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-admin-muted">Plan</p>
+            <div className="flex items-center h-10 px-3.5 rounded-lg border border-admin-border bg-admin-surface2 text-sm text-white/80">
+              {open?.planName || "—"}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-admin-muted">Plan Status</p>
+            <div className="flex items-center h-10 px-3.5 rounded-lg border border-admin-border bg-admin-surface2 text-sm text-white/80 capitalize">
+              {open?.planStatus || "none"}
+            </div>
+          </div>
         </div>
         <div className="mt-6 grid grid-cols-2 gap-5">
           <div>

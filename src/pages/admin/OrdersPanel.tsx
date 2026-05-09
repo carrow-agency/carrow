@@ -25,6 +25,7 @@ export default function OrdersPanel() {
   const deleteOrder = useDeleteOrder();
 
   const [tab, setTab]     = useState<TabType>("All");
+  const [activateTarget, setActivateTarget] = useState<OrderData | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -39,11 +40,13 @@ export default function OrdersPanel() {
   const activeOrders    = orders?.filter(o => o.status === "Active").length ?? 0;
   const cancelledOrders = orders?.filter(o => o.status === "Cancelled").length ?? 0;
 
-  const handleActivate = async (order: OrderData) => {
+  const handleActivate = async () => {
+    if (!activateTarget) return;
     setActionLoading(true);
-    try { await updateOrderStatus({ id: order.id as any, status: "Active" }); }
+    try { await updateOrderStatus({ id: activateTarget.id as any, status: "Active" }); }
     catch (e) { console.error(e); }
     setActionLoading(false);
+    setActivateTarget(null);
   };
 
   const handleCancel = async () => {
@@ -82,7 +85,7 @@ export default function OrdersPanel() {
       render: o => (
         <div className="flex justify-end gap-1.5">
           {o.status === "Pending" && (
-            <Button size="sm" variant="secondary" onClick={() => handleActivate(o)} disabled={actionLoading}>
+            <Button size="sm" variant="secondary" onClick={() => setActivateTarget(o)} disabled={actionLoading}>
               <CheckCircle2 size={13} /> Activate
             </Button>
           )}
@@ -138,6 +141,17 @@ export default function OrdersPanel() {
         </div>
       )}
       {status === "LoadingMore" && <p className="text-center text-sm text-admin-muted">Loading…</p>}
+
+      {/* Activate confirmation */}
+      <ConfirmDialog
+        open={!!activateTarget}
+        onClose={() => setActivateTarget(null)}
+        onConfirm={handleActivate}
+        loading={actionLoading}
+        title="Activate Plan?"
+        description={`You are about to activate the ${activateTarget?.plan} plan for ${activateTarget?.clientName}. This will start their billing cycle and grant them full access.`}
+        confirmLabel="Activate Plan"
+      />
 
       {/* Cancel confirmation */}
       <ConfirmDialog
