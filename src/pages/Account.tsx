@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest } from '../lib/useConvex';
+import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest, useMonthlyReportsByUser } from '../lib/useConvex';
 import { useAppStore } from '../lib/store';
 import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { MonthlyReportViewer } from '../components/reports/MonthlyReportViewer';
 
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
@@ -60,9 +61,11 @@ export default function Account() {
   const [requestType, setRequestType] = useState<'renewal' | 'upgrade' | null>(null);
   const [selectedPlan, setSelectedPlan] = useState('');
   const [requesting, setRequesting] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
 
   const myWorks = useMyWorks();
   const myFiles = useMyFiles();
+  const monthlyReports = useMonthlyReportsByUser(currentUser?.id);
   const createPlanRequest = useCreatePlanRequest();
 
   if (currentUser === undefined) {
@@ -382,9 +385,35 @@ export default function Account() {
 
           {/* FILES TAB */}
           {activeTab === 'files' && (
-            <div className="space-y-8">
-              {myFiles && myFiles.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-12">
+              
+              {/* Monthly Analysis Reports Section */}
+              {monthlyReports && monthlyReports.length > 0 && (
+                <div>
+                  <h3 className="font-serif text-2xl font-bold text-gray-900 mb-6">Monthly Analysis</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {monthlyReports.map(report => (
+                      <button
+                        key={report._id}
+                        onClick={() => setSelectedReport(report)}
+                        className="bg-white p-6 rounded-xl border border-gray-200 hover:border-gray-900 hover:shadow-md transition-all text-left flex flex-col items-center group"
+                      >
+                        <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <FolderOpen size={32} />
+                        </div>
+                        <h4 className="font-semibold text-gray-900 text-center w-full truncate">{report.monthYear}</h4>
+                        <p className="text-xs text-gray-500 mt-1 text-center w-full">View Report</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* General Uploaded Files Section */}
+              <div>
+                <h3 className="font-serif text-2xl font-bold text-gray-900 mb-6">Documents & Media</h3>
+                {myFiles && myFiles.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {myFiles.map(file => (
                     <div key={file._id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-md transition-shadow flex flex-col justify-between">
                       <div>
@@ -418,15 +447,15 @@ export default function Account() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
-                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <FolderOpen className="text-gray-400" size={32} />
+                  <div className="bg-white p-8 rounded-xl border border-gray-200 text-center col-span-full">
+                    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <FolderOpen className="text-gray-400" size={32} />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">No Files Available</h3>
+                    <p className="text-gray-500 mt-1">Your assigned files and reports will appear here.</p>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900">No Files Available</h3>
-                  <p className="text-gray-500 mt-1">Your assigned files and reports will appear here.</p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
@@ -459,6 +488,13 @@ export default function Account() {
           )}
         </div>
       </main>
+
+      {selectedReport && (
+        <MonthlyReportViewer 
+          report={selectedReport} 
+          onClose={() => setSelectedReport(null)} 
+        />
+      )}
     </div>
   );
 }

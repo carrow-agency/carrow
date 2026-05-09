@@ -99,6 +99,52 @@ export default defineSchema({
     clientId: v.id("users"),
   }).index("by_clientId_and_period", ["clientId", "period"]),
 
+  monthlyReports: defineTable({
+    clientId: v.id("users"),
+    monthYear: v.string(),
+    kpiCards: v.object({
+      totalViews: v.string(),
+      accountsReached: v.string(),
+      totalInteractions: v.string(),
+      profileVisits: v.string(),
+      totalContentPosted: v.string(),
+    }),
+    contentType: v.object({
+      reels: v.number(),
+      stories: v.number(),
+      posts: v.number(),
+    }),
+    engagement: v.object({
+      likes: v.string(),
+      comments: v.string(),
+      shares: v.string(),
+      saves: v.string(),
+    }),
+    topReels: v.array(v.object({
+      thumbnailUrl: v.string(),
+      views: v.string(),
+      date: v.string(),
+      caption: v.optional(v.string()),
+    })),
+    topPosts: v.array(v.object({
+      thumbnailUrl: v.string(),
+      viewsOrReach: v.string(),
+      date: v.string(),
+      caption: v.optional(v.string()),
+    })),
+    strategicInsights: v.object({
+      performanceSummary: v.string(),
+      bestContentType: v.string(),
+      growthOpportunity: v.string(),
+    }),
+    previousMonth: v.optional(v.object({
+      views: v.string(),
+      reach: v.string(),
+      interactions: v.string(),
+    })),
+    createdAt: v.string(),
+  }).index("by_clientId", ["clientId"]).index("by_clientId_and_monthYear", ["clientId", "monthYear"]),
+
   planRequests: defineTable({
     userId: v.id("users"),
     type: v.string(),

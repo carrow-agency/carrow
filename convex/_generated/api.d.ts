@@ -15,6 +15,7 @@ import type * as errorLogs from "../errorLogs.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
+import type * as monthlyReports from "../monthlyReports.js";
 import type * as orders from "../orders.js";
 import type * as planRequests from "../planRequests.js";
 import type * as plans from "../plans.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   http: typeof http;
   init: typeof init;
+  monthlyReports: typeof monthlyReports;
   orders: typeof orders;
   planRequests: typeof planRequests;
   plans: typeof plans;

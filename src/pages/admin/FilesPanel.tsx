@@ -4,10 +4,11 @@ import { Button } from "./components/Button";
 import { StatsCard } from "./components/StatsCard";
 import { Select } from "./components/Input";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { useAllFiles, useGenerateUploadUrl, useSaveClientFile, useDeleteClientFile, useUsers } from "../../lib/useConvex";
-import { FileText, Image as ImageIcon, FileBarChart, Download, Trash2, Upload, FolderOpen } from "lucide-react";
+import { useAllFiles, useGenerateUploadUrl, useSaveClientFile, useDeleteClientFile, useUsers, useMonthlyReportsByUser, useDeleteMonthlyReport } from "../../lib/useConvex";
+import { FileText, Image as ImageIcon, FileBarChart, Download, Trash2, Upload, FolderOpen, Plus } from "lucide-react";
+import { ReportBuilder } from "./components/ReportBuilder";
 
-const TYPE_TABS = ["All", "Contract", "Report", "Media"] as const;
+const TYPE_TABS = ["All", "Contract", "Report", "Monthly Analysis", "Media"] as const;
 
 const iconFor = (t: string) =>
   t === "Contract" ? FileText : t === "Report" ? FileBarChart : ImageIcon;
@@ -29,12 +30,15 @@ export default function FilesPanel() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; storageId: string; name: string } | null>(null);
   const [deleting, setDeleting]     = useState(false);
   const fileInputRef                = useRef<HTMLInputElement>(null);
+  const [showReportBuilder, setShowReportBuilder] = useState(false);
 
   const files             = useAllFiles() ?? [];
   const { users }         = useUsers() || { users: [] };
   const generateUploadUrl = useGenerateUploadUrl();
   const saveClientFile    = useSaveClientFile();
   const deleteClientFile  = useDeleteClientFile();
+  const monthlyReports    = useMonthlyReportsByUser(selectedUserId);
+  const deleteMonthlyReport = useDeleteMonthlyReport();
 
   const filtered = useMemo(() => {
     if (tab === "All") return files;
@@ -43,11 +47,12 @@ export default function FilesPanel() {
   }, [files, tab]);
 
   const stats = useMemo(() => ({
-    total:     files.length,
+    total:     files.length + (monthlyReports?.length || 0),
     contracts: files.filter(f => f.type === "Contract").length,
     reports:   files.filter(f => f.type === "Report").length,
+    monthlyAnalysis: monthlyReports?.length || 0,
     media:     files.filter(f => f.type?.startsWith("image/") || f.type === "Media").length,
-  }), [files]);
+  }), [files, monthlyReports]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -100,19 +105,26 @@ export default function FilesPanel() {
         description="Documents, contracts and media shared across client engagements."
         actions={
           selectedUserId ? (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
-                onChange={handleUpload}
-              />
-              <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                <Upload size={14} />
-                {uploading ? "Uploading…" : "Upload file"}
+            tab === "Monthly Analysis" ? (
+              <Button onClick={() => setShowReportBuilder(true)}>
+                <Plus size={14} />
+                Generate Analysis
               </Button>
-            </>
+            ) : (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
+                  onChange={handleUpload}
+                />
+                <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                  <Upload size={14} />
+                  {uploading ? "Uploading…" : "Upload file"}
+                </Button>
+              </>
+            )
           ) : null
         }
       />
@@ -162,10 +174,11 @@ export default function FilesPanel() {
           ) : (
             <>
               {/* Stats */}
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
                 <StatsCard label="Total files" value={String(stats.total)}     icon={<FolderOpen size={15}/>}   iconColor="text-white/30" />
                 <StatsCard label="Contracts"   value={String(stats.contracts)} icon={<FileText size={15}/>}     iconColor="text-blue-400" />
                 <StatsCard label="Reports"     value={String(stats.reports)}   icon={<FileBarChart size={15}/>} iconColor="text-green-400" />
+                <StatsCard label="Analysis"    value={String(stats.monthlyAnalysis)} icon={<FileBarChart size={15}/>} iconColor="text-emerald-400" />
                 <StatsCard label="Media"       value={String(stats.media)}     icon={<ImageIcon size={15}/>}    iconColor="text-purple-400" />
               </div>
 
@@ -187,44 +200,35 @@ export default function FilesPanel() {
               </div>
 
               {/* File grid */}
-              {filtered.filter(f => f.userId === selectedUserId).length === 0 ? (
-                <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface p-12 text-center flex flex-col justify-center">
-                  <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
-                  <p className="text-sm text-admin-muted">No files uploaded for this client in this category.</p>
-                </div>
-              ) : (
-                <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  {filtered.filter(f => f.userId === selectedUserId).map(f => {
-                    const Icon = iconFor(f.type);
-                    return (
+              {tab === "Monthly Analysis" ? (
+                monthlyReports?.length === 0 ? (
+                  <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface p-12 text-center flex flex-col justify-center">
+                    <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
+                    <p className="text-sm text-admin-muted">No monthly analysis generated for this client yet.</p>
+                  </div>
+                ) : (
+                  <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {monthlyReports?.map(report => (
                       <article
-                        key={f._id}
+                        key={report._id}
                         className="flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface p-4 hover:border-white/20 transition-colors"
                       >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2 text-admin-muted">
-                          <Icon size={16} />
+                          <FolderOpen size={16} className="text-emerald-400" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-white">{f.name}</p>
+                          <p className="truncate text-sm font-medium text-white">{report.monthYear}</p>
                           <p className="text-xs text-admin-muted mt-0.5">
-                            {f.type} · {formatSize(f.size)} · {formatDate(f._creationTime)}
+                            Monthly Analysis · {formatDate(report._creationTime)}
                           </p>
                         </div>
                         <div className="flex flex-col gap-1 shrink-0">
-                          {f.url && (
-                            <a
-                              href={f.url}
-                              download={f.name}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors"
-                              title="Download"
-                            >
-                              <Download size={13} />
-                            </a>
-                          )}
                           <button
-                            onClick={() => setDeleteTarget({ id: f._id, storageId: f.storageId, name: f.name })}
+                            onClick={async () => {
+                              if (confirm("Delete this monthly analysis report?")) {
+                                await deleteMonthlyReport({ id: report._id });
+                              }
+                            }}
                             className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-admin-danger/10 hover:text-admin-danger transition-colors"
                             title="Delete"
                           >
@@ -232,9 +236,59 @@ export default function FilesPanel() {
                           </button>
                         </div>
                       </article>
-                    );
-                  })}
-                </section>
+                    ))}
+                  </section>
+                )
+              ) : (
+                filtered.filter(f => f.userId === selectedUserId).length === 0 ? (
+                  <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface p-12 text-center flex flex-col justify-center">
+                    <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
+                    <p className="text-sm text-admin-muted">No files uploaded for this client in this category.</p>
+                  </div>
+                ) : (
+                  <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {filtered.filter(f => f.userId === selectedUserId).map(f => {
+                      const Icon = iconFor(f.type);
+                      return (
+                        <article
+                          key={f._id}
+                          className="flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface p-4 hover:border-white/20 transition-colors"
+                        >
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2 text-admin-muted">
+                            <Icon size={16} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-white">{f.name}</p>
+                            <p className="text-xs text-admin-muted mt-0.5">
+                              {f.type} · {formatSize(f.size)} · {formatDate(f._creationTime)}
+                            </p>
+                          </div>
+                          <div className="flex flex-col gap-1 shrink-0">
+                            {f.url && (
+                              <a
+                                href={f.url}
+                                download={f.name}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors"
+                                title="Download"
+                              >
+                                <Download size={13} />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => setDeleteTarget({ id: f._id, storageId: f.storageId, name: f.name })}
+                              className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-admin-danger/10 hover:text-admin-danger transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </section>
+                )
               )}
             </>
           )}
@@ -250,6 +304,13 @@ export default function FilesPanel() {
         description="This file will be permanently deleted from storage and cannot be recovered."
         confirmLabel="Delete File"
       />
+
+      {showReportBuilder && selectedUserId && (
+        <ReportBuilder
+          clientId={selectedUserId}
+          onClose={() => setShowReportBuilder(false)}
+        />
+      )}
     </div>
   );
 }

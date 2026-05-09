@@ -369,3 +369,15 @@ export function useResolveError() {
 export function useDeleteError() {
   return useMutation(api.errorLogs.deleteError);
 }
+
+export function useCreateMonthlyReport() {
+  return useMutation(api.monthlyReports.createReport);
+}
+
+export function useMonthlyReportsByUser(clientId?: string) {
+  return useQuery(api.monthlyReports.getReportsByUser, clientId ? { clientId: clientId as any } : "skip");
+}
+
+export function useDeleteMonthlyReport() {
+  return useMutation(api.monthlyReports.deleteReport);
+}
