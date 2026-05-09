@@ -48,15 +48,15 @@ export default function Services() {
 
   return (
     <div className="bg-brand-white min-h-screen">
-      <section className="py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto text-center border-b border-brand-border">
+      <section className="py-12 md:py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto text-center border-b border-brand-border">
         <FadeIn>
            <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">What We Do</p>
-           <h1 className="font-serif font-bold text-[48px] md:text-[72px] text-brand-black mb-6">Expertise Driven By Results.</h1>
+           <h1 className="font-serif font-bold text-[28px] md:text-[72px] text-brand-black mb-6">Expertise Driven By Results.</h1>
            <p className="font-sans text-[18px] text-brand-mid-grey mb-8 max-w-[600px] mx-auto">We don't do everything. We do what we are best at, and we do it better than anyone else.</p>
         </FadeIn>
       </section>
 
-      <section className="py-[140px] px-6 md:px-12 max-w-[1280px] mx-auto space-y-[140px]">
+      <section className="py-16 md:py-[140px] px-6 md:px-12 max-w-[1280px] mx-auto space-y-16 md:space-y-[140px]">
          {services.map((svc, i) => {
            const isEven = i % 2 === 0;
            return (
@@ -65,14 +65,14 @@ export default function Services() {
                    <FadeIn delay={0.1}>
                      <div className="w-full aspect-[4/3] bg-brand-black rounded-[20px] relative overflow-hidden flex items-center justify-center">
                         <div className="noise-overlay opacity-20"></div>
-                        <span className="font-serif font-bold text-[64px] text-brand-white opacity-10">0{i+1}</span>
+                        <span className="font-serif font-bold text-[40px] md:text-[64px] text-brand-white opacity-10">{i+1 < 10 ? '0' : ''}{i+1}</span>
                      </div>
                    </FadeIn>
                 </div>
                 <div className="w-full md:w-1/2">
                    <FadeIn delay={0.2}>
                      <p className="font-sans font-semibold text-[12px] uppercase text-brand-mid-grey tracking-widest mb-4">0{i+1}</p>
-                     <h2 className="font-serif font-bold text-[40px] text-brand-black mb-6">{svc.title}</h2>
+                     <h2 className="font-serif font-bold text-[24px] md:text-[40px] text-brand-black mb-6">{svc.title}</h2>
                      <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] mb-8">{svc.desc}</p>
                      <ul className="space-y-4">
                        {svc.bullets.map((b, bi) => (
@@ -89,9 +89,9 @@ export default function Services() {
          })}
       </section>
 
-      <section className="py-[140px] bg-brand-off-white text-center">
+      <section className="py-16 md:py-[140px] bg-brand-off-white text-center">
         <FadeIn>
-          <h2 className="font-serif font-bold text-[48px] text-brand-black mb-8">Ready to transform your brand?</h2>
+          <h2 className="font-serif font-bold text-[28px] md:text-[48px] text-brand-black mb-8">Ready to transform your brand?</h2>
           <button onClick={() => navigate('/#plans')} className="bg-brand-black text-brand-white rounded-full px-[48px] py-[18px] font-sans font-bold text-[16px] hover:bg-transparent hover:text-brand-black border border-brand-black transition-colors">See Our Plans</button>
         </FadeIn>
       </section>

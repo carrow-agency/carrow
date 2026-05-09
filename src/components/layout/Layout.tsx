@@ -49,9 +49,9 @@ function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navVisible ? 'translate-y-0' : '-translate-y-full'} ${scrolled ? 'bg-brand-white border-b border-brand-border h-[72px]' : 'bg-transparent h-[72px]'} flex flex-col justify-center`}>
+      <nav className={`fixed top-0 w-full z-50 transition-transform duration-300 ${navVisible ? 'translate-y-0' : '-translate-y-full'} ${scrolled ? 'bg-brand-white border-b border-brand-border h-[72px]' : 'bg-brand-black h-[72px]'} flex flex-col justify-center`}>
         <div className="max-w-[1280px] w-full mx-auto px-6 md:px-12 flex justify-between items-center">
-          <Link to="/" className="font-serif font-bold text-2xl text-brand-black">Carrow</Link>
+          <Link to="/" className="font-serif font-bold text-2xl text-brand-white">Carrow</Link>
           
           <div className="hidden md:flex items-center space-x-8">
             {['Work', 'Services', 'Process', 'Brands', 'Plans', 'FAQ'].map(item => {
@@ -61,8 +61,12 @@ function Navbar() {
                 <button 
                   key={item} 
                   onClick={() => isHash ? navigateToHash('#' + item.toLowerCase()) : navigate(path)}
-                  className={`text-sm font-medium transition-colors border-b hover:text-brand-black hover:border-brand-black pb-0.5 ${
-                    isLinkActive(path) ? 'text-brand-black border-brand-black' : 'text-brand-dark-grey border-transparent'
+                  className={`text-sm font-medium transition-colors border-b pb-0.5 ${
+                    isLinkActive(path)
+                      ? scrolled ? 'text-brand-black border-brand-black' : 'text-brand-white border-brand-white'
+                      : scrolled
+                        ? 'text-brand-dark-grey border-transparent hover:text-brand-black hover:border-brand-black'
+                        : 'text-brand-white/50 border-transparent hover:text-brand-white hover:border-brand-white'
                   }`}
                   aria-current={isLinkActive(path) ? 'page' : undefined}
                 >
@@ -74,23 +78,23 @@ function Navbar() {
 
           <div className="hidden md:flex items-center space-x-6">
             {!auth || auth === undefined ? (
-              <button onClick={() => setAuthOpen(true)} className="text-sm font-medium text-brand-dark-grey hover:text-brand-black">Login</button>
+              <button onClick={() => setAuthOpen(true)} className={`text-sm font-medium transition-colors ${scrolled ? 'text-brand-dark-grey hover:text-brand-black' : 'text-brand-white/50 hover:text-brand-white'}`}>Login</button>
             ) : (
               <div className="flex items-center gap-6">
-                <Link to={auth.role === 'admin' ? '/admin' : '/account'} className="text-sm font-medium text-brand-dark-grey hover:text-brand-black cursor-pointer">
+                <Link to={auth.role === 'admin' ? '/admin' : '/account'} className={`text-sm font-medium cursor-pointer transition-colors ${scrolled ? 'text-brand-dark-grey hover:text-brand-black' : 'text-brand-white/50 hover:text-brand-white'}`}>
                   {auth.role === 'admin' ? 'Admin Panel' : 'My Account'}
                 </Link>
                 <button className="relative" onClick={() => navigate('/checkout')}>
-                  <ShoppingBag size={20} className="text-brand-black" />
+                  <ShoppingBag size={20} className={scrolled ? 'text-brand-black' : 'text-brand-white'} />
                   {cart.length ? (
-                    <span className="absolute -top-1 -right-2 bg-brand-black text-brand-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+<span className={`absolute -top-1 -right-2 ${scrolled ? 'bg-brand-black' : 'bg-brand-white'} ${scrolled ? 'text-brand-white' : 'text-brand-black'} text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold`}>
                       {cart.length}
                     </span>
                   ) : null}
                 </button>
               </div>
             )}
-            <button onClick={() => navigateToHash('#plans')} className="bg-brand-black text-brand-white text-[14px] font-semibold rounded-full px-6 py-2.5 transition-colors border border-brand-black hover:bg-brand-white hover:text-brand-black tracking-[0.05em]">
+            <button onClick={() => navigateToHash('#plans')} className={`text-[14px] font-semibold rounded-full px-6 py-2.5 transition-colors border tracking-[0.05em] ${scrolled ? 'bg-brand-white text-brand-black border-brand-black hover:bg-transparent hover:text-brand-black' : 'bg-brand-black text-brand-white border-brand-black hover:bg-brand-white hover:text-brand-black'}`}>
               Get Started
             </button>
           </div>
@@ -98,16 +102,16 @@ function Navbar() {
           <div className="md:hidden flex items-center space-x-4">
             {auth && auth !== undefined && (
                <button className="relative" onClick={() => navigate('/checkout')}>
-                 <ShoppingBag size={20} className="text-brand-black" />
+                 <ShoppingBag size={20} className={scrolled ? 'text-brand-black' : 'text-brand-white'} />
                  {cart.length ? (
-                   <span className="absolute -top-1 -right-2 bg-brand-black text-brand-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                   <span className={`absolute -top-1 -right-2 ${scrolled ? 'bg-brand-black text-brand-white' : 'bg-brand-white text-brand-black'} text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold`}>
                      {cart.length}
                    </span>
                  ) : null}
                </button>
             )}
             <button onClick={() => setMobileMenuOpen(true)} aria-label="Open menu" aria-expanded={mobileMenuOpen}>
-              <Menu size={24} className="text-brand-black" />
+              <Menu size={24} className={scrolled ? 'text-brand-black' : 'text-brand-white'} />
             </button>
           </div>
         </div>

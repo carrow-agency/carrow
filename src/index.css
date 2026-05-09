@@ -186,3 +186,11 @@
 .admin-panel h1, .admin-panel h2 {
     font-family: var(--font-serif);
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -63,15 +63,15 @@ export default function Checkout() {
   };
 
   return (
-    <div className="pt-32 pb-24 px-6 md:px-12 max-w-[1280px] mx-auto min-h-screen">
+    <div className="pt-24 md:pt-32 pb-16 md:pb-24 px-6 md:px-12 max-w-[1280px] mx-auto min-h-screen">
       <div className="mb-12">
-        <h1 className="font-serif font-bold text-[40px] md:text-[56px] text-brand-black mb-4">Checkout.</h1>
+        <h1 className="font-serif font-bold text-[28px] md:text-[56px] text-brand-black mb-4">Checkout.</h1>
         <p className="font-sans text-[18px] text-brand-mid-grey">Complete your request to initiate onboarding.</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-12">
         <div className="lg:w-2/3">
-          <div className="bg-brand-white border border-brand-border rounded-[24px] p-8 md:p-12">
+          <div className="bg-brand-white border border-brand-border rounded-[24px] p-6 md:p-12">
             <h2 className="font-serif font-bold text-[28px] text-brand-black mb-8">Business Details</h2>
             
             <form id="checkout-form" onSubmit={handleCheckout} className="space-y-6">

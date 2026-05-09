@@ -117,9 +117,9 @@ export default function Account() {
   const otherPlans = plans?.filter(p => p.id !== currentUser.planId) || [];
 
   return (
-    <div className="min-h-screen bg-[#f8f8f8] flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 fixed h-full left-0 top-0">
+    <div className="min-h-screen bg-[#f8f8f8]">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:block w-64 bg-white border-r border-gray-200 fixed h-full left-0 top-0">
         <div className="p-6 border-b border-gray-200">
           <h1 className="font-serif text-2xl font-bold text-gray-900">Carrow</h1>
           <p className="text-xs text-gray-500 mt-1">Client Dashboard</p>
@@ -153,8 +153,43 @@ export default function Account() {
         </div>
       </aside>
 
+      {/* Mobile Top Tab Bar */}
+      <div className="md:hidden">
+        <div className="bg-white border-b border-gray-200 px-4 pt-16">
+          <div className="flex items-center gap-3 mb-4">
+            <div>
+              <h1 className="font-serif text-xl font-bold text-gray-900">Carrow</h1>
+              <p className="text-[11px] text-gray-500">Client Dashboard</p>
+            </div>
+          </div>
+          <div className="flex overflow-x-auto gap-1 pb-3 -mx-4 px-4 scrollbar-hide">
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <tab.icon size={14} />
+                {tab.label}
+              </button>
+            ))}
+            <button
+              onClick={handleSignOut}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-600 bg-red-50"
+            >
+              <LogOut size={14} />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 md:ml-64 p-6 md:p-8 pt-4 md:pt-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">

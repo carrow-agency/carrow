@@ -51,12 +51,12 @@ export default function WorkDetail() {
 
   return (
     <div className="bg-brand-white min-h-screen">
-      <section className="py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto">
+      <section className="py-16 md:py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto">
         <FadeIn>
            <button onClick={() => navigate('/work')} className="font-sans text-[14px] text-brand-mid-grey mb-8 flex items-center gap-2 hover:text-brand-black transition-colors">
               &larr; Back to all brands
            </button>
-           <h1 className="font-serif font-bold text-[48px] md:text-[64px] text-brand-black mb-6">{clientName} Portfolio</h1>
+           <h1 className="font-serif font-bold text-[28px] md:text-[64px] text-brand-black mb-6">{clientName} Portfolio</h1>
            <p className="font-sans text-[18px] text-brand-mid-grey mb-16 max-w-[600px]">Creative assets, media, and branding completed for {clientName}.</p>
         </FadeIn>
 

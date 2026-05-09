@@ -29,7 +29,7 @@ export default function Footer() {
             </div>
           </div>
           
-          <div className="md:col-span-7 lg:col-span-6 grid grid-cols-3 gap-8">
+          <div className="md:col-span-7 lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-8">
             <div>
               <h4 className="font-sans font-semibold text-[12px] uppercase tracking-[0.2em] text-brand-mid-grey mb-6">Company</h4>
               <ul className="space-y-4">

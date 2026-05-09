@@ -30,7 +30,7 @@ const ProcessPhase: React.FC<{ step: any, i: number, processProgress: any }> = (
         <div className="font-sans font-medium text-[13px] text-brand-mid-grey tracking-widest uppercase mb-4 flex items-center gap-4">
           Phase {step.n}
         </div>
-        <h3 className="font-serif font-bold text-[32px] md:text-[40px] text-brand-white mb-4 transition-colors duration-300">{step.t}</h3>
+        <h3 className="font-serif font-bold text-[24px] md:text-[40px] text-brand-white mb-4 transition-colors duration-300">{step.t}</h3>
         <p className="font-sans text-[16px] md:text-[18px] text-[#A3A3A3] leading-[1.8] max-w-[500px]">{step.d}</p>
       </div>
     </motion.div>
@@ -58,7 +58,7 @@ export default function Process() {
   ];
 
   return (
-    <section id="process" className="py-[160px] bg-brand-black px-6 md:px-12 relative overflow-hidden" ref={processRef}>
+    <section id="process" className="py-16 md:py-[160px] bg-brand-black px-6 md:px-12 relative overflow-hidden" ref={processRef}>
       <div className="absolute top-0 left-0 w-full h-[1px] bg-brand-dark-grey"></div>
       <div className="max-w-[1280px] mx-auto relative z-10">
         <div className="flex flex-col lg:flex-row gap-16 lg:gap-32">
@@ -68,7 +68,7 @@ export default function Process() {
                  <span className="w-8 h-[1px] bg-[#A3A3A3]"></span>
                  Our Methodology
                </p>
-               <h2 className="font-serif font-bold text-[48px] md:text-[64px] text-brand-white leading-[1.1] tracking-tight mb-8">
+               <h2 className="font-serif font-bold text-[32px] md:text-[64px] text-brand-white leading-[1.1] tracking-tight mb-8">
                  Engineered<br />for Impact.
                </h2>
                <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] max-w-[400px]">

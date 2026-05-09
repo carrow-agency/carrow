@@ -98,7 +98,7 @@ export default function PlanDetail() {
   return (
     <div className="bg-brand-white min-h-screen">
       {/* Hero */}
-      <section className="py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto text-center border-b border-brand-border">
+      <section className="py-16 md:py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto text-center border-b border-brand-border">
         <FadeIn>
           <button onClick={() => navigate('/#plans')} className="font-sans font-medium text-[14px] text-brand-mid-grey flex items-center justify-center mx-auto mb-8 hover:text-brand-black transition-colors gap-2">
             <ArrowLeft size={16} /> Plans
@@ -108,10 +108,10 @@ export default function PlanDetail() {
             {plan.name} Plan
           </div>
           
-          <h1 className="font-serif font-bold text-[48px] md:text-[72px] text-brand-black leading-tight mb-4">{plan.name} Plan</h1>
+          <h1 className="font-serif font-bold text-[28px] md:text-[72px] text-brand-black leading-tight mb-4">{plan.name} Plan</h1>
           <p className="font-sans text-[18px] text-brand-mid-grey mb-12">{plan.tagline}</p>
           
-          <div className="font-serif font-bold text-[56px] text-brand-black mb-2">{plan.price}</div>
+          <div className="font-serif font-bold text-[36px] md:text-[56px] text-brand-black mb-2">{plan.price}</div>
           <p className="font-sans text-[15px] text-brand-mid-grey mb-12">{plan.desc}</p>
           
           <button 
@@ -127,10 +127,10 @@ export default function PlanDetail() {
       </section>
 
       {/* What's Included */}
-      <section className="py-[140px] px-6 md:px-12 max-w-[1280px] mx-auto border-b border-brand-border">
+      <section className="py-16 md:py-[140px] px-6 md:px-12 max-w-[1280px] mx-auto border-b border-brand-border">
         <FadeIn>
            <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">What's Included</p>
-           <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Everything in the {plan.name} Plan.</h2>
+           <h2 className="font-serif font-bold text-[24px] md:text-[56px] text-brand-black mb-16">Everything in the {plan.name} Plan.</h2>
         </FadeIn>
         <div className="grid md:grid-cols-2 gap-8">
           {plan.features.map((f: PlanFeature, i: number) => (
@@ -148,7 +148,7 @@ export default function PlanDetail() {
       </section>
 
       {/* Reviews */}
-      <section className="py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto bg-brand-off-white my-12 rounded-[32px]">
+      <section className="py-16 md:py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto bg-brand-off-white my-12 rounded-[32px]">
         <FadeIn>
             <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4 text-center">Hear What Others Have To Say</p>
             <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16 text-center">What Brands Say About {plan.name}.</h2>
@@ -241,14 +241,14 @@ export default function PlanDetail() {
       </section>
 
       {/* How This Plan Works */}
-      <section className="py-[100px] bg-brand-black px-6 md:px-12">
+      <section className="py-16 md:py-[100px] bg-brand-black px-6 md:px-12">
         <div className="max-w-[800px] mx-auto relative pl-8 md:pl-16">
           {/* Vertical Line */}
           <div className="absolute left-[7px] md:left-[31px] top-6 bottom-6 w-px bg-brand-dark-grey"></div>
           
           <FadeIn>
             <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4 text-center md:text-left">How It Works</p>
-            <h2 className="font-serif font-bold text-[32px] md:text-[52px] text-brand-white mb-16 text-center md:text-left">Your Journey with Carrow.</h2>
+            <h2 className="font-serif font-bold text-[24px] md:text-[52px] text-brand-white mb-16 text-center md:text-left">Your Journey with Carrow.</h2>
           </FadeIn>
 
           <div className="space-y-16">
@@ -269,11 +269,11 @@ export default function PlanDetail() {
       </section>
 
       {/* Plan FAQ */}
-      <section className="py-[100px] bg-brand-white px-6 md:px-12">
+      <section className="py-16 md:py-[100px] bg-brand-white px-6 md:px-12">
         <div className="max-w-[800px] mx-auto">
           <FadeIn>
              <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4 text-center">Plan FAQ</p>
-             <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16 text-center">Everything About This Plan.</h2>
+             <h2 className="font-serif font-bold text-[24px] md:text-[56px] text-brand-black mb-16 text-center">Everything About This Plan.</h2>
           </FadeIn>
           
           <div className="space-y-0 text-left">
@@ -295,10 +295,10 @@ export default function PlanDetail() {
       </section>
 
       {/* Add to Cart CTA */}
-      <section className="py-[100px] bg-brand-black text-brand-white px-6 md:px-12 text-center">
+      <section className="py-16 md:py-[100px] bg-brand-black text-brand-white px-6 md:px-12 text-center">
         <div className="max-w-[800px] mx-auto">
           <FadeIn>
-            <h2 className="font-serif font-bold text-[40px] md:text-[56px] leading-tight mb-4">Ready to Start with {plan.name}?</h2>
+            <h2 className="font-serif font-bold text-[28px] md:text-[56px] leading-tight mb-4">Ready to Start with {plan.name}?</h2>
             <p className="font-sans text-[17px] text-brand-mid-grey mb-12">No contracts. No hidden fees. Just results.</p>
             <button 
               onClick={handleAddToCart}

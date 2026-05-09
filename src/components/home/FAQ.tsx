@@ -14,11 +14,11 @@ export default function FAQ() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-[140px] bg-brand-white px-6 md:px-12">
+    <section id="faq" className="py-16 md:py-[140px] bg-brand-white px-6 md:px-12">
       <div className="max-w-[800px] mx-auto">
         <FadeIn>
           <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4 text-center">FAQ</p>
-          <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16 text-center">Questions. Answered.</h2>
+          <h2 className="font-serif font-bold text-[24px] md:text-[56px] text-brand-black mb-16 text-center">Questions. Answered.</h2>
         </FadeIn>
         
         <div className="space-y-0 text-left">

@@ -36,7 +36,7 @@ export default function Expertise() {
   const navigate = useNavigate();
 
   return (
-    <section className="py-[140px] md:py-[180px] bg-brand-white px-6 md:px-12 max-w-[1400px] mx-auto">
+    <section className="py-16 md:py-[180px] bg-brand-white px-6 md:px-12 max-w-[1400px] mx-auto">
       <FadeIn>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 md:mb-24 gap-8">
           <div>
@@ -44,7 +44,7 @@ export default function Expertise() {
               <span className="w-8 h-[1px] bg-brand-mid-grey"></span>
               Our Expertise
             </p>
-            <h2 className="font-serif font-bold text-[40px] md:text-[64px] lg:text-[72px] text-brand-black leading-[1.05] tracking-tight max-w-[700px]">
+            <h2 className="font-serif font-bold text-[28px] md:text-[64px] lg:text-[72px] text-brand-black leading-[1.05] tracking-tight max-w-[700px]">
               We Engineer Attention.
             </h2>
           </div>
@@ -68,7 +68,7 @@ export default function Expertise() {
                   {exp.num}
                 </span>
                 <div className="w-full">
-                  <h3 className="font-serif font-bold text-[32px] md:text-[48px] text-brand-black transition-transform duration-500 origin-left group-hover:scale-105">
+                  <h3 className="font-serif font-bold text-[24px] md:text-[48px] text-brand-black transition-transform duration-500 origin-left group-hover:scale-105">
                     {exp.title}
                   </h3>
                   <div className="overflow-hidden lg:hidden mt-6">

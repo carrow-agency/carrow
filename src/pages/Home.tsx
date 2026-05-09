@@ -40,12 +40,12 @@ export default function Home() {
       <Process />
 
       {/* Our Work - Masonry/Carousel */}
-      <section className="py-[140px] bg-brand-white px-6 md:px-12 max-w-[1280px] mx-auto">
+      <section className="py-16 md:py-[140px] bg-brand-white px-6 md:px-12 max-w-[1280px] mx-auto">
         <FadeIn>
           <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Our Work</p>
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-            <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black">Work That Speaks for Itself.</h2>
-            <p className="font-sans text-[17px] text-brand-mid-grey md:mb-4">A selection of brands we've helped grow.</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-16 gap-4 md:gap-6">
+            <h2 className="font-serif font-bold text-[28px] md:text-[56px] text-brand-black">Work That Speaks for Itself.</h2>
+            <p className="font-sans text-[15px] md:text-[17px] text-brand-mid-grey md:mb-4">A selection of brands we've helped grow.</p>
           </div>
         </FadeIn>
 
@@ -60,7 +60,7 @@ export default function Home() {
       </section>
 
       {/* Brands Section */}
-      <section id="brands" className="py-[140px] bg-brand-off-white overflow-hidden">
+      <section id="brands" className="py-16 md:py-[140px] bg-brand-off-white overflow-hidden">
         <div className="max-w-[1280px] mx-auto px-6 md:px-12 text-center">
 <FadeIn>
               <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Our Clients</p>
@@ -69,7 +69,7 @@ export default function Home() {
             
             <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:-space-x-12 mb-[100px]">
               {['Rumis', 'Shawok', 'Croustile'].map((brand, i) => (
-                 <span key={i} className="font-serif font-bold text-[60px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none">{brand}</span>
+                 <span key={i} className="font-serif font-bold text-[36px] sm:text-[48px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none">{brand}</span>
               ))}
             </div>
          </div>
@@ -88,10 +88,10 @@ export default function Home() {
       </section>
 
       {/* Why Us / Differentiators */}
-      <section className="py-[140px] bg-brand-white px-6 md:px-12 max-w-[1280px] mx-auto">
+      <section className="py-16 md:py-[140px] bg-brand-white px-6 md:px-12 max-w-[1280px] mx-auto">
         <FadeIn>
           <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4">Why Us</p>
-          <h2 className="font-serif font-bold text-[40px] md:text-[64px] text-brand-black mb-16 leading-[1.05] tracking-tight max-w-[800px]">What Makes Carrow Different.</h2>
+          <h2 className="font-serif font-bold text-[28px] md:text-[64px] text-brand-black mb-8 md:mb-16 leading-[1.05] tracking-tight max-w-[800px]">What Makes Carrow Different.</h2>
         </FadeIn>
         
         <div className="grid md:grid-cols-3 gap-6">
@@ -125,11 +125,11 @@ export default function Home() {
       <FAQ />
 
       {/* Final Call to Action */}
-      <section className="py-[160px] bg-brand-black text-brand-white px-6 md:px-12 text-center relative overflow-hidden">
+      <section className="py-16 md:py-[160px] bg-brand-black text-brand-white px-6 md:px-12 text-center relative overflow-hidden">
         <div className="noise-overlay"></div>
         <div className="max-w-[800px] mx-auto relative z-10">
           <FadeIn>
-            <h2 className="font-serif font-bold text-[48px] md:text-[72px] leading-tight mb-6">Your Brand Deserves to Be Remembered.</h2>
+            <h2 className="font-serif font-bold text-[32px] md:text-[72px] leading-tight mb-6">Your Brand Deserves to Be Remembered.</h2>
             <p className="font-sans text-[17px] text-brand-mid-grey mb-12">Join the brands that chose bold.</p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <button onClick={() => navigateToHash('#plans')} className="bg-brand-white text-brand-black rounded-full px-[48px] py-[18px] font-sans font-semibold text-[16px] hover:bg-transparent hover:text-brand-white hover:border-brand-white border border-transparent transition-colors">Get Started</button>

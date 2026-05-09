@@ -1,6 +1,7 @@
 node_modules/
 build/
 dist/
+dist-build/
 dist-new/
 coverage/
 .DS_Store

@@ -45,10 +45,10 @@ export default function OurWork() {
 
   return (
     <div className="bg-brand-white min-h-screen">
-      <section className="py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto">
+      <section className="py-16 md:py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto">
         <FadeIn>
            <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-4 text-center">Our Portfolio</p>
-           <h1 className="font-serif font-bold text-[48px] md:text-[72px] text-brand-black mb-6 text-center">Brands We've Built.</h1>
+           <h1 className="font-serif font-bold text-[28px] md:text-[72px] text-brand-black mb-6 text-center">Brands We've Built.</h1>
            <p className="font-sans text-[18px] text-brand-mid-grey mb-16 text-center max-w-[600px] mx-auto">A curated selection of companies we've helped grow. Click to see the specific works.</p>
         </FadeIn>
 
@@ -70,8 +70,8 @@ export default function OurWork() {
         </div>
       </section>
       
-      <section className="py-[120px] bg-brand-black text-brand-white text-center">
-        <h2 className="font-serif font-bold text-[48px] mb-8">Want your brand here?</h2>
+      <section className="py-16 md:py-[120px] bg-brand-black text-brand-white text-center">
+        <h2 className="font-serif font-bold text-[28px] md:text-[48px] mb-8">Want your brand here?</h2>
         <button onClick={() => navigate('/#plans')} className="bg-brand-white text-brand-black rounded-full px-[48px] py-[18px] font-sans font-bold text-[16px] hover:bg-opacity-90 transition-colors">Start Your Project</button>
       </section>
     </div>
