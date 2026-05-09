@@ -346,7 +346,7 @@ export default function Account() {
               ) : (
                 <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
                   <p className="text-gray-500 mb-4">You don't have an active plan yet.</p>
-                  <Button onClick={() => navigate('/services#plans')}>View Plans</Button>
+                  <Button onClick={() => navigate('/#plans')}>View Plans</Button>
                 </div>
               )}
             </div>

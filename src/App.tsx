@@ -19,10 +19,32 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    // Only scroll to top when there is no hash
+    if (!hash) {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
+  return null;
+}
+
+function ScrollToHash() {
+  const { hash, pathname } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    // Small delay to allow the page to render before scrolling
+    const id = hash.replace('#', '');
+    const tryScroll = (attempts = 0) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (attempts < 10) {
+        setTimeout(() => tryScroll(attempts + 1), 100);
+      }
+    };
+    tryScroll();
+  }, [hash, pathname]);
   return null;
 }
 
@@ -75,6 +97,7 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <ScrollToTop />
+        <ScrollToHash />
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
