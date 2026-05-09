@@ -149,6 +149,20 @@ export const update = mutation({
     }
 
     const { id, ...updates } = args;
+    
+    // If we're updating the URL (media), check if we need to delete the old one
+    if (updates.url !== undefined) {
+      const existing = await ctx.db.get(id);
+      if (existing && existing.url && !existing.url.startsWith("http") && existing.url !== updates.url) {
+        // Delete the old storage file
+        try {
+          await ctx.storage.delete(existing.url as any);
+        } catch (e) {
+          console.error("Failed to delete old portfolio media", e);
+        }
+      }
+    }
+
     const actualUpdates: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) actualUpdates[key] = value;
@@ -166,6 +180,16 @@ export const remove = mutation({
     const isAdmin = await requireAdmin(ctx);
     if (!isAdmin) {
       throw new Error("Admin access required");
+    }
+
+    const work = await ctx.db.get(args.id);
+    if (work && work.url && !work.url.startsWith("http")) {
+      // Delete the associated storage file
+      try {
+        await ctx.storage.delete(work.url as any);
+      } catch (e) {
+        console.error("Failed to delete portfolio media", e);
+      }
     }
 
     await ctx.db.delete(args.id);
