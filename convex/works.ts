@@ -12,7 +12,18 @@ export const list = query({
       .withIndex("by_published", (q) => q.eq("published", true))
       .order("desc")
       .paginate(args.paginationOpts);
-    return works;
+      
+    const pageWithUrls = await Promise.all(
+      works.page.map(async (work) => {
+        let resolvedUrl = work.url;
+        if (work.url && !work.url.startsWith("http")) {
+          resolvedUrl = await ctx.storage.getUrl(work.url) || work.url;
+        }
+        return { ...work, url: resolvedUrl };
+      })
+    );
+
+    return { ...works, page: pageWithUrls };
   },
 });
 
@@ -24,7 +35,16 @@ export const listAll = query({
       throw new Error("Admin access required");
     }
     const works = await ctx.db.query("works").order("desc").paginate(args.paginationOpts);
-    return works;
+    const pageWithUrls = await Promise.all(
+      works.page.map(async (work) => {
+        let resolvedUrl = work.url;
+        if (work.url && !work.url.startsWith("http")) {
+          resolvedUrl = await ctx.storage.getUrl(work.url) || work.url;
+        }
+        return { ...work, url: resolvedUrl };
+      })
+    );
+    return { ...works, page: pageWithUrls };
   },
 });
 
@@ -46,7 +66,16 @@ export const getByClient = query({
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
       .order("desc")
       .take(300);
-    return works;
+      
+    return await Promise.all(
+      works.map(async (work) => {
+        let resolvedUrl = work.url;
+        if (work.url && !work.url.startsWith("http")) {
+          resolvedUrl = await ctx.storage.getUrl(work.url) || work.url;
+        }
+        return { ...work, url: resolvedUrl };
+      })
+    );
   },
 });
 
@@ -54,11 +83,21 @@ export const getMine = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
-    return await ctx.db
+    const works = await ctx.db
       .query("works")
       .withIndex("by_clientId", (q) => q.eq("clientId", userId))
       .order("desc")
       .take(300);
+      
+    return await Promise.all(
+      works.map(async (work) => {
+        let resolvedUrl = work.url;
+        if (work.url && !work.url.startsWith("http")) {
+          resolvedUrl = await ctx.storage.getUrl(work.url) || work.url;
+        }
+        return { ...work, url: resolvedUrl };
+      })
+    );
   },
 });
 

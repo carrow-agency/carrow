@@ -5,18 +5,19 @@ interface Props {
   value: string;
   hint?: string;
   icon?: ReactNode;
+  iconColor?: string;
   className?: string;
 }
 
-export function StatsCard({ label, value, hint, icon, className }: Props) {
+export function StatsCard({ label, value, hint, icon, iconColor = "text-white/30", className }: Props) {
   return (
-    <div className={`bg-white p-6 rounded-xl border border-gray-200 ${className || ''}`}>
+    <div className={`rounded-xl border border-admin-border bg-admin-surface p-5 ${className || ""}`}>
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm text-gray-500">{label}</span>
-        {icon && <span className="text-gray-400">{icon}</span>}
+        <span className="text-xs font-semibold uppercase tracking-widest text-admin-muted">{label}</span>
+        {icon && <span className={iconColor}>{icon}</span>}
       </div>
-      <p className="text-3xl font-bold text-gray-900">{value}</p>
-      {hint && <p className="text-xs text-gray-500 mt-1">{hint}</p>}
+      <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
+      {hint && <p className="text-xs text-admin-muted mt-1">{hint}</p>}
     </div>
   );
 }

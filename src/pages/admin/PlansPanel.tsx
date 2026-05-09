@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PageHeader } from "./components/PageHeader";
 import { Button } from "./components/Button";
 import { Modal } from "./components/Modal";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Input, Textarea } from "./components/Input";
 import { Toggle } from "./components/Toggle";
 import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from "../../lib/useConvex";
-import { Check, Plus, Pencil, Trash2, X } from "lucide-react";
+import { Check, Plus, Pencil, Trash2, X, Eye, EyeOff } from "lucide-react";
 
 interface PlanData {
   id: string;
@@ -17,46 +18,45 @@ interface PlanData {
   tagline?: string;
 }
 
+const EMPTY_FORM = { name: "", price: "", tagline: "", isPopular: false, visibility: true };
+
 export default function PlansPanel() {
-  const plans = usePlans();
+  const plans = usePlans() ?? [];
   const createPlan = useCreatePlan();
   const updatePlan = useUpdatePlan();
   const deletePlan = useDeletePlan();
-  const [list, setList] = useState<PlanData[]>([]);
-  const [editing, setEditing] = useState<number | null>(null);
-  const [features, setFeatures] = useState<string[]>([]);
-  const [formData, setFormData] = useState({ name: "", price: "", tagline: "", isPopular: false, visibility: true });
-  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (plans) {
-      setList(plans);
-    }
-  }, [plans]);
+  // Use plan ID (not index) as editing key to avoid stale-index bugs
+  const [editingId, setEditingId]   = useState<string | "new" | null>(null);
+  const [features, setFeatures]     = useState<string[]>([]);
+  const [formData, setFormData]     = useState(EMPTY_FORM);
+  const [saving, setSaving]         = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PlanData | null>(null);
+  const [deleting, setDeleting]     = useState(false);
 
-  const openEdit = (i: number) => {
-    const plan = list[i];
+  const openEdit = (plan: PlanData) => {
     setFormData({
-      name: plan?.name || "",
-      price: plan?.price || "",
-      tagline: plan?.tagline || "",
-      isPopular: plan?.isPopular || false,
-      visibility: plan?.visibility ?? true,
+      name: plan.name,
+      price: plan.price || "",
+      tagline: plan.tagline || "",
+      isPopular: plan.isPopular || false,
+      visibility: plan.visibility ?? true,
     });
-    setFeatures(plan?.features?.slice() || []);
-    setEditing(i);
+    setFeatures(plan.features?.slice() || []);
+    setEditingId(plan.id);
   };
 
   const openNew = () => {
-    setFormData({ name: "", price: "", tagline: "", isPopular: false, visibility: true });
+    setFormData(EMPTY_FORM);
     setFeatures([]);
-    setEditing(list.length);
+    setEditingId("new");
   };
 
   const handleSave = async () => {
+    if (!formData.name.trim()) return;
     setSaving(true);
     try {
-      const planData = {
+      const payload = {
         name: formData.name,
         price: formData.price,
         tagline: formData.tagline,
@@ -64,156 +64,188 @@ export default function PlansPanel() {
         isPopular: formData.isPopular,
         visibility: formData.visibility,
       };
-      
-      const existingPlan = editing !== null && editing < list.length ? list[editing] : null;
-      if (existingPlan) {
-        await updatePlan({ id: existingPlan.id as any, ...planData });
+      if (editingId === "new") {
+        await createPlan(payload);
       } else {
-        await createPlan(planData);
+        await updatePlan({ id: editingId as any, ...payload });
       }
-      setEditing(null);
-    } catch (error) {
-      console.error("Failed to save plan:", error);
-    }
+      setEditingId(null);
+    } catch (e) { console.error(e); }
     setSaving(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this plan?")) {
-      try {
-        await deletePlan({ id: id as any });
-      } catch (error) {
-        console.error("Failed to delete plan:", error);
-      }
-    }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await deletePlan({ id: deleteTarget.id as any }); }
+    catch (e) { console.error(e); }
+    setDeleting(false);
+    setDeleteTarget(null);
   };
 
-  const handleToggleVisibility = async (id: string, visible: boolean) => {
-    try {
-      await updatePlan({ id: id as any, visibility: visible });
-    } catch (error) {
-      console.error("Failed to update visibility:", error);
-    }
+  const handleToggleVisibility = async (plan: PlanData, visible: boolean) => {
+    try { await updatePlan({ id: plan.id as any, visibility: visible }); }
+    catch (e) { console.error(e); }
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Pricing"
         title="Plans"
-        description="Curated subscription tiers offered to clients of the studio."
+        description="Subscription tiers displayed on the public pricing page."
         actions={<Button onClick={openNew}><Plus size={14} /> New plan</Button>}
       />
 
-      <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {list.map((p, i) => (
-          <div key={p.id || p.name + i} className={`relative flex flex-col overflow-hidden rounded-xl border bg-admin-surface p-8 transition-colors ${p.isPopular ? "border-white/40" : "border-admin-border"}`}>
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {plans.map(p => (
+          <div
+            key={p.id}
+            className={`relative flex flex-col rounded-xl border bg-admin-surface p-6 transition-colors ${
+              p.isPopular ? "border-white/30" : "border-admin-border"
+            }`}
+          >
             {p.isPopular && (
-              <span className="absolute right-6 top-6 rounded-full border border-white/30 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-black">
-                Most chosen
+              <span className="absolute right-5 top-5 rounded-full border border-white/20 bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-admin-bg">
+                Popular
               </span>
             )}
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-admin-muted">{p.name}</p>
-            <div className="mt-4 flex items-baseline gap-2">
-              <span className="font-display text-5xl font-semibold tracking-tight">{p.price || "—"}</span>
-              {p.price?.startsWith("$") && <span className="text-sm text-admin-muted">/ month</span>}
-            </div>
-            <p className="mt-4 text-sm text-admin-muted">{p.tagline}</p>
 
-            <div className="my-7 h-px bg-admin-border" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-admin-muted">{p.name}</p>
+            <p className="mt-3 text-4xl font-bold text-white tracking-tight">{p.price || "—"}</p>
+            {p.price?.startsWith("$") && <p className="text-xs text-admin-muted">/ month</p>}
+            {p.tagline && <p className="mt-2 text-sm text-admin-muted">{p.tagline}</p>}
 
-            <ul className="flex-1 space-y-3">
-              {p.features?.map((f) => (
-                <li key={f} className="flex items-start gap-3 text-sm text-white/90">
-                  <Check size={15} className="mt-0.5 shrink-0 text-white" />
-                  <span>{f}</span>
+            <div className="my-5 h-px bg-admin-border" />
+
+            <ul className="flex-1 space-y-2.5">
+              {p.features?.map(f => (
+                <li key={f} className="flex items-start gap-2.5 text-sm text-white/80">
+                  <Check size={14} className="mt-0.5 shrink-0 text-admin-accent" />
+                  {f}
                 </li>
               ))}
             </ul>
 
-            <div className="mt-8 flex items-center justify-between border-t border-admin-border pt-5">
-              <Toggle
-                checked={p.visibility ?? true}
-                onChange={(v) => handleToggleVisibility(p.id, v)}
-                label={p.visibility !== false ? "Visible" : "Hidden"}
-              />
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={() => openEdit(i)}><Pencil size={13} /> Edit</Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(p.id)}><Trash2 size={14} /></Button>
+            <div className="mt-6 flex items-center justify-between border-t border-admin-border pt-4">
+              <button
+                onClick={() => handleToggleVisibility(p, !(p.visibility ?? true))}
+                className="flex items-center gap-1.5 text-xs text-admin-muted hover:text-white transition-colors"
+                title={p.visibility !== false ? "Hide from pricing page" : "Show on pricing page"}
+              >
+                {p.visibility !== false ? <Eye size={13} /> : <EyeOff size={13} />}
+                {p.visibility !== false ? "Visible" : "Hidden"}
+              </button>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="secondary" onClick={() => openEdit(p)}>
+                  <Pencil size={12} /> Edit
+                </Button>
+                <Button size="sm" variant="danger" onClick={() => setDeleteTarget(p)}>
+                  <Trash2 size={12} />
+                </Button>
               </div>
             </div>
           </div>
         ))}
+
+        {plans.length === 0 && (
+          <div className="col-span-3 rounded-xl border border-admin-border bg-admin-surface p-12 text-center">
+            <p className="text-admin-muted">No plans yet. Create your first plan.</p>
+          </div>
+        )}
       </section>
 
+      {/* Edit / New modal */}
       <Modal
-        open={editing !== null}
-        onClose={() => setEditing(null)}
-        title={editing !== null && editing < list.length ? `Edit ${list[editing]?.name}` : "New plan"}
-        subtitle="Plans appear on the public pricing page."
+        open={editingId !== null}
+        onClose={() => setEditingId(null)}
+        title={editingId === "new" ? "New plan" : `Edit plan`}
+        subtitle="Changes appear on the public pricing page immediately."
         size="lg"
-        footer={<>
-          <Button variant="secondary" onClick={() => setEditing(null)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save plan"}</Button>
-        </>}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving || !formData.name.trim()}>
+              {saving ? "Saving…" : "Save plan"}
+            </Button>
+          </>
+        }
       >
-        <div className="grid grid-cols-2 gap-5">
-          <Input 
-            label="Plan name" 
-            value={formData.name} 
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-            placeholder="Pro" 
-          />
-          <Input 
-            label="Price"     
-            value={formData.price}
-            onChange={(e) => setFormData({...formData, price: e.target.value})}
-            placeholder="$149 or 'Contact us'" 
-          />
-          <div className="col-span-2">
-            <Textarea 
-              label="Tagline" 
-              value={formData.tagline}
-              onChange={(e) => setFormData({...formData, tagline: e.target.value})}
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Plan name"
+              value={formData.name}
+              onChange={e => setFormData({...formData, name: e.target.value})}
+              placeholder="Pro"
+            />
+            <Input
+              label="Price"
+              value={formData.price}
+              onChange={e => setFormData({...formData, price: e.target.value})}
+              placeholder="$149 or 'Contact us'"
+            />
+            <div className="col-span-2">
+              <Textarea
+                label="Tagline"
+                value={formData.tagline}
+                onChange={e => setFormData({...formData, tagline: e.target.value})}
+                placeholder="Best for growing brands…"
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-widest text-admin-muted">Features</span>
+              <Button size="sm" variant="ghost" onClick={() => setFeatures([...features, ""])}>
+                <Plus size={12} /> Add
+              </Button>
+            </div>
+            <ul className="space-y-2">
+              {features.map((f, i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <input
+                    className="h-10 flex-1 rounded-lg border border-admin-border bg-admin-surface2 px-3.5 text-sm text-white outline-none placeholder:text-admin-muted/60 focus:border-white/30"
+                    value={f}
+                    onChange={e => setFeatures(features.map((x, xi) => xi === i ? e.target.value : x))}
+                    placeholder="Describe a benefit"
+                  />
+                  <button
+                    onClick={() => setFeatures(features.filter((_, xi) => xi !== i))}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border text-admin-muted hover:text-admin-danger hover:border-admin-danger/30 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex items-center gap-8 border-t border-admin-border pt-4">
+            <Toggle
+              checked={formData.isPopular}
+              onChange={v => setFormData({...formData, isPopular: v})}
+              label="Most popular"
+            />
+            <Toggle
+              checked={formData.visibility}
+              onChange={v => setFormData({...formData, visibility: v})}
+              label="Visible on pricing page"
             />
           </div>
         </div>
-
-        <div className="mt-7">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-[0.14em] text-admin-muted">Features</span>
-            <Button size="sm" variant="ghost" onClick={() => setFeatures([...features, ""])}><Plus size={12} /> Add feature</Button>
-          </div>
-          <ul className="space-y-2">
-            {features.map((f, i) => (
-              <li key={i} className="flex items-center gap-2">
-                <input
-                  className="h-11 flex-1 rounded-md border border-admin-border bg-admin-surface2 px-3.5 text-sm focus:border-white/40"
-                  value={f}
-                  onChange={(e) => setFeatures(features.map((x, xi) => xi === i ? e.target.value : x))}
-                  placeholder="Describe a benefit"
-                />
-                <button onClick={() => setFeatures(features.filter((_, xi) => xi !== i))} className="rounded-md border border-admin-border p-2.5 text-admin-muted hover:text-white">
-                  <X size={14} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="mt-7 flex items-center gap-8 border-t border-admin-border pt-5">
-          <Toggle 
-            checked={formData.isPopular} 
-            onChange={(v) => setFormData({...formData, isPopular: v})} 
-            label="Mark as most popular" 
-          />
-          <Toggle 
-            checked={formData.visibility} 
-            onChange={(v) => setFormData({...formData, visibility: v})} 
-            label="Visible on pricing page" 
-          />
-        </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title={`Delete "${deleteTarget?.name}"?`}
+        description="This plan will be removed permanently. Existing clients with this plan are unaffected."
+        confirmLabel="Delete Plan"
+      />
     </div>
   );
 }

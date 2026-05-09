@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
-import { useAuthFunctions, useCurrentUser } from '../lib/useConvex';
+import { useAuthFunctions, useCurrentUser, useCurrentUserFromConvex } from '../lib/useConvex';
 
 const inputClass =
   'w-full bg-brand-off-white border border-brand-border rounded-[12px] px-5 py-4 font-sans text-[15px] text-brand-black placeholder:text-brand-mid-grey focus:outline-none focus:border-brand-black transition-colors duration-200';
@@ -16,7 +16,9 @@ export default function LoginPage() {
   const next = searchParams.get('next') || '/account';
 
   const { signIn } = useAuthFunctions();
-  const { isAuthenticated, isLoading } = useCurrentUser();
+  const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
+  const currentUser = useCurrentUserFromConvex();
+  const isLoading = isAuthLoading || currentUser === undefined;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,10 +28,11 @@ export default function LoginPage() {
 
   // If already authenticated, redirect immediately
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate(next, { replace: true });
+    if (!isLoading && isAuthenticated && currentUser) {
+      const redirectPath = next === '/account' && currentUser.role === 'admin' ? '/admin' : next;
+      navigate(redirectPath, { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, next]);
+  }, [isAuthenticated, isLoading, currentUser, navigate, next]);
 
   const validate = (): string | null => {
     if (!email.trim()) return 'Email is required.';

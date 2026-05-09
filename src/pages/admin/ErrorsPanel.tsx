@@ -3,8 +3,9 @@ import { PageHeader } from "./components/PageHeader";
 import { DataTable, Column } from "./components/DataTable";
 import { Button } from "./components/Button";
 import { StatsCard } from "./components/StatsCard";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 import { useErrorLogs, useErrorStats, useResolveError, useDeleteError } from "../../lib/useConvex";
-import { AlertCircle, CheckCircle, Trash2, X, RefreshCw, Server, Monitor } from "lucide-react";
+import { AlertCircle, CheckCircle, Trash2, RefreshCw, Server, Monitor } from "lucide-react";
 
 interface ErrorData {
   id: string;
@@ -16,152 +17,158 @@ interface ErrorData {
   resolved: boolean;
 }
 
-const tabs = ["All", "Unresolved", "Resolved"] as const;
+const TABS = ["All", "Unresolved", "Resolved"] as const;
+
+const fmtDate = (s: string) =>
+  new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export default function ErrorsPanel() {
-  const errorLogs = useErrorLogs();
-  const stats = useErrorStats();
+  const errorLogs    = useErrorLogs() ?? [];
+  const stats        = useErrorStats();
   const resolveError = useResolveError();
-  const deleteError = useDeleteError();
-  const [tab, setTab] = useState<(typeof tabs)[number]>("Unresolved");
-  const [resolving, setResolving] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const deleteError  = useDeleteError();
 
-  const filteredErrors = useMemo(() => {
-    if (!errorLogs) return [];
-    if (tab === "All") return errorLogs;
+  const [tab, setTab]           = useState<(typeof TABS)[number]>("Unresolved");
+  const [resolving, setResolving] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ErrorData | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const filtered = useMemo(() => {
+    if (tab === "All")        return errorLogs;
     if (tab === "Unresolved") return errorLogs.filter(e => !e.resolved);
     return errorLogs.filter(e => e.resolved);
   }, [errorLogs, tab]);
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const handleResolve = async (errorId: string) => {
-    setResolving(errorId);
-    try {
-      await resolveError({ id: errorId as any });
-    } catch (err) {
-      console.error("Failed to resolve:", err);
-    }
+  const handleResolve = async (id: string) => {
+    setResolving(id);
+    try { await resolveError({ id: id as any }); }
+    catch (e) { console.error(e); }
     setResolving(null);
   };
 
-  const handleDelete = async (errorId: string) => {
-    if (!confirm("Delete this error log?")) return;
-    setDeleting(errorId);
-    try {
-      await deleteError({ id: errorId as any });
-    } catch (err) {
-      console.error("Failed to delete:", err);
-    }
-    setDeleting(null);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await deleteError({ id: deleteTarget.id as any }); }
+    catch (e) { console.error(e); }
+    setDeleting(false);
+    setDeleteTarget(null);
   };
 
   const cols: Column<ErrorData>[] = [
-    { key: "status", header: "Status", render: (e) => (
-      e.resolved ? (
-        <span className="flex items-center gap-2 text-green-600">
-          <CheckCircle size={16} /> Resolved
+    {
+      key: "status", header: "Status",
+      render: e => e.resolved ? (
+        <span className="flex items-center gap-1.5 text-xs text-green-400">
+          <CheckCircle size={13} /> Resolved
         </span>
       ) : (
-        <span className="flex items-center gap-2 text-red-600">
-          <AlertCircle size={16} /> Active
+        <span className="flex items-center gap-1.5 text-xs text-admin-danger">
+          <AlertCircle size={13} /> Active
         </span>
-      )
-    )},
-    { key: "message", header: "Error", render: (e) => (
-      <div className="max-w-md">
-        <p className="font-medium text-gray-900 truncate">{e.message}</p>
-        {e.stack && (
-          <details className="mt-1">
-            <summary className="text-xs text-gray-500 cursor-pointer">Show stack</summary>
-            <pre className="mt-2 p-2 bg-gray-100 rounded text-xs overflow-x-auto max-h-32">
-              {e.stack}
-            </pre>
-          </details>
-        )}
-      </div>
-    )},
-    { key: "source", header: "Source", render: (e) => (
-      <span className="flex items-center gap-1 text-sm text-gray-600">
-        {e.source === "frontend" ? <Monitor size={14} /> : <Server size={14} />}
-        {e.source}
-      </span>
-    )},
-    { key: "timestamp", header: "Time", render: (e) => (
-      <span className="text-sm text-gray-500">{formatDate(e.timestamp)}</span>
-    )},
-    { key: "actions", header: "", align: "right", render: (e) => (
-      <div className="flex justify-end gap-2">
-        {!e.resolved && (
-          <Button 
-            size="sm" 
-            variant="secondary" 
-            onClick={() => handleResolve(e.id)}
-            disabled={resolving === e.id}
-          >
-            {resolving === e.id ? <RefreshCw size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-            Resolve
+      ),
+    },
+    {
+      key: "message", header: "Error",
+      render: e => (
+        <div className="max-w-md">
+          <p className="text-sm font-medium text-white truncate">{e.message}</p>
+          {e.stack && (
+            <details className="mt-1">
+              <summary className="text-xs text-admin-muted cursor-pointer hover:text-white transition-colors">Show stack</summary>
+              <pre className="mt-2 p-3 rounded-lg bg-admin-surface2 border border-admin-border text-xs text-admin-muted overflow-x-auto max-h-28 whitespace-pre-wrap">
+                {e.stack}
+              </pre>
+            </details>
+          )}
+          {e.url && <p className="text-[11px] text-admin-muted mt-0.5 truncate">{e.url}</p>}
+        </div>
+      ),
+    },
+    {
+      key: "source", header: "Source",
+      render: e => (
+        <span className="flex items-center gap-1.5 text-xs text-admin-muted capitalize">
+          {e.source === "frontend" ? <Monitor size={13} /> : <Server size={13} />}
+          {e.source}
+        </span>
+      ),
+    },
+    {
+      key: "time", header: "Time",
+      render: e => <span className="text-xs text-admin-muted">{fmtDate(e.timestamp)}</span>,
+    },
+    {
+      key: "actions", header: "", align: "right",
+      render: e => (
+        <div className="flex justify-end gap-1.5">
+          {!e.resolved && (
+            <Button
+              size="sm" variant="secondary"
+              onClick={() => handleResolve(e.id)}
+              disabled={resolving === e.id}
+            >
+              {resolving === e.id ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+              Resolve
+            </Button>
+          )}
+          <Button size="sm" variant="danger" onClick={() => setDeleteTarget(e)} title="Delete">
+            <Trash2 size={13} />
           </Button>
-        )}
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={() => handleDelete(e.id)}
-          disabled={deleting === e.id}
-        >
-          {deleting === e.id ? <X size={14} className="animate-pulse" /> : <Trash2 size={14} />}
-        </Button>
-      </div>
-    )},
+        </div>
+      ),
+    },
   ];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Diagnostics"
         title="Error Logs"
-        description="Track and resolve errors from your application."
+        description="Track and resolve application errors from all sources."
       />
 
-      <section className="grid grid-cols-2 gap-5 md:grid-cols-4">
-        <StatsCard label="Total errors" value={String(stats?.total ?? 0)} />
-        <StatsCard label="Unresolved" value={String(stats?.unresolved ?? 0)} />
-        <StatsCard label="Frontend" value={String(stats?.frontend ?? 0)} />
-        <StatsCard label="Backend" value={String(stats?.backend ?? 0)} />
-      </section>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard label="Total"      value={String(stats?.total      ?? 0)} icon={<AlertCircle size={15}/>} iconColor="text-white/30" />
+        <StatsCard label="Unresolved" value={String(stats?.unresolved ?? 0)} icon={<AlertCircle size={15}/>} iconColor="text-admin-danger" />
+        <StatsCard label="Frontend"   value={String(stats?.frontend   ?? 0)} icon={<Monitor     size={15}/>} iconColor="text-blue-400" />
+        <StatsCard label="Backend"    value={String(stats?.backend    ?? 0)} icon={<Server      size={15}/>} iconColor="text-purple-400" />
+      </div>
 
       <div className="flex items-center gap-2">
-        {tabs.map((t) => (
+        {TABS.map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`rounded-md border px-4 py-2 text-xs font-medium transition-colors ${
+            className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-all ${
               tab === t
-                ? "border-gray-900 bg-gray-900 text-white"
-                : "border-gray-300 bg-white text-gray-600 hover:border-gray-400"
+                ? "border-white bg-white text-admin-bg"
+                : "border-admin-border bg-admin-surface text-admin-muted hover:text-white hover:border-white/20"
             }`}
-          >{t}</button>
+          >
+            {t}
+          </button>
         ))}
       </div>
 
-      {filteredErrors.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
-          <AlertCircle size={32} className="mx-auto text-gray-300" />
-          <p className="mt-4 text-gray-500">No errors found</p>
-          <p className="mt-1 text-sm text-gray-400">All systems operational</p>
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-admin-border bg-admin-surface p-12 text-center">
+          <CheckCircle size={28} className="mx-auto text-admin-muted mb-3" />
+          <p className="text-sm text-admin-muted">No errors found — all systems operational</p>
         </div>
       ) : (
-        <DataTable columns={cols} data={filteredErrors} />
+        <DataTable columns={cols} data={filtered} rowKey={e => e.id} />
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title="Delete this error log?"
+        description="The log entry will be permanently removed. This is irreversible."
+        confirmLabel="Delete Log"
+      />
     </div>
   );
 }

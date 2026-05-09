@@ -43,3 +43,30 @@ export const seedWorks = mutation({
     return { message: "Works seeded", count: workData.length };
   },
 });
+
+export const seedReports = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const admin = await ctx.db.query("users").filter(q => q.eq(q.field("email"), "admin@gmail.com")).first();
+    if (!admin) return { message: "Admin not found" };
+
+    const existingReports = await ctx.db.query("reports").withIndex("by_clientId_and_period", q => q.eq("clientId", admin._id)).collect();
+    if (existingReports.length > 0) return { message: "Reports already exist" };
+
+    const reportData = [
+      { title: "Engagement", value: 12500, trend: 12, period: "2026-01", clientId: admin._id },
+      { title: "Engagement", value: 14200, trend: 15, period: "2026-02", clientId: admin._id },
+      { title: "Engagement", value: 16800, trend: 18, period: "2026-03", clientId: admin._id },
+      { title: "Engagement", value: 15900, trend: -5, period: "2026-04", clientId: admin._id },
+      { title: "Engagement", value: 19200, trend: 20, period: "2026-05", clientId: admin._id },
+      { title: "Reach", value: 45000, trend: 8, period: "2026-05", clientId: admin._id },
+      { title: "Conversions", value: 850, trend: 25, period: "2026-05", clientId: admin._id },
+    ];
+
+    for (const r of reportData) {
+      await ctx.db.insert("reports", r);
+    }
+
+    return { message: "Reports seeded" };
+  },
+});

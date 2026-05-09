@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useWorks } from "../../lib/useConvex";
 
-const images = [
+const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=2370&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2370&auto=format&fit=crop",
   "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=2699&auto=format&fit=crop",
@@ -12,6 +13,12 @@ const images = [
 
 const ExpandOnHover = () => {
   const [expandedImage, setExpandedImage] = useState(3);
+  
+  const worksData = useWorks();
+  const dbImages = worksData?.works?.map(w => w.url).filter(url => url) || [];
+  
+  // Mix DB images with fallbacks to always have exactly 7 images for UI layout
+  const images = [...dbImages, ...FALLBACK_IMAGES].slice(0, 7);
 
   const getImageWidth = (index: number) =>
     index === expandedImage ? "24rem" : "5rem";

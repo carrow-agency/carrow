@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import { PageHeader } from "./components/PageHeader";
 import { Button } from "./components/Button";
 import { Modal } from "./components/Modal";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Input, Select } from "./components/Input";
 import { Toggle } from "./components/Toggle";
-import { FileUpload } from "./components/FileUpload";
 import { useWorksAll, useCreateWork, useUpdateWork, useDeleteWork, useGenerateUploadUrl } from "../../lib/useConvex";
-import { Plus, Pencil, Trash2, X, ExternalLink, Image } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Image as ImageIcon } from "lucide-react";
 
 interface WorkData {
   id: string;
@@ -17,80 +17,74 @@ interface WorkData {
   published?: boolean;
 }
 
-const categories = ["Brand Identity", "Web Design", "Social Media", "Print", "Motion"];
+const CATEGORIES = ["Brand Identity", "Web Design", "Social Media", "Print", "Motion"];
 
 export default function PortfolioPanel() {
-  const { works, status, loadMore } = useWorksAll() || { works: [] };
-  const createWork = useCreateWork();
-  const updateWork = useUpdateWork();
-  const deleteWork = useDeleteWork();
+  const { works, status, loadMore } = useWorksAll() || { works: [], status: "Exhausted" as const, loadMore: () => {} };
+  const createWork      = useCreateWork();
+  const updateWork      = useUpdateWork();
+  const deleteWork      = useDeleteWork();
   const generateUploadUrl = useGenerateUploadUrl();
-  
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  
+  const fileInputRef    = useRef<HTMLInputElement>(null);
+
+  const [open, setOpen]             = useState(false);
+  const [saving, setSaving]         = useState(false);
+  const [editingId, setEditingId]   = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WorkData | null>(null);
+  const [deleting, setDeleting]     = useState(false);
+
+  // Separate preview URL and storageId so <img> always has a valid src
+  const [previewUrl, setPreviewUrl]     = useState<string | null>(null);
+  const [storageId, setStorageId]       = useState<string | null>(null);
+  const [uploadingImg, setUploadingImg] = useState(false);
+
   const [formData, setFormData] = useState({
-    title: "",
-    client: "",
-    category: "Brand Identity",
-    published: true,
+    title: "", client: "", category: CATEGORIES[0], published: true,
   });
 
   const items: WorkData[] = useMemo(() => works || [], [works]);
 
   const handleOpenNew = () => {
-    setFormData({ title: "", client: "", category: "Brand Identity", published: true });
-    setUploadedImage(null);
+    setFormData({ title: "", client: "", category: CATEGORIES[0], published: true });
+    setPreviewUrl(null);
+    setStorageId(null);
     setEditingId(null);
     setOpen(true);
   };
 
-  const handleOpenEdit = (work: WorkData) => {
-    setFormData({
-      title: work.title,
-      client: work.client || "",
-      category: work.category,
-      published: work.published ?? false,
-    });
-    setUploadedImage(work.url);
-    setEditingId(work.id);
+  const handleOpenEdit = (w: WorkData) => {
+    setFormData({ title: w.title, client: w.client || "", category: w.category, published: w.published ?? false });
+    setPreviewUrl(w.url);   // existing URL — valid for <img>
+    setStorageId(null);     // no new upload yet
+    setEditingId(w.id);
     setOpen(true);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    setUploadingImage(true);
+    setUploadingImg(true);
     try {
+      // Create local blob URL for instant preview
+      setPreviewUrl(URL.createObjectURL(file));
+      // Upload and get storageId
       const uploadUrl = await generateUploadUrl();
-      const response = await fetch(uploadUrl, {
-        method: "POST",
-        body: file,
-        headers: { "Content-Type": file.type },
-      });
-      
-      if (!response.ok) throw new Error("Upload failed");
-      const { storageId } = await response.json();
-      setUploadedImage(storageId);
-    } catch (error) {
-      console.error("Failed to upload image:", error);
-      alert("Failed to upload image. Please try again.");
+      const res = await fetch(uploadUrl, { method: "POST", body: file, headers: { "Content-Type": file.type } });
+      if (!res.ok) throw new Error("Upload failed");
+      const { storageId: sid } = await res.json();
+      setStorageId(sid);       // store for save
+    } catch (err) {
+      console.error(err);
+      alert("Image upload failed.");
+      setPreviewUrl(null);
+      setStorageId(null);
     }
-    setUploadingImage(false);
+    setUploadingImg(false);
   };
 
   const handleSave = async () => {
-    if (!formData.title.trim()) {
-      alert("Please enter a title");
-      return;
-    }
-    
+    if (!formData.title.trim()) { alert("Please enter a title."); return; }
+    if (!editingId && !storageId) { alert("Please upload an image."); return; }
     setSaving(true);
     try {
       if (editingId) {
@@ -99,122 +93,90 @@ export default function PortfolioPanel() {
           title: formData.title,
           client: formData.client,
           category: formData.category,
-          url: uploadedImage || undefined,
           published: formData.published,
+          ...(storageId ? { url: storageId } : {}),
         });
       } else {
-        if (!uploadedImage) {
-          alert("Please upload an image");
-          setSaving(false);
-          return;
-        }
         await createWork({
           title: formData.title,
           client: formData.client,
           category: formData.category,
-          url: uploadedImage,
+          url: storageId!,
           published: formData.published,
         });
       }
       setOpen(false);
-    } catch (error) {
-      console.error("Failed to save work:", error);
-      alert("Failed to save work. Please try again.");
-    }
+    } catch (err) { console.error(err); alert("Save failed."); }
     setSaving(false);
   };
 
-  const handleTogglePublish = async (work: WorkData, published: boolean) => {
-    try {
-      await updateWork({
-        id: work.id as any,
-        published,
-      });
-    } catch (error) {
-      console.error("Failed to update:", error);
-    }
+  const handleTogglePublish = async (w: WorkData, published: boolean) => {
+    try { await updateWork({ id: w.id as any, published }); }
+    catch (err) { console.error(err); }
   };
 
-  const handleDelete = async (workId: string) => {
-    if (!confirm("Are you sure you want to delete this work?")) return;
-    
-    setDeleting(workId);
-    try {
-      await deleteWork({ id: workId as any });
-    } catch (error) {
-      console.error("Failed to delete:", error);
-      alert("Failed to delete work. Please try again.");
-    }
-    setDeleting(null);
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try { await deleteWork({ id: deleteTarget.id as any }); }
+    catch (err) { console.error(err); }
+    setDeleting(false);
+    setDeleteTarget(null);
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         eyebrow="Showcase"
         title="Portfolio"
-        description="The body of work presented on Carrow's public-facing site. Curate carefully."
+        description="Work displayed on Carrow's public site. Curate carefully."
         actions={<Button onClick={handleOpenNew}><Plus size={14} /> New work</Button>}
       />
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-12 text-center">
-          <Image size={32} className="mx-auto text-gray-300" />
-          <p className="mt-4 text-gray-500">No portfolio items yet</p>
-          <p className="mt-1 text-sm text-gray-400">Add your first project to showcase your work</p>
-          <Button onClick={handleOpenNew} className="mt-6">
-            <Plus size={14} /> Add first work
-          </Button>
+        <div className="rounded-xl border border-admin-border bg-admin-surface p-12 text-center">
+          <ImageIcon size={28} className="mx-auto text-admin-muted mb-3" />
+          <p className="text-sm text-admin-muted">No portfolio items yet</p>
+          <Button onClick={handleOpenNew} className="mt-4"><Plus size={14} /> Add first work</Button>
         </div>
       ) : (
-        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((w) => (
-            <article 
-              key={w.id} 
-              className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition-colors hover:border-gray-300 hover:shadow-sm"
-            >
-              <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {items.map(w => (
+            <article key={w.id} className="group flex flex-col overflow-hidden rounded-xl border border-admin-border bg-admin-surface hover:border-white/20 transition-colors">
+              <div className="relative aspect-[4/5] overflow-hidden bg-admin-surface2">
                 {w.url ? (
                   <img
                     src={w.url}
                     alt={w.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gray-100">
-                    <Image size={24} className="text-gray-300" />
+                  <div className="flex h-full w-full items-center justify-center">
+                    <ImageIcon size={24} className="text-admin-muted" />
                   </div>
                 )}
-                <span className="absolute left-4 top-4 rounded-full border border-white/30 bg-white/70 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-gray-600 backdrop-blur">
+                <span className="absolute left-3 top-3 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-medium text-white/80 backdrop-blur">
                   {w.category}
                 </span>
+                <span className={`absolute right-3 top-3 h-2 w-2 rounded-full ${w.published ? "bg-admin-accent" : "bg-admin-muted"}`} title={w.published ? "Published" : "Draft"} />
               </div>
-              <div className="flex flex-1 flex-col gap-4 p-5">
+              <div className="flex flex-1 flex-col gap-3 p-4">
                 <div>
-                  <h3 className="font-display text-base font-semibold tracking-tight text-gray-900">{w.title}</h3>
-                  <p className="mt-1 text-xs text-gray-500">{w.client}</p>
+                  <h3 className="text-sm font-semibold text-white leading-tight">{w.title}</h3>
+                  {w.client && <p className="text-xs text-admin-muted mt-0.5">{w.client}</p>}
                 </div>
-                <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4">
+                <div className="mt-auto flex items-center justify-between border-t border-admin-border pt-3">
                   <Toggle
                     checked={w.published ?? false}
-                    onChange={(v) => handleTogglePublish(w, v)}
+                    onChange={v => handleTogglePublish(w, v)}
                     label={w.published ? "Published" : "Draft"}
                   />
-                  <div className="flex gap-1.5">
-                    <Button size="sm" variant="ghost" onClick={() => handleOpenEdit(w)}>
-                      <Pencil size={13} />
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="ghost" onClick={() => handleOpenEdit(w)} title="Edit">
+                      <Pencil size={12} />
                     </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleDelete(w.id)}
-                      disabled={deleting === w.id}
-                    >
-                      {deleting === w.id ? (
-                        <X size={13} className="animate-pulse" />
-                      ) : (
-                        <Trash2 size={13} />
-                      )}
+                    <Button size="sm" variant="danger" onClick={() => setDeleteTarget(w)} title="Delete">
+                      <Trash2 size={12} />
                     </Button>
                   </div>
                 </div>
@@ -223,105 +185,81 @@ export default function PortfolioPanel() {
           ))}
         </section>
       )}
-      
+
       {status === "CanLoadMore" && (
-        <div className="flex justify-center mt-6">
-          <Button variant="secondary" onClick={() => loadMore(50)}>Load More</Button>
+        <div className="flex justify-center">
+          <Button variant="secondary" onClick={() => loadMore(50)}>Load more</Button>
         </div>
       )}
-      {status === "LoadingMore" && (
-        <div className="flex justify-center mt-6 text-sm text-gray-500">Loading more items...</div>
-      )}
 
+      {/* Add / Edit modal */}
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         title={editingId ? "Edit work" : "Add new work"}
-        subtitle="Publish a project to your public portfolio."
+        subtitle="Manage a project in your public portfolio."
         size="lg"
-        footer={<>
-          <Button variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save work"}
-          </Button>
-        </>}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save work"}</Button>
+          </>
+        }
       >
-        <div className="space-y-6">
+        <div className="space-y-5">
+          {/* Image upload */}
           <div>
-            <label className="mb-3 block text-sm font-medium text-gray-700">Image</label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={handleImageUpload}
-            />
-            {uploadedImage ? (
-              <div className="relative aspect-[4/5] w-full max-w-xs overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
-                <img
-                  src={uploadedImage}
-                  alt="Preview"
-                  className="h-full w-full object-contain"
-                />
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-admin-muted">Image</p>
+            <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+            {previewUrl ? (
+              <div className="relative inline-block">
+                <img src={previewUrl} alt="Preview" className="h-44 w-44 rounded-xl object-cover border border-admin-border" />
+                {uploadingImg && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/50">
+                    <span className="text-xs text-white">Uploading…</span>
+                  </div>
+                )}
                 <button
-                  onClick={() => setUploadedImage(null)}
-                  className="absolute right-2 top-2 rounded-full bg-white p-1.5 shadow-md hover:bg-gray-100"
+                  onClick={() => { setPreviewUrl(null); setStorageId(null); }}
+                  className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-admin-surface border border-admin-border text-admin-muted hover:text-white"
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </button>
               </div>
             ) : (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage}
-                className="flex h-40 w-full max-w-xs flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 transition-colors hover:border-gray-400"
+                disabled={uploadingImg}
+                className="flex h-44 w-44 flex-col items-center justify-center rounded-xl border-2 border-dashed border-admin-border text-admin-muted hover:border-white/30 hover:text-white transition-colors"
               >
-                {uploadingImage ? (
-                  <>
-                    <Image size={24} className="animate-pulse text-gray-400" />
-                    <span className="mt-2 text-sm text-gray-500">Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus size={24} className="text-gray-400" />
-                    <span className="mt-2 text-sm text-gray-500">Click to upload image</span>
-                  </>
-                )}
+                <Plus size={20} />
+                <span className="mt-1.5 text-xs">{uploadingImg ? "Uploading…" : "Click to upload"}</span>
               </button>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-5">
-            <Input 
-              label="Title" 
-              value={formData.title} 
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              placeholder="Project title" 
-            />
-            <Input 
-              label="Client" 
-              value={formData.client} 
-              onChange={(e) => setFormData({...formData, client: e.target.value})}
-              placeholder="Client name" 
-            />
-            <Select 
-              label="Category"
-              value={formData.category}
-              onChange={(e) => setFormData({...formData, category: e.target.value})}
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Title"    value={formData.title}    onChange={e => setFormData({...formData, title: e.target.value})}    placeholder="Project name" />
+            <Input label="Client"   value={formData.client}   onChange={e => setFormData({...formData, client: e.target.value})}   placeholder="Client name" />
+            <Select label="Category" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </Select>
-            <div className="flex items-end">
-              <Toggle 
-                checked={formData.published} 
-                onChange={(v) => setFormData({...formData, published: v})} 
-                label="Publish immediately" 
-              />
+            <div className="flex items-end pb-1">
+              <Toggle checked={formData.published} onChange={v => setFormData({...formData, published: v})} label="Publish immediately" />
             </div>
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        loading={deleting}
+        title={`Delete "${deleteTarget?.title}"?`}
+        description="This portfolio item will be permanently removed from your public site."
+        confirmLabel="Delete Work"
+      />
     </div>
   );
 }

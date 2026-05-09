@@ -1,6 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "outline";
+type Variant = "primary" | "secondary" | "ghost" | "outline" | "danger";
 type Size = "sm" | "md" | "lg";
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -9,16 +9,17 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary:   "bg-gray-900 text-white hover:bg-gray-800",
-  secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
-  ghost:     "bg-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-100",
-  outline:   "bg-transparent text-gray-700 border border-gray-300 hover:border-gray-400 hover:bg-gray-50",
+  primary:   "bg-white text-admin-bg hover:bg-white/90",
+  secondary: "bg-admin-surface2 text-white border border-admin-border hover:bg-white/10 hover:border-white/20",
+  ghost:     "bg-transparent text-admin-muted hover:text-white hover:bg-white/5",
+  outline:   "bg-transparent text-white border border-admin-border hover:border-white/40 hover:bg-white/5",
+  danger:    "bg-admin-danger/10 text-admin-danger border border-admin-danger/20 hover:bg-admin-danger/20",
 };
 
 const sizes: Record<Size, string> = {
   sm: "h-8 px-3 text-xs",
-  md: "h-10 px-4 text-sm",
-  lg: "h-12 px-6 text-sm",
+  md: "h-9 px-4 text-sm",
+  lg: "h-11 px-6 text-sm",
 };
 
 export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
@@ -27,7 +28,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   return (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${variants[variant]} ${sizes[size]} ${className}`}
       {...rest}
     />
   );

@@ -4,6 +4,7 @@ import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useM
 import { useAppStore } from '../lib/store';
 import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { OverviewChart } from './admin/components/Charts';
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -75,6 +76,10 @@ export default function Account() {
 
   if (!currentUser) {
     return <Navigate to="/" replace />;
+  }
+
+  if (currentUser.role === 'admin') {
+    return <Navigate to="/admin" replace />;
   }
 
   const activePlan = plans.find(p => p.id === currentUser.planId) || null;
@@ -413,25 +418,38 @@ export default function Account() {
 
           {/* REPORTS TAB */}
           {activeTab === 'reports' && (
-            <div>
+            <div className="space-y-8">
               {myReports && myReports.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {myReports.map(report => (
-                    <div key={report._id} className="bg-white p-6 rounded-xl border border-gray-200">
-                      <h4 className="text-sm text-gray-500 mb-1">{report.title}</h4>
-                      <p className="text-3xl font-bold text-gray-900">{report.value.toLocaleString()}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className={`text-sm ${report.trend && report.trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {report.trend && report.trend >= 0 ? '+' : ''}{report.trend}%
-                        </span>
-                        <span className="text-xs text-gray-400">{report.period}</span>
+                <>
+                  <div className="bg-white p-6 rounded-xl border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-6">Performance Trend</h4>
+                    <OverviewChart data={myReports.map(r => ({ name: r.period, value: r.value }))} height={350} />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {myReports.map(report => (
+                      <div key={report._id} className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-md transition-shadow">
+                        <h4 className="text-sm text-gray-500 mb-1">{report.title}</h4>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-3xl font-bold text-gray-900">{report.value.toLocaleString()}</p>
+                          {report.trend !== undefined && (
+                            <span className={`text-sm font-medium ${report.trend >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                              {report.trend >= 0 ? '↑' : '↓'}{Math.abs(report.trend)}%
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">{report.period}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
-                  <p className="text-gray-500">No reports available.</p>
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <BarChart3 className="text-gray-400" size={32} />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No Reports Yet</h3>
+                  <p className="text-gray-500 mt-1">Check back later for your performance updates.</p>
                 </div>
               )}
             </div>

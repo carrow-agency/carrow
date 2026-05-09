@@ -9,15 +9,15 @@ interface Props {
 
 export function PageHeader({ eyebrow, title, description, actions }: Props) {
   return (
-    <div className="flex flex-col gap-2 pb-6 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-2 pb-8 md:flex-row md:items-end md:justify-between">
       <div>
         {eyebrow && (
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{eyebrow}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-admin-muted">{eyebrow}</span>
         )}
-        <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-        {description && <p className="text-gray-500 mt-1">{description}</p>}
+        <h1 className="text-2xl font-bold text-white tracking-tight mt-1">{title}</h1>
+        {description && <p className="text-sm text-admin-muted mt-1 max-w-xl">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
+      {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
     </div>
   );
 }

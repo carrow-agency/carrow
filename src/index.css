@@ -16,6 +16,17 @@
 
   --font-serif: "Cormorant Garamond", serif;
   --font-sans: "DM Sans", sans-serif;
+
+  /* Admin panel design tokens */
+  --color-admin-bg:       #0D0D0D;
+  --color-admin-sidebar:  #111111;
+  --color-admin-surface:  #1A1A1A;
+  --color-admin-surface2: #1E1E1E;
+  --color-admin-border:   #2A2A2A;
+  --color-admin-muted:    #666666;
+  --color-admin-accent:   #22c55e;
+  --color-admin-danger:   #EF4444;
+  --color-admin-warning:  #F59E0B;
 }
 
 @layer base {
