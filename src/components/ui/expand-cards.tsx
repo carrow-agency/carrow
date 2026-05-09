@@ -17,8 +17,8 @@ const ExpandOnHover = () => {
   const worksData = useWorks();
   const dbImages = worksData?.works?.map(w => w.url).filter(url => url) || [];
   
-  // Mix DB images with fallbacks to always have exactly 7 images for UI layout
-  const images = [...dbImages, ...FALLBACK_IMAGES].slice(0, 7);
+  // Mix DB images with fallbacks to always have exactly 6 images for UI layout
+  const images = [...dbImages, ...FALLBACK_IMAGES].slice(0, 6);
 
   const getImageWidth = (index: number) =>
     index === expandedImage ? "24rem" : "5rem";
