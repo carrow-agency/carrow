@@ -22,9 +22,10 @@ export const list = query({
       throw new Error("Unauthorized");
     }
     const paginatedUsers = await ctx.db.query("users").order("desc").paginate(args.paginationOpts);
+    const nonAdminUsers = paginatedUsers.page.filter(u => u.role !== "admin");
     return {
       ...paginatedUsers,
-      page: paginatedUsers.page.map(user => {
+      page: nonAdminUsers.map(user => {
         const { passwordHash, ...safeUser } = user;
         return safeUser;
       })

@@ -11,8 +11,20 @@ export const list = query({
     if (!isAdmin) {
       throw new Error("Admin access required");
     }
-    const orders = await ctx.db.query("orders").order("desc").paginate(args.paginationOpts);
-    return orders;
+    const ordersPage = await ctx.db.query("orders").order("desc").paginate(args.paginationOpts);
+    
+    const filteredOrders: typeof ordersPage.page = [];
+    for (const order of ordersPage.page) {
+      const user = await ctx.db.get(order.clientId);
+      if (user?.role !== "admin") {
+        filteredOrders.push(order);
+      }
+    }
+    
+    return {
+      ...ordersPage,
+      page: filteredOrders,
+    };
   },
 });
 
