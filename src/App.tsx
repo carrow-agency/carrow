@@ -1,10 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { AuthModal } from './components/modals/AuthModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import Layout from './components/layout/Layout';
 import { useEffect, Suspense, lazy } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import { useAppStore } from './lib/store';
 import { useCurrentUser, useCurrentUserFromConvex } from './lib/useConvex';
 
 const Home = lazy(() => import('./pages/Home'));
@@ -74,8 +71,6 @@ const Loading = () => (
 );
 
 export default function App() {
-  const isAuthOpen = useAppStore((state) => state.isAuthOpen);
-
   return (
     <ErrorBoundary>
       <BrowserRouter>
@@ -100,9 +95,6 @@ export default function App() {
           </Routes>
         </Suspense>
 
-        <AnimatePresence>
-          {isAuthOpen && <AuthModal />}
-        </AnimatePresence>
       </BrowserRouter>
     </ErrorBoundary>
   );

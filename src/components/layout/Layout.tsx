@@ -12,7 +12,7 @@ function Navbar() {
   
   const location = useLocation();
   const navigate = useNavigate();
-  const { setAuthOpen, cart } = useAppStore();
+  const { cart } = useAppStore();
   const auth = useCurrentUserFromConvex();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -78,7 +78,7 @@ function Navbar() {
 
           <div className="hidden md:flex items-center space-x-6">
             {!auth || auth === undefined ? (
-              <button onClick={() => setAuthOpen(true)} className={`text-sm font-medium transition-colors ${scrolled ? 'text-brand-dark-grey hover:text-brand-black' : 'text-brand-white/50 hover:text-brand-white'}`}>Login</button>
+              <Link to="/login" className={`text-sm font-medium transition-colors ${scrolled ? 'text-brand-dark-grey hover:text-brand-black' : 'text-brand-white/50 hover:text-brand-white'}`}>Login</Link>
             ) : (
               <div className="flex items-center gap-6">
                 <Link to={auth.role === 'admin' ? '/admin' : '/account'} className={`text-sm font-medium cursor-pointer transition-colors ${scrolled ? 'text-brand-dark-grey hover:text-brand-black' : 'text-brand-white/50 hover:text-brand-white'}`}>
@@ -149,7 +149,7 @@ function Navbar() {
               <div className="pt-8 flex flex-col items-center space-y-4">
                 {!auth || auth === undefined ? (
                   <button 
-                    onClick={() => { setMobileMenuOpen(false); setAuthOpen(true); }} 
+                    onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} 
                     className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg"
                   >
                     Login
