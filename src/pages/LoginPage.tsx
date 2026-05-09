@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const next = searchParams.get('next') || '/account';
 
-  const { signIn } = useAuthFunctions();
+  const { signIn, signOut } = useAuthFunctions();
   const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
   const currentUser = useCurrentUserFromConvex();
   const isLoading = isAuthLoading || currentUser === undefined;
@@ -33,6 +33,15 @@ export default function LoginPage() {
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, isLoading, currentUser, navigate, next]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && currentUser === null) {
+      signOut().then(() => {
+        setError('Your account has been deleted or deactivated. Please sign up again.');
+        setLoading(false);
+      });
+    }
+  }, [isAuthenticated, isLoading, currentUser, signOut]);
 
   const validate = (): string | null => {
     if (!email.trim()) return 'Email is required.';
@@ -56,7 +65,7 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
-    navigate(next, { replace: true });
+    // DO NOT navigate immediately. Wait for currentUser to load so we don't hit race conditions or ghost users.
   };
 
   return (

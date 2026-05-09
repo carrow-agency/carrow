@@ -7,7 +7,14 @@ type Ctx = QueryCtx | MutationCtx;
 async function getUserFromCtx(ctx: Ctx): Promise<Doc<"users"> | null> {
   const userId = await getAuthUserId(ctx);
   if (!userId) return null;
-  return await ctx.db.get(userId as Id<"users">);
+  const user = await ctx.db.get(userId as Id<"users">);
+  if (!user) {
+    // If the user document was deleted but the auth account still exists,
+    // we should return null, but also maybe the client should handle it.
+    // For now, let's return null.
+    return null;
+  }
+  return user;
 }
 
 export async function requireAdmin(ctx: Ctx): Promise<boolean> {
