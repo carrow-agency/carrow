@@ -58,6 +58,7 @@ export function UploadZone({ targetUserId, onSuccess }: Props) {
         storageId,
         userId: targetUserId as any,
         fileLabel,
+        mimeType: file.type,
         name: file.name,
         size: file.size,
       });

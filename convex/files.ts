@@ -15,7 +15,8 @@ export const saveClientFile = mutation({
   args: {
     storageId: v.id("_storage"),
     userId: v.optional(v.id("users")),
-    fileLabel: v.optional(v.string()), // "Contract" | "Report" | "Media"
+    fileLabel: v.optional(v.string()),
+    mimeType: v.optional(v.string()),
     name: v.string(),
     size: v.optional(v.number()),
   },
@@ -34,10 +35,7 @@ export const saveClientFile = mutation({
         throw new Error("File too large. Maximum 20 MB allowed.");
       }
 
-      // Determine MIME type from the storage object
-      const storageMetadata = await ctx.storage.getMetadata(args.storageId);
-      const mimeType = storageMetadata?.contentType ?? "application/octet-stream";
-
+      const mimeType = args.mimeType ?? "application/octet-stream";
       const label = args.fileLabel ?? "Media";
 
       await ctx.db.insert("clientFiles", {
