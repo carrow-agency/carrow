@@ -126,12 +126,14 @@ export default defineSchema({
     }),
     topReels: v.array(v.object({
       thumbnailStorageId: v.optional(v.id("_storage")),
+      thumbnailUrl: v.optional(v.string()), // legacy field
       views: v.string(),
       date: v.string(),
       caption: v.optional(v.string()),
     })),
     topPosts: v.array(v.object({
       thumbnailStorageId: v.optional(v.id("_storage")),
+      thumbnailUrl: v.optional(v.string()), // legacy field
       viewsOrReach: v.string(),
       date: v.string(),
       caption: v.optional(v.string()),

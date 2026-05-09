@@ -2,6 +2,7 @@ import { useRef, useState, DragEvent } from "react";
 import { Upload, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "./Button";
 import { useGenerateUploadUrl, useSaveClientFile } from "../../../lib/useConvex";
+import { toWebP } from "../../../lib/toWebP";
 
 const FILE_LABELS = ["Contract", "Report", "Media"] as const;
 type FileLabel = (typeof FILE_LABELS)[number];
@@ -24,23 +25,28 @@ export function UploadZone({ targetUserId, onSuccess }: Props) {
   const generateUploadUrl = useGenerateUploadUrl();
   const saveClientFile = useSaveClientFile();
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (rawFile: File) => {
     setUploadState("uploading");
-    setProgress(10);
+    setProgress(5);
     setErrorMessage("");
 
     try {
+      // Convert images to WebP (except GIFs and videos)
+      const { blob, name, isConverted } = await toWebP(rawFile, 0.85);
+      const finalMime = isConverted ? "image/webp" : rawFile.type;
+      setProgress(15);
+
       const uploadUrl = await generateUploadUrl();
-      setProgress(30);
+      setProgress(25);
 
       const xhr = new XMLHttpRequest();
       xhr.open("POST", uploadUrl);
-      xhr.setRequestHeader("Content-Type", file.type);
+      xhr.setRequestHeader("Content-Type", finalMime);
 
       await new Promise<void>((resolve, reject) => {
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
-            setProgress(30 + Math.round((e.loaded / e.total) * 55));
+            setProgress(25 + Math.round((e.loaded / e.total) * 65));
           }
         };
         xhr.onload = () => {
@@ -48,19 +54,19 @@ export function UploadZone({ targetUserId, onSuccess }: Props) {
           else reject(new Error(`Upload failed: ${xhr.status}`));
         };
         xhr.onerror = () => reject(new Error("Network error during upload"));
-        xhr.send(file);
+        xhr.send(blob);
       });
 
-      setProgress(90);
+      setProgress(94);
       const { storageId } = JSON.parse(xhr.responseText);
 
       await saveClientFile({
         storageId,
         userId: targetUserId as any,
         fileLabel,
-        mimeType: file.type,
-        name: file.name,
-        size: file.size,
+        mimeType: finalMime,
+        name,
+        size: blob.size,
       });
 
       setProgress(100);
@@ -154,7 +160,9 @@ export function UploadZone({ targetUserId, onSuccess }: Props) {
               <p className="text-sm font-medium text-white">
                 Drop a file here or <span className="text-white underline underline-offset-2">browse</span>
               </p>
-              <p className="text-xs text-admin-muted mt-1">PDF, images, documents up to 20 MB</p>
+              <p className="text-xs text-admin-muted mt-1">
+                Images auto-convert to WebP · PDF, video, docs up to 20 MB
+              </p>
             </div>
           </>
         )}

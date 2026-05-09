@@ -4,6 +4,7 @@ import {
   X, ChevronRight, ChevronLeft, Check, Plus, Trash2, Upload, Loader2,
 } from "lucide-react";
 import { useCreateMonthlyReport, useGenerateUploadUrl } from "../../../lib/useConvex";
+import { toWebP } from "../../../lib/toWebP";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface MediaItem {
@@ -64,12 +65,15 @@ export function ReportBuilder({ clientId, clientName, onClose }: Props) {
   const [prev, setPrev] = useState({ views: "", reach: "", interactions: "" });
   const [ins, setIns] = useState({ performanceSummary: "", bestContentType: "", growthOpportunity: "" });
 
-  const uploadThumb = async (file: File) => {
+  const uploadThumb = async (rawFile: File) => {
+    const { blob, isConverted } = await toWebP(rawFile, 0.85);
+    const finalMime = isConverted ? "image/webp" : rawFile.type;
+
     const url = await generateUploadUrl();
-    const res = await fetch(url, { method: "POST", body: file, headers: { "Content-Type": file.type } });
+    const res = await fetch(url, { method: "POST", body: blob, headers: { "Content-Type": finalMime } });
     if (!res.ok) return null;
     const { storageId } = await res.json();
-    return { storageId, preview: URL.createObjectURL(file) };
+    return { storageId, preview: URL.createObjectURL(blob) };
   };
 
   const go = (delta: number) => {
