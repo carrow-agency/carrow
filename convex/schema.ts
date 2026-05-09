@@ -71,15 +71,19 @@ export default defineSchema({
     seoDescription: v.optional(v.string()),
   }),
 
+  // fileLabel: semantic category set by admin ("Contract" | "Report" | "Media")
+  // type: the actual MIME type of the file
   clientFiles: defineTable({
     userId: v.id("users"),
     storageId: v.id("_storage"),
-    type: v.string(),
+    type: v.string(),       // MIME type e.g. "application/pdf"
+    fileLabel: v.optional(v.string()), // "Contract" | "Report" | "Media"
     name: v.string(),
     size: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_type", ["type"]),
+    .index("by_type", ["type"])
+    .index("by_user_and_label", ["userId", "fileLabel"]),
 
   contracts: defineTable({
     title: v.string(),
@@ -121,13 +125,13 @@ export default defineSchema({
       saves: v.string(),
     }),
     topReels: v.array(v.object({
-      thumbnailUrl: v.string(),
+      thumbnailStorageId: v.optional(v.id("_storage")),
       views: v.string(),
       date: v.string(),
       caption: v.optional(v.string()),
     })),
     topPosts: v.array(v.object({
-      thumbnailUrl: v.string(),
+      thumbnailStorageId: v.optional(v.id("_storage")),
       viewsOrReach: v.string(),
       date: v.string(),
       caption: v.optional(v.string()),
@@ -143,7 +147,9 @@ export default defineSchema({
       interactions: v.string(),
     })),
     createdAt: v.string(),
-  }).index("by_clientId", ["clientId"]).index("by_clientId_and_monthYear", ["clientId", "monthYear"]),
+  })
+    .index("by_clientId", ["clientId"])
+    .index("by_clientId_and_monthYear", ["clientId", "monthYear"]),
 
   planRequests: defineTable({
     userId: v.id("users"),

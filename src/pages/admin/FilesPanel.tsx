@@ -1,316 +1,373 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import { PageHeader } from "./components/PageHeader";
 import { Button } from "./components/Button";
 import { StatsCard } from "./components/StatsCard";
-import { Select } from "./components/Input";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { useAllFiles, useGenerateUploadUrl, useSaveClientFile, useDeleteClientFile, useUsers, useMonthlyReportsByUser, useDeleteMonthlyReport } from "../../lib/useConvex";
-import { FileText, Image as ImageIcon, FileBarChart, Download, Trash2, Upload, FolderOpen, Plus } from "lucide-react";
+import { ClientFileCard } from "./components/ClientFileCard";
+import { UploadZone } from "./components/UploadZone";
 import { ReportBuilder } from "./components/ReportBuilder";
+import {
+  useAllFiles,
+  useClientFiles,
+  useUsers,
+  useMonthlyReportsByUser,
+  useDeleteMonthlyReport,
+} from "../../lib/useConvex";
+import {
+  FileText,
+  Image as ImageIcon,
+  BarChart2,
+  FolderOpen,
+  Search,
+  Plus,
+  Trash2,
+  ChevronRight,
+  File,
+} from "lucide-react";
 
-const TYPE_TABS = ["All", "Contract", "Report", "Monthly Analysis", "Media"] as const;
+// ─── constants ───────────────────────────────────────────────────────────────
+const FILE_TABS = ["All", "Contract", "Report", "Media", "Monthly Analysis"] as const;
+type FileTab = (typeof FILE_TABS)[number];
 
-const iconFor = (t: string) =>
-  t === "Contract" ? FileText : t === "Report" ? FileBarChart : ImageIcon;
-
-const formatSize = (b?: number) => {
-  if (!b) return "—";
-  if (b < 1024) return `${b} B`;
-  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-  return `${(b / 1024 / 1024).toFixed(1)} MB`;
+const TAB_LABELS: Record<FileTab, string> = {
+  "All": "All Files",
+  "Contract": "Contracts",
+  "Report": "Reports",
+  "Media": "Media",
+  "Monthly Analysis": "Monthly Analysis",
 };
 
-const formatDate = (s?: string | number) =>
-  s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+function formatDate(ts?: string | number) {
+  if (!ts) return "—";
+  return new Date(ts).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
 
+// ─── component ───────────────────────────────────────────────────────────────
 export default function FilesPanel() {
-  const [tab, setTab]               = useState<(typeof TYPE_TABS)[number]>("All");
-  const [uploading, setUploading]   = useState(false);
+  const [tab, setTab] = useState<FileTab>("All");
+  const [clientSearch, setClientSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; storageId: string; name: string } | null>(null);
-  const [deleting, setDeleting]     = useState(false);
-  const fileInputRef                = useRef<HTMLInputElement>(null);
+  const [showUpload, setShowUpload] = useState(false);
   const [showReportBuilder, setShowReportBuilder] = useState(false);
 
-  const files             = useAllFiles() ?? [];
-  const { users }         = useUsers() || { users: [] };
-  const generateUploadUrl = useGenerateUploadUrl();
-  const saveClientFile    = useSaveClientFile();
-  const deleteClientFile  = useDeleteClientFile();
-  const monthlyReports    = useMonthlyReportsByUser(selectedUserId);
+  // Data
+  const { users } = useUsers() || { users: [] };
+  const allFiles = useAllFiles() ?? [];
+  const clientFiles = useClientFiles(selectedUserId || undefined);
+  const monthlyReports = useMonthlyReportsByUser(selectedUserId || null);
   const deleteMonthlyReport = useDeleteMonthlyReport();
 
-  const filtered = useMemo(() => {
-    if (tab === "All") return files;
-    if (tab === "Media") return files.filter(f => f.type?.startsWith("image/") || f.type === "Media");
-    return files.filter(f => f.type === tab);
-  }, [files, tab]);
+  // Selected client info
+  const selectedUser = users?.find((u) => u.id === selectedUserId);
 
+  // Filtered + sorted clients
+  const filteredClients = useMemo(() => {
+    const q = clientSearch.toLowerCase();
+    return (users ?? [])
+      .filter((u) => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [users, clientSearch]);
+
+  // File counts per client for sidebar badges
+  const fileCountByUser = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const f of allFiles) {
+      map[f.userId as string] = (map[f.userId as string] ?? 0) + 1;
+    }
+    return map;
+  }, [allFiles]);
+
+  // Filtered files for current tab
+  const filteredFiles = useMemo(() => {
+    if (!clientFiles) return [];
+    if (tab === "All") return clientFiles;
+    if (tab === "Monthly Analysis") return [];
+    return clientFiles.filter((f) => {
+      const label = f.fileLabel ?? (f.type.startsWith("image/") ? "Media" : "Report");
+      return label === tab;
+    });
+  }, [clientFiles, tab]);
+
+  // Stats
   const stats = useMemo(() => ({
-    total:     files.length + (monthlyReports?.length || 0),
-    contracts: files.filter(f => f.type === "Contract").length,
-    reports:   files.filter(f => f.type === "Report").length,
-    monthlyAnalysis: monthlyReports?.length || 0,
-    media:     files.filter(f => f.type?.startsWith("image/") || f.type === "Media").length,
-  }), [files, monthlyReports]);
+    contracts:       (clientFiles ?? []).filter((f) => f.fileLabel === "Contract").length,
+    reports:         (clientFiles ?? []).filter((f) => f.fileLabel === "Report").length,
+    media:           (clientFiles ?? []).filter((f) => f.fileLabel === "Media" || f.type.startsWith("image/")).length,
+    monthlyAnalysis: monthlyReports?.length ?? 0,
+    total:           (clientFiles?.length ?? 0) + (monthlyReports?.length ?? 0),
+  }), [clientFiles, monthlyReports]);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!selectedUserId) {
-      alert("Please select a client before uploading.");
-      return;
-    }
-    setUploading(true);
-    try {
-      const uploadUrl = await generateUploadUrl();
-      const res = await fetch(uploadUrl, {
-        method: "POST", body: file,
-        headers: { "Content-Type": file.type },
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const { storageId } = await res.json();
-      const fileType = file.type.startsWith("image/") ? "Media"
-        : file.type === "application/pdf" ? "Contract"
-        : "Report";
-      await saveClientFile({
-        storageId,
-        userId: selectedUserId as any,
-        type: fileType,
-        name: file.name,
-        size: file.size,
-      });
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed. Please try again.");
-    }
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try { await deleteClientFile({ id: deleteTarget.id as any, storageId: deleteTarget.storageId as any }); }
-    catch (err) { console.error(err); alert("Delete failed."); }
-    setDeleting(false);
-    setDeleteTarget(null);
+  const handleDeleteReport = async (id: string) => {
+    if (!confirm("Delete this monthly analysis report? This cannot be undone.")) return;
+    await deleteMonthlyReport({ id: id as any });
   };
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
+    <div className="flex flex-col gap-6 h-full">
       <PageHeader
-        eyebrow="Storage"
+        eyebrow="Client Management"
         title="Files"
-        description="Documents, contracts and media shared across client engagements."
+        description="Upload, manage, and organize documents and reports for each client."
         actions={
           selectedUserId ? (
             tab === "Monthly Analysis" ? (
               <Button onClick={() => setShowReportBuilder(true)}>
                 <Plus size={14} />
-                Generate Analysis
+                Generate Report
               </Button>
             ) : (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx"
-                  onChange={handleUpload}
-                />
-                <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                  <Upload size={14} />
-                  {uploading ? "Uploading…" : "Upload file"}
-                </Button>
-              </>
+              <Button onClick={() => setShowUpload((v) => !v)}>
+                <Plus size={14} />
+                {showUpload ? "Hide Upload" : "Upload File"}
+              </Button>
             )
-          ) : null
+          ) : undefined
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-[600px]">
-        {/* Left Pane: Clients List */}
-        <div className="lg:col-span-1 border border-admin-border bg-admin-surface rounded-xl overflow-hidden flex flex-col h-full">
-          <div className="p-4 border-b border-admin-border bg-admin-surface2">
-            <h3 className="text-sm font-semibold text-white">Clients</h3>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {users?.map((u) => (
-              <button
-                key={u.id}
-                onClick={() => setSelectedUserId(u.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                  selectedUserId === u.id
-                    ? "bg-white/10 text-white"
-                    : "text-admin-muted hover:bg-white/5 hover:text-white"
-                }`}
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white uppercase">
-                  {u.name ? u.name.split(" ").map(p => p[0]).slice(0, 2).join("") : "?"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium leading-tight">{u.name || "Unknown"}</p>
-                  <p className="truncate text-xs text-white/40 mt-0.5">{u.email}</p>
-                </div>
-              </button>
-            ))}
-            {users?.length === 0 && (
-              <p className="text-center text-xs text-admin-muted py-8">No clients found</p>
-            )}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6 flex-1 min-h-0">
 
-        {/* Right Pane: Files Area */}
-        <div className="lg:col-span-3 flex flex-col space-y-6">
+        {/* ── Left: Client Sidebar ── */}
+        <aside className="flex flex-col rounded-xl border border-admin-border bg-admin-surface overflow-hidden">
+          {/* Search */}
+          <div className="p-3 border-b border-admin-border bg-admin-surface2">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-admin-border bg-admin-surface text-admin-muted focus-within:border-white/30 focus-within:text-white transition-colors">
+              <Search size={13} />
+              <input
+                type="text"
+                value={clientSearch}
+                onChange={(e) => setClientSearch(e.target.value)}
+                placeholder="Search clients…"
+                className="flex-1 bg-transparent text-xs text-white placeholder:text-admin-muted outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Client List */}
+          <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+            {filteredClients.length === 0 && (
+              <p className="text-center text-xs text-admin-muted py-10">No clients found</p>
+            )}
+            {filteredClients.map((u) => {
+              const count = fileCountByUser[u.id] ?? 0;
+              const isActive = selectedUserId === u.id;
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => { setSelectedUserId(u.id); setTab("All"); setShowUpload(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all group ${
+                    isActive
+                      ? "bg-white text-admin-bg"
+                      : "text-admin-muted hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold uppercase ${
+                    isActive ? "bg-admin-bg text-white" : "bg-white/10 text-white"
+                  }`}>
+                    {u.name ? u.name.split(" ").map((p) => p[0]).slice(0, 2).join("") : "?"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium leading-tight">{u.name || "Unknown"}</p>
+                    <p className={`truncate text-[11px] mt-0.5 ${isActive ? "text-admin-bg/60" : "text-white/40"}`}>
+                      {u.email}
+                    </p>
+                  </div>
+                  {count > 0 && (
+                    <span className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isActive ? "bg-admin-bg/20 text-admin-bg" : "bg-white/10 text-white/60"
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                  <ChevronRight size={12} className={`shrink-0 ${isActive ? "text-admin-bg/40" : "text-white/20"}`} />
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* ── Right: Files Area ── */}
+        <section className="flex flex-col gap-5 min-h-0">
           {!selectedUserId ? (
-            <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface flex items-center justify-center p-12 text-center">
-              <div>
-                <FolderOpen size={48} className="mx-auto text-white/10 mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">Select a Client</h3>
-                <p className="text-sm text-admin-muted">Choose a client from the sidebar to view and upload their files.</p>
+            <div className="flex-1 flex items-center justify-center rounded-xl border border-admin-border bg-admin-surface">
+              <div className="text-center space-y-3">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-admin-border bg-admin-surface2 text-white/10">
+                  <FolderOpen size={28} />
+                </div>
+                <p className="text-sm font-medium text-white">Select a client</p>
+                <p className="text-xs text-admin-muted">Choose a client from the sidebar to manage their files.</p>
               </div>
             </div>
           ) : (
             <>
               {/* Stats */}
-              <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
-                <StatsCard label="Total files" value={String(stats.total)}     icon={<FolderOpen size={15}/>}   iconColor="text-white/30" />
-                <StatsCard label="Contracts"   value={String(stats.contracts)} icon={<FileText size={15}/>}     iconColor="text-blue-400" />
-                <StatsCard label="Reports"     value={String(stats.reports)}   icon={<FileBarChart size={15}/>} iconColor="text-green-400" />
-                <StatsCard label="Analysis"    value={String(stats.monthlyAnalysis)} icon={<FileBarChart size={15}/>} iconColor="text-emerald-400" />
-                <StatsCard label="Media"       value={String(stats.media)}     icon={<ImageIcon size={15}/>}    iconColor="text-purple-400" />
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
+                <StatsCard label="Total" value={String(stats.total)} icon={<FolderOpen size={14} />} iconColor="text-white/30" />
+                <StatsCard label="Contracts" value={String(stats.contracts)} icon={<FileText size={14} />} iconColor="text-blue-400" />
+                <StatsCard label="Reports" value={String(stats.reports)} icon={<BarChart2 size={14} />} iconColor="text-green-400" />
+                <StatsCard label="Media" value={String(stats.media)} icon={<ImageIcon size={14} />} iconColor="text-purple-400" />
+                <StatsCard label="Analysis" value={String(stats.monthlyAnalysis)} icon={<BarChart2 size={14} />} iconColor="text-emerald-400" />
               </div>
 
-              {/* Type tabs */}
-              <div className="flex items-center gap-2">
-                {TYPE_TABS.map(t => (
+              {/* Upload Zone (collapsible) */}
+              {showUpload && tab !== "Monthly Analysis" && (
+                <div className="rounded-xl border border-admin-border bg-admin-surface p-5">
+                  <h3 className="text-xs font-semibold text-admin-muted uppercase tracking-wider mb-4">
+                    Upload for {selectedUser?.name || "Client"}
+                  </h3>
+                  <UploadZone
+                    targetUserId={selectedUserId}
+                    onSuccess={() => setShowUpload(false)}
+                  />
+                </div>
+              )}
+
+              {/* Tabs */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {FILE_TABS.map((t) => (
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className={`rounded-lg border px-3.5 py-1.5 text-xs font-medium transition-all ${
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
                       tab === t
                         ? "border-white bg-white text-admin-bg"
                         : "border-admin-border bg-admin-surface text-admin-muted hover:text-white hover:border-white/20"
                     }`}
                   >
-                    {t === "All" ? "All files" : `${t}s`}
+                    {TAB_LABELS[t]}
                   </button>
                 ))}
               </div>
 
-              {/* File grid */}
-              {tab === "Monthly Analysis" ? (
-                monthlyReports?.length === 0 ? (
-                  <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface p-12 text-center flex flex-col justify-center">
-                    <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
-                    <p className="text-sm text-admin-muted">No monthly analysis generated for this client yet.</p>
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+
+                {/* Monthly Analysis Tab */}
+                {tab === "Monthly Analysis" && (
+                  <div>
+                    {monthlyReports === undefined ? (
+                      <div className="flex items-center justify-center py-16">
+                        <div className="h-5 w-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                      </div>
+                    ) : monthlyReports.length === 0 ? (
+                      <EmptyState
+                        icon={<BarChart2 size={24} />}
+                        title="No analysis reports yet"
+                        description={`Generate the first report for ${selectedUser?.name || "this client"}.`}
+                        action={
+                          <Button size="sm" onClick={() => setShowReportBuilder(true)}>
+                            <Plus size={13} /> Generate Report
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {monthlyReports.map((report) => (
+                          <MonthlyReportCard
+                            key={report._id}
+                            report={report}
+                            onDelete={() => handleDeleteReport(report._id)}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {monthlyReports?.map(report => (
-                      <article
-                        key={report._id}
-                        className="flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface p-4 hover:border-white/20 transition-colors"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2 text-admin-muted">
-                          <FolderOpen size={16} className="text-emerald-400" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-white">{report.monthYear}</p>
-                          <p className="text-xs text-admin-muted mt-0.5">
-                            Monthly Analysis · {formatDate(report._creationTime)}
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-1 shrink-0">
-                          <button
-                            onClick={async () => {
-                              if (confirm("Delete this monthly analysis report?")) {
-                                await deleteMonthlyReport({ id: report._id });
-                              }
-                            }}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-admin-danger/10 hover:text-admin-danger transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </section>
-                )
-              ) : (
-                filtered.filter(f => f.userId === selectedUserId).length === 0 ? (
-                  <div className="flex-1 rounded-xl border border-admin-border bg-admin-surface p-12 text-center flex flex-col justify-center">
-                    <FolderOpen size={28} className="mx-auto text-admin-muted mb-3" />
-                    <p className="text-sm text-admin-muted">No files uploaded for this client in this category.</p>
+                )}
+
+                {/* File Tabs */}
+                {tab !== "Monthly Analysis" && (
+                  <div>
+                    {clientFiles === null ? (
+                      <div className="flex items-center justify-center py-16">
+                        <div className="h-5 w-5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                      </div>
+                    ) : filteredFiles.length === 0 ? (
+                      <EmptyState
+                        icon={<File size={24} />}
+                        title={`No ${TAB_LABELS[tab].toLowerCase()} for this client`}
+                        description="Upload a file using the button above."
+                        action={
+                          <Button size="sm" onClick={() => setShowUpload(true)}>
+                            <Plus size={13} /> Upload File
+                          </Button>
+                        }
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        {filteredFiles.map((f) => (
+                          <ClientFileCard key={f._id} file={f as any} />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {filtered.filter(f => f.userId === selectedUserId).map(f => {
-                      const Icon = iconFor(f.type);
-                      return (
-                        <article
-                          key={f._id}
-                          className="flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface p-4 hover:border-white/20 transition-colors"
-                        >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2 text-admin-muted">
-                            <Icon size={16} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-white">{f.name}</p>
-                            <p className="text-xs text-admin-muted mt-0.5">
-                              {f.type} · {formatSize(f.size)} · {formatDate(f._creationTime)}
-                            </p>
-                          </div>
-                          <div className="flex flex-col gap-1 shrink-0">
-                            {f.url && (
-                              <a
-                                href={f.url}
-                                download={f.name}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors"
-                                title="Download"
-                              >
-                                <Download size={13} />
-                              </a>
-                            )}
-                            <button
-                              onClick={() => setDeleteTarget({ id: f._id, storageId: f.storageId, name: f.name })}
-                              className="flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-admin-danger/10 hover:text-admin-danger transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </section>
-                )
-              )}
+                )}
+
+              </div>
             </>
           )}
-        </div>
+        </section>
       </div>
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        loading={deleting}
-        title={`Delete "${deleteTarget?.name}"?`}
-        description="This file will be permanently deleted from storage and cannot be recovered."
-        confirmLabel="Delete File"
-      />
-
+      {/* Report Builder Drawer */}
       {showReportBuilder && selectedUserId && (
         <ReportBuilder
           clientId={selectedUserId}
+          clientName={selectedUser?.name}
           onClose={() => setShowReportBuilder(false)}
         />
       )}
+    </div>
+  );
+}
+
+// ─── sub-components ──────────────────────────────────────────────────────────
+function EmptyState({
+  icon, title, description, action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-admin-border bg-admin-surface gap-4">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-admin-border bg-admin-surface2 text-admin-muted">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-white">{title}</p>
+        <p className="text-xs text-admin-muted mt-1">{description}</p>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function MonthlyReportCard({
+  report,
+  onDelete,
+}: {
+  report: { _id: string; monthYear: string; _creationTime: number };
+  onDelete: () => void;
+}) {
+  return (
+    <div className="group flex items-center gap-4 rounded-xl border border-admin-border bg-admin-surface px-4 py-3 hover:border-white/20 transition-all">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-admin-border bg-admin-surface2">
+        <FolderOpen size={18} className="text-emerald-400" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-white leading-tight">{report.monthYear}</p>
+        <p className="text-[11px] text-admin-muted mt-0.5">Monthly Analysis · {formatDate(report._creationTime)}</p>
+      </div>
+      <button
+        onClick={onDelete}
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-admin-muted hover:bg-red-500/10 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+        title="Delete"
+      >
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }

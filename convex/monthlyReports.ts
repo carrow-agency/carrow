@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { getCurrentUser } from "./access";
 
 export const createReport = mutation({
   args: {
@@ -25,13 +25,13 @@ export const createReport = mutation({
       saves: v.string(),
     }),
     topReels: v.array(v.object({
-      thumbnailUrl: v.string(),
+      thumbnailStorageId: v.optional(v.id("_storage")),
       views: v.string(),
       date: v.string(),
       caption: v.optional(v.string()),
     })),
     topPosts: v.array(v.object({
-      thumbnailUrl: v.string(),
+      thumbnailStorageId: v.optional(v.id("_storage")),
       viewsOrReach: v.string(),
       date: v.string(),
       caption: v.optional(v.string()),
@@ -48,11 +48,21 @@ export const createReport = mutation({
     })),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Unauthorized");
-    
-    const user = await ctx.db.get(userId);
-    if (user?.role !== "admin") throw new Error("Only admins can create reports");
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser) throw new Error("Unauthorized");
+    if (currentUser.role !== "admin") throw new Error("Only admins can create reports");
+
+    // Prevent duplicate month/year for the same client
+    const existing = await ctx.db
+      .query("monthlyReports")
+      .withIndex("by_clientId_and_monthYear", (q) =>
+        q.eq("clientId", args.clientId).eq("monthYear", args.monthYear)
+      )
+      .first();
+
+    if (existing) {
+      throw new Error(`A report for ${args.monthYear} already exists for this client. Delete the existing one first.`);
+    }
 
     return await ctx.db.insert("monthlyReports", {
       ...args,
@@ -66,20 +76,44 @@ export const getReportsByUser = query({
     clientId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return [];
-    
-    const user = await ctx.db.get(userId);
-    // Allow users to see their own reports, or admins to see anyone's reports
-    if (user?.role !== "admin" && userId !== args.clientId) {
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser) return [];
+
+    // Users can only see their own reports; admins see anyone's
+    if (currentUser.role !== "admin" && currentUser._id !== args.clientId) {
       throw new Error("Unauthorized");
     }
 
-    return await ctx.db
+    const reports = await ctx.db
       .query("monthlyReports")
       .withIndex("by_clientId", (q) => q.eq("clientId", args.clientId))
       .order("desc")
       .collect();
+
+    // Resolve thumbnail URLs from storage
+    const reportsWithUrls = await Promise.all(
+      reports.map(async (report) => {
+        const topReels = await Promise.all(
+          report.topReels.map(async (reel) => ({
+            ...reel,
+            thumbnailUrl: reel.thumbnailStorageId
+              ? await ctx.storage.getUrl(reel.thumbnailStorageId)
+              : null,
+          }))
+        );
+        const topPosts = await Promise.all(
+          report.topPosts.map(async (post) => ({
+            ...post,
+            thumbnailUrl: post.thumbnailStorageId
+              ? await ctx.storage.getUrl(post.thumbnailStorageId)
+              : null,
+          }))
+        );
+        return { ...report, topReels, topPosts };
+      })
+    );
+
+    return reportsWithUrls;
   },
 });
 
@@ -88,11 +122,24 @@ export const deleteReport = mutation({
     id: v.id("monthlyReports"),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Unauthorized");
-    
-    const user = await ctx.db.get(userId);
-    if (user?.role !== "admin") throw new Error("Only admins can delete reports");
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser) throw new Error("Unauthorized");
+    if (currentUser.role !== "admin") throw new Error("Only admins can delete reports");
+
+    // Also delete storage files for thumbnails
+    const report = await ctx.db.get(args.id);
+    if (report) {
+      for (const reel of report.topReels) {
+        if (reel.thumbnailStorageId) {
+          try { await ctx.storage.delete(reel.thumbnailStorageId); } catch {}
+        }
+      }
+      for (const post of report.topPosts) {
+        if (post.thumbnailStorageId) {
+          try { await ctx.storage.delete(post.thumbnailStorageId); } catch {}
+        }
+      }
+    }
 
     await ctx.db.delete(args.id);
   },

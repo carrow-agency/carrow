@@ -1,19 +1,53 @@
-import { useState } from "react";
-import { X, Plus, Trash2, Upload, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { X, Plus, Trash2, Upload, Loader2, CheckCircle, ChevronRight } from "lucide-react";
 import { Button } from "./Button";
 import { useCreateMonthlyReport, useGenerateUploadUrl } from "../../../lib/useConvex";
 
-type Props = {
+// ─── types ────────────────────────────────────────────────────────────────────
+interface ReelEntry {
+  thumbnailStorageId: string | null;
+  thumbnailPreview: string | null;
+  views: string;
+  date: string;
+  caption: string;
+}
+
+interface PostEntry {
+  thumbnailStorageId: string | null;
+  thumbnailPreview: string | null;
+  viewsOrReach: string;
+  date: string;
+  caption: string;
+}
+
+interface Props {
   clientId: string;
+  clientName?: string;
   onClose: () => void;
-};
+}
 
-export function ReportBuilder({ clientId, onClose }: Props) {
-  const createReport = useCreateMonthlyReport();
+// ─── helpers ──────────────────────────────────────────────────────────────────
+const SECTIONS = ["Info", "KPIs", "Engagement", "Content", "Insights"] as const;
+type Section = (typeof SECTIONS)[number];
+
+const inputCls =
+  "w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors";
+
+const labelCls = "block text-xs font-semibold text-admin-muted uppercase tracking-wider mb-1.5";
+
+// ─── component ────────────────────────────────────────────────────────────────
+export function ReportBuilder({ clientId, clientName, onClose }: Props) {
+  const createReport   = useCreateMonthlyReport();
   const generateUploadUrl = useGenerateUploadUrl();
-  const [loading, setLoading] = useState(false);
 
+  const [activeSection, setActiveSection] = useState<Section>("Info");
+  const [saving, setSaving] = useState(false);
+  const [error, setError]   = useState("");
+
+  // ── Section: Info ──
   const [monthYear, setMonthYear] = useState("");
+
+  // ── Section: KPIs ──
   const [kpiCards, setKpiCards] = useState({
     totalViews: "",
     accountsReached: "",
@@ -21,341 +55,509 @@ export function ReportBuilder({ clientId, onClose }: Props) {
     profileVisits: "",
     totalContentPosted: "",
   });
-  const [contentType, setContentType] = useState({
-    reels: 0,
-    stories: 0,
-    posts: 0,
-  });
+
+  // ── Section: Engagement ──
   const [engagement, setEngagement] = useState({
     likes: "",
     comments: "",
     shares: "",
     saves: "",
   });
-  const [strategicInsights, setStrategicInsights] = useState({
+
+  // ── Section: Content ──
+  const [contentType, setContentType] = useState({ reels: 0, stories: 0, posts: 0 });
+  const [topReels, setTopReels] = useState<ReelEntry[]>([
+    { thumbnailStorageId: null, thumbnailPreview: null, views: "", date: "", caption: "" },
+  ]);
+  const [topPosts, setTopPosts] = useState<PostEntry[]>([
+    { thumbnailStorageId: null, thumbnailPreview: null, viewsOrReach: "", date: "", caption: "" },
+  ]);
+
+  // ── Section: Insights ──
+  const [insights, setInsights] = useState({
     performanceSummary: "",
     bestContentType: "",
     growthOpportunity: "",
   });
-  
-  const [topReels, setTopReels] = useState([{ thumbnailUrl: "", views: "", date: "", caption: "" }]);
-  const [topPosts, setTopPosts] = useState([{ thumbnailUrl: "", viewsOrReach: "", date: "", caption: "" }]);
-
   const [hasPrevMonth, setHasPrevMonth] = useState(false);
-  const [previousMonth, setPreviousMonth] = useState({ views: "", reach: "", interactions: "" });
+  const [prevMonth, setPrevMonth] = useState({ views: "", reach: "", interactions: "" });
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number, type: 'reel' | 'post') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // ── Upload thumbnail to Convex storage ──────────────────────────────────────
+  const uploadThumbnail = async (file: File): Promise<{ storageId: string; preview: string } | null> => {
     try {
-      // Create a temporary object URL for immediate preview
-      const tempUrl = URL.createObjectURL(file);
-      
-      // We simulate upload for now - in reality you would upload to storage and get a public URL
-      // Since `monthlyReports` schema takes a string URL, we should upload to Convex storage and get the url.
-      // Wait, we need an endpoint to get public URL. For now, let's use Data URL or require external URL.
-      // Using Data URL for simplicity if it's small, or just a text input for URL to avoid huge documents.
-      // Let's read as Data URL.
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64data = reader.result as string;
-        if (type === 'reel') {
-          const newReels = [...topReels];
-          newReels[index].thumbnailUrl = base64data;
-          setTopReels(newReels);
-        } else {
-          const newPosts = [...topPosts];
-          newPosts[index].thumbnailUrl = base64data;
-          setTopPosts(newPosts);
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      console.error("Failed to process image", err);
+      const uploadUrl = await generateUploadUrl();
+      const res = await fetch(uploadUrl, {
+        method: "POST",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const { storageId } = await res.json();
+      const preview = URL.createObjectURL(file);
+      return { storageId, preview };
+    } catch {
+      return null;
     }
   };
 
+  const handleReelThumb = async (e: React.ChangeEvent<HTMLInputElement>, i: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const result = await uploadThumbnail(file);
+    if (result) {
+      setTopReels((prev) => {
+        const n = [...prev];
+        n[i] = { ...n[i], thumbnailStorageId: result.storageId, thumbnailPreview: result.preview };
+        return n;
+      });
+    }
+  };
+
+  const handlePostThumb = async (e: React.ChangeEvent<HTMLInputElement>, i: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const result = await uploadThumbnail(file);
+    if (result) {
+      setTopPosts((prev) => {
+        const n = [...prev];
+        n[i] = { ...n[i], thumbnailStorageId: result.storageId, thumbnailPreview: result.preview };
+        return n;
+      });
+    }
+  };
+
+  // ── Save ───────────────────────────────────────────────────────────────────
   const handleSave = async () => {
-    if (!monthYear) {
-      alert("Month/Year is required");
+    setError("");
+    if (!monthYear.trim()) {
+      setError("Month & Year is required (e.g. Jan-26).");
+      setActiveSection("Info");
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     try {
       await createReport({
         clientId: clientId as any,
-        monthYear,
+        monthYear: monthYear.trim(),
         kpiCards,
         contentType,
         engagement,
-        topReels,
-        topPosts,
-        strategicInsights,
-        previousMonth: hasPrevMonth ? previousMonth : undefined,
+        topReels: topReels.map(({ thumbnailStorageId, views, date, caption }) => ({
+          thumbnailStorageId: thumbnailStorageId as any ?? undefined,
+          views,
+          date,
+          caption: caption || undefined,
+        })),
+        topPosts: topPosts.map(({ thumbnailStorageId, viewsOrReach, date, caption }) => ({
+          thumbnailStorageId: thumbnailStorageId as any ?? undefined,
+          viewsOrReach,
+          date,
+          caption: caption || undefined,
+        })),
+        strategicInsights: insights,
+        previousMonth: hasPrevMonth ? prevMonth : undefined,
       });
       onClose();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to save report.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save report.");
+      setSaving(false);
     }
   };
 
+  const sectionIndex = SECTIONS.indexOf(activeSection);
+  const isLast = sectionIndex === SECTIONS.length - 1;
+
+  const goNext = () => {
+    if (!isLast) setActiveSection(SECTIONS[sectionIndex + 1]);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-3xl bg-admin-surface border-l border-admin-border h-full flex flex-col shadow-2xl animate-in slide-in-from-right-full">
-        <div className="flex items-center justify-between p-6 border-b border-admin-border bg-admin-surface2">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
+      <div className="flex flex-col w-full max-w-2xl bg-admin-sidebar border-l border-admin-border h-full shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-admin-border bg-admin-surface2 shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-white">Generate Monthly Analysis</h2>
-            <p className="text-sm text-admin-muted mt-1">Create a powerful performance report.</p>
+            <p className="text-[11px] font-semibold text-admin-muted uppercase tracking-widest">Monthly Analysis</p>
+            <h2 className="text-lg font-bold text-white mt-0.5">
+              {clientName ? `Report for ${clientName}` : "Generate Report"}
+            </h2>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors">
-            <X size={20} />
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-admin-muted hover:bg-white/5 hover:text-white transition-colors"
+          >
+            <X size={16} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
-          {/* Header Info */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Report Info</h3>
-            <div>
-              <label className="block text-xs font-medium text-admin-muted mb-1.5">Month & Year (e.g., Jan-26)</label>
-              <input 
-                type="text" 
-                value={monthYear}
-                onChange={e => setMonthYear(e.target.value)}
-                className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-white/30 transition-colors" 
-                placeholder="Jan-26" 
-              />
-            </div>
+        {/* Section Nav */}
+        <div className="flex items-center gap-0 border-b border-admin-border bg-admin-surface2 px-6 shrink-0 overflow-x-auto">
+          {SECTIONS.map((s, i) => (
+            <button
+              key={s}
+              onClick={() => setActiveSection(s)}
+              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
+                activeSection === s
+                  ? "border-white text-white"
+                  : "border-transparent text-admin-muted hover:text-white"
+              }`}
+            >
+              <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${
+                activeSection === s ? "bg-white text-admin-bg" : "bg-white/10 text-white/50"
+              }`}>
+                {i + 1}
+              </span>
+              {s}
+            </button>
+          ))}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mx-6 mt-4 px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400 shrink-0">
+            {error}
           </div>
+        )}
 
-          <hr className="border-admin-border" />
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-          {/* KPI Cards */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">KPI Cards</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.keys(kpiCards).map((k) => (
-                <div key={k}>
-                  <label className="block text-xs font-medium text-admin-muted mb-1.5 capitalize">{k.replace(/([A-Z])/g, ' $1').trim()}</label>
-                  <input 
-                    type="text" 
-                    value={kpiCards[k as keyof typeof kpiCards]}
-                    onChange={e => setKpiCards({ ...kpiCards, [k]: e.target.value })}
-                    className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
-                    placeholder="e.g. 1.2M" 
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-admin-border" />
-
-          {/* Content Type & Engagement */}
-          <div className="grid md:grid-cols-2 gap-8">
+          {/* ── Info ─────────────────────────────────────────────────────── */}
+          {activeSection === "Info" && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Content Type (%)</h3>
-              {Object.keys(contentType).map((k) => (
-                <div key={k} className="flex items-center gap-3">
-                  <label className="w-16 text-xs font-medium text-admin-muted capitalize">{k}</label>
-                  <input 
-                    type="number" 
-                    value={contentType[k as keyof typeof contentType]}
-                    onChange={e => setContentType({ ...contentType, [k]: parseInt(e.target.value) || 0 })}
-                    className="flex-1 bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
-                  />
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Engagement</h3>
-              {Object.keys(engagement).map((k) => (
-                <div key={k} className="flex items-center gap-3">
-                  <label className="w-20 text-xs font-medium text-admin-muted capitalize">{k}</label>
-                  <input 
-                    type="text" 
-                    value={engagement[k as keyof typeof engagement]}
-                    onChange={e => setEngagement({ ...engagement, [k]: e.target.value })}
-                    className="flex-1 bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
-                    placeholder="e.g. 45K"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-admin-border" />
-
-          {/* Top Reels */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Top Reels</h3>
-              <Button size="sm" variant="outline" onClick={() => setTopReels([...topReels, { thumbnailUrl: "", views: "", date: "", caption: "" }])}>
-                <Plus size={14} /> Add Reel
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              {topReels.map((reel, i) => (
-                <div key={i} className="p-4 border border-admin-border rounded-xl bg-admin-surface2 flex gap-4">
-                  <div className="w-24 h-32 rounded-lg bg-admin-surface border border-admin-border shrink-0 overflow-hidden flex items-center justify-center relative group">
-                    {reel.thumbnailUrl ? (
-                      <img src={reel.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
-                    ) : (
-                      <Upload size={20} className="text-admin-muted" />
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={(e) => handleImageUpload(e, i, 'reel')}
-                      className="absolute inset-0 opacity-0 cursor-pointer" 
-                    />
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    <div className="flex gap-3">
-                      <input type="text" placeholder="Views (e.g. 1.5M)" value={reel.views} onChange={e => {
-                        const newReels = [...topReels]; newReels[i].views = e.target.value; setTopReels(newReels);
-                      }} className="flex-1 bg-admin-surface border border-admin-border rounded-lg px-3 py-1.5 text-sm text-white" />
-                      <input type="text" placeholder="Date (e.g. Jan 12)" value={reel.date} onChange={e => {
-                        const newReels = [...topReels]; newReels[i].date = e.target.value; setTopReels(newReels);
-                      }} className="w-1/3 bg-admin-surface border border-admin-border rounded-lg px-3 py-1.5 text-sm text-white" />
-                    </div>
-                    <input type="text" placeholder="Caption (optional)" value={reel.caption} onChange={e => {
-                      const newReels = [...topReels]; newReels[i].caption = e.target.value; setTopReels(newReels);
-                    }} className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-1.5 text-sm text-white" />
-                  </div>
-                  <button onClick={() => setTopReels(topReels.filter((_, idx) => idx !== i))} className="text-admin-muted hover:text-admin-danger shrink-0 h-fit p-1">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-admin-border" />
-
-          {/* Top Posts */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Top Posts</h3>
-              <Button size="sm" variant="outline" onClick={() => setTopPosts([...topPosts, { thumbnailUrl: "", viewsOrReach: "", date: "", caption: "" }])}>
-                <Plus size={14} /> Add Post
-              </Button>
-            </div>
-            
-            <div className="space-y-4">
-              {topPosts.map((post, i) => (
-                <div key={i} className="p-4 border border-admin-border rounded-xl bg-admin-surface2 flex gap-4">
-                  <div className="w-24 h-24 rounded-lg bg-admin-surface border border-admin-border shrink-0 overflow-hidden flex items-center justify-center relative group">
-                    {post.thumbnailUrl ? (
-                      <img src={post.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
-                    ) : (
-                      <Upload size={20} className="text-admin-muted" />
-                    )}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      onChange={(e) => handleImageUpload(e, i, 'post')}
-                      className="absolute inset-0 opacity-0 cursor-pointer" 
-                    />
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    <div className="flex gap-3">
-                      <input type="text" placeholder="Views/Reach" value={post.viewsOrReach} onChange={e => {
-                        const newPosts = [...topPosts]; newPosts[i].viewsOrReach = e.target.value; setTopPosts(newPosts);
-                      }} className="flex-1 bg-admin-surface border border-admin-border rounded-lg px-3 py-1.5 text-sm text-white" />
-                      <input type="text" placeholder="Date" value={post.date} onChange={e => {
-                        const newPosts = [...topPosts]; newPosts[i].date = e.target.value; setTopPosts(newPosts);
-                      }} className="w-1/3 bg-admin-surface border border-admin-border rounded-lg px-3 py-1.5 text-sm text-white" />
-                    </div>
-                    <input type="text" placeholder="Caption (optional)" value={post.caption} onChange={e => {
-                      const newPosts = [...topPosts]; newPosts[i].caption = e.target.value; setTopPosts(newPosts);
-                    }} className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-1.5 text-sm text-white" />
-                  </div>
-                  <button onClick={() => setTopPosts(topPosts.filter((_, idx) => idx !== i))} className="text-admin-muted hover:text-admin-danger shrink-0 h-fit p-1">
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-admin-border" />
-
-          {/* Strategic Insights */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Strategic Insights</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-admin-muted mb-1.5">Performance Summary</label>
-                <textarea 
-                  value={strategicInsights.performanceSummary}
-                  onChange={e => setStrategicInsights({ ...strategicInsights, performanceSummary: e.target.value })}
-                  rows={3} 
-                  className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
+              <SectionTitle>Report Period</SectionTitle>
+              <Field label="Month & Year">
+                <input
+                  type="text"
+                  value={monthYear}
+                  onChange={(e) => setMonthYear(e.target.value)}
+                  className={inputCls}
+                  placeholder="e.g. Jan-26"
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-admin-muted mb-1.5">Best Content Type</label>
-                <input 
-                  type="text" 
-                  value={strategicInsights.bestContentType}
-                  onChange={e => setStrategicInsights({ ...strategicInsights, bestContentType: e.target.value })}
-                  className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-admin-muted mb-1.5">Growth Opportunity</label>
-                <textarea 
-                  value={strategicInsights.growthOpportunity}
-                  onChange={e => setStrategicInsights({ ...strategicInsights, growthOpportunity: e.target.value })}
-                  rows={3} 
-                  className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
-                />
-              </div>
+                <p className="text-xs text-admin-muted mt-1">
+                  This label is shown to the client as the report folder name.
+                </p>
+              </Field>
             </div>
-          </div>
+          )}
 
-          <hr className="border-admin-border" />
-
-          {/* Previous Month (Optional) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Previous Month (Optional)</h3>
-              <input type="checkbox" checked={hasPrevMonth} onChange={e => setHasPrevMonth(e.target.checked)} className="rounded bg-admin-surface border-admin-border" />
-            </div>
-            
-            {hasPrevMonth && (
-              <div className="grid grid-cols-3 gap-4">
-                {Object.keys(previousMonth).map((k) => (
-                  <div key={k}>
-                    <label className="block text-xs font-medium text-admin-muted mb-1.5 capitalize">{k}</label>
-                    <input 
-                      type="text" 
-                      value={previousMonth[k as keyof typeof previousMonth]}
-                      onChange={e => setPreviousMonth({ ...previousMonth, [k]: e.target.value })}
-                      className="w-full bg-admin-surface border border-admin-border rounded-lg px-3 py-2 text-sm text-white" 
+          {/* ── KPIs ─────────────────────────────────────────────────────── */}
+          {activeSection === "KPIs" && (
+            <div className="space-y-4">
+              <SectionTitle>Key Performance Indicators</SectionTitle>
+              <div className="grid grid-cols-2 gap-4">
+                {(Object.keys(kpiCards) as (keyof typeof kpiCards)[]).map((k) => (
+                  <Field key={k} label={humanize(k)}>
+                    <input
+                      type="text"
+                      value={kpiCards[k]}
+                      onChange={(e) => setKpiCards({ ...kpiCards, [k]: e.target.value })}
+                      className={inputCls}
+                      placeholder="e.g. 1.2M"
                     />
-                  </div>
+                  </Field>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Engagement ───────────────────────────────────────────────── */}
+          {activeSection === "Engagement" && (
+            <div className="space-y-6">
+              <div>
+                <SectionTitle>Engagement Metrics</SectionTitle>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  {(Object.keys(engagement) as (keyof typeof engagement)[]).map((k) => (
+                    <Field key={k} label={humanize(k)}>
+                      <input
+                        type="text"
+                        value={engagement[k]}
+                        onChange={(e) => setEngagement({ ...engagement, [k]: e.target.value })}
+                        className={inputCls}
+                        placeholder="e.g. 45.2K"
+                      />
+                    </Field>
+                  ))}
+                </div>
+              </div>
+
+              <Divider />
+
+              <div>
+                <SectionTitle>Previous Month (optional)</SectionTitle>
+                <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
+                  <div
+                    onClick={() => setHasPrevMonth(!hasPrevMonth)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${hasPrevMonth ? "bg-white" : "bg-white/20"}`}
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-admin-bg transition-all ${hasPrevMonth ? "left-5" : "left-0.5"}`} />
+                  </div>
+                  <span className="text-sm text-admin-muted">Include comparison data</span>
+                </label>
+
+                {hasPrevMonth && (
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    {(Object.keys(prevMonth) as (keyof typeof prevMonth)[]).map((k) => (
+                      <Field key={k} label={humanize(k)}>
+                        <input
+                          type="text"
+                          value={prevMonth[k]}
+                          onChange={(e) => setPrevMonth({ ...prevMonth, [k]: e.target.value })}
+                          className={inputCls}
+                          placeholder="e.g. 800K"
+                        />
+                      </Field>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── Content ──────────────────────────────────────────────────── */}
+          {activeSection === "Content" && (
+            <div className="space-y-8">
+              {/* Content Type Breakdown */}
+              <div>
+                <SectionTitle>Content Type Breakdown (%)</SectionTitle>
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  {(Object.keys(contentType) as (keyof typeof contentType)[]).map((k) => (
+                    <Field key={k} label={humanize(k)}>
+                      <input
+                        type="number"
+                        min={0} max={100}
+                        value={contentType[k]}
+                        onChange={(e) => setContentType({ ...contentType, [k]: Number(e.target.value) })}
+                        className={inputCls}
+                        placeholder="0"
+                      />
+                    </Field>
+                  ))}
+                </div>
+              </div>
+
+              <Divider />
+
+              {/* Top Reels */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <SectionTitle>Top Reels</SectionTitle>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setTopReels((p) => [...p, { thumbnailStorageId: null, thumbnailPreview: null, views: "", date: "", caption: "" }])}
+                  >
+                    <Plus size={13} /> Add Reel
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {topReels.map((reel, i) => (
+                    <MediaEntryRow
+                      key={i}
+                      type="reel"
+                      preview={reel.thumbnailPreview}
+                      onThumbChange={(e) => handleReelThumb(e, i)}
+                      fields={[
+                        { label: "Views", value: reel.views, placeholder: "e.g. 1.5M", onChange: (v) => setTopReels((p) => { const n = [...p]; n[i] = { ...n[i], views: v }; return n; }) },
+                        { label: "Date", value: reel.date, placeholder: "e.g. Jan 12", onChange: (v) => setTopReels((p) => { const n = [...p]; n[i] = { ...n[i], date: v }; return n; }) },
+                        { label: "Caption", value: reel.caption, placeholder: "Optional", onChange: (v) => setTopReels((p) => { const n = [...p]; n[i] = { ...n[i], caption: v }; return n; }) },
+                      ]}
+                      onRemove={topReels.length > 1 ? () => setTopReels((p) => p.filter((_, idx) => idx !== i)) : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <Divider />
+
+              {/* Top Posts */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <SectionTitle>Top Posts</SectionTitle>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setTopPosts((p) => [...p, { thumbnailStorageId: null, thumbnailPreview: null, viewsOrReach: "", date: "", caption: "" }])}
+                  >
+                    <Plus size={13} /> Add Post
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {topPosts.map((post, i) => (
+                    <MediaEntryRow
+                      key={i}
+                      type="post"
+                      preview={post.thumbnailPreview}
+                      onThumbChange={(e) => handlePostThumb(e, i)}
+                      fields={[
+                        { label: "Views / Reach", value: post.viewsOrReach, placeholder: "e.g. 30K", onChange: (v) => setTopPosts((p) => { const n = [...p]; n[i] = { ...n[i], viewsOrReach: v }; return n; }) },
+                        { label: "Date", value: post.date, placeholder: "e.g. Jan 22", onChange: (v) => setTopPosts((p) => { const n = [...p]; n[i] = { ...n[i], date: v }; return n; }) },
+                        { label: "Caption", value: post.caption, placeholder: "Optional", onChange: (v) => setTopPosts((p) => { const n = [...p]; n[i] = { ...n[i], caption: v }; return n; }) },
+                      ]}
+                      onRemove={topPosts.length > 1 ? () => setTopPosts((p) => p.filter((_, idx) => idx !== i)) : undefined}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Insights ─────────────────────────────────────────────────── */}
+          {activeSection === "Insights" && (
+            <div className="space-y-5">
+              <SectionTitle>Strategic Insights</SectionTitle>
+              <Field label="Performance Summary">
+                <textarea
+                  value={insights.performanceSummary}
+                  onChange={(e) => setInsights({ ...insights, performanceSummary: e.target.value })}
+                  rows={4}
+                  className={inputCls}
+                  placeholder="Describe overall performance this month…"
+                />
+              </Field>
+              <Field label="Best Content Type">
+                <input
+                  type="text"
+                  value={insights.bestContentType}
+                  onChange={(e) => setInsights({ ...insights, bestContentType: e.target.value })}
+                  className={inputCls}
+                  placeholder="e.g. Reels"
+                />
+              </Field>
+              <Field label="Growth Opportunity">
+                <textarea
+                  value={insights.growthOpportunity}
+                  onChange={(e) => setInsights({ ...insights, growthOpportunity: e.target.value })}
+                  rows={4}
+                  className={inputCls}
+                  placeholder="Key areas to improve or capitalize on next month…"
+                />
+              </Field>
+            </div>
+          )}
+
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-admin-border bg-admin-surface2 shrink-0">
+          <button
+            onClick={() => sectionIndex > 0 && setActiveSection(SECTIONS[sectionIndex - 1])}
+            disabled={sectionIndex === 0}
+            className="text-xs font-semibold text-admin-muted hover:text-white disabled:opacity-30 transition-colors"
+          >
+            Back
+          </button>
+
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={onClose} disabled={saving}>
+              Cancel
+            </Button>
+            {isLast ? (
+              <Button size="sm" onClick={handleSave} disabled={saving}>
+                {saving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : <><CheckCircle size={14} /> Save Report</>}
+              </Button>
+            ) : (
+              <Button size="sm" onClick={goNext}>
+                Next <ChevronRight size={14} />
+              </Button>
             )}
           </div>
         </div>
-
-        <div className="p-6 border-t border-admin-border bg-admin-surface2 flex gap-3 justify-end">
-          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : "Generate Report"}
-          </Button>
-        </div>
       </div>
+    </div>
+  );
+}
+
+// ─── helper components ────────────────────────────────────────────────────────
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-sm font-bold text-white">{children}</h3>;
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className={labelCls}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Divider() {
+  return <div className="border-t border-admin-border" />;
+}
+
+function humanize(key: string) {
+  return key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()).trim();
+}
+
+interface FieldSpec {
+  label: string;
+  value: string;
+  placeholder: string;
+  onChange: (v: string) => void;
+}
+
+function MediaEntryRow({
+  type,
+  preview,
+  onThumbChange,
+  fields,
+  onRemove,
+}: {
+  type: "reel" | "post";
+  preview: string | null;
+  onThumbChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  fields: FieldSpec[];
+  onRemove?: () => void;
+}) {
+  const thumbRef = useRef<HTMLInputElement>(null);
+  const isReel = type === "reel";
+
+  return (
+    <div className="flex gap-3 items-start p-3 rounded-xl border border-admin-border bg-admin-surface2">
+      {/* Thumbnail */}
+      <div
+        onClick={() => thumbRef.current?.click()}
+        className={`shrink-0 rounded-lg border border-admin-border bg-admin-surface overflow-hidden flex items-center justify-center cursor-pointer hover:border-white/30 transition-colors relative ${
+          isReel ? "w-16 h-24" : "w-16 h-16"
+        }`}
+      >
+        {preview ? (
+          <img src={preview} alt="Thumbnail" className="w-full h-full object-cover" />
+        ) : (
+          <Upload size={14} className="text-admin-muted" />
+        )}
+        <input ref={thumbRef} type="file" accept="image/*" className="hidden" onChange={onThumbChange} />
+      </div>
+
+      {/* Fields */}
+      <div className="flex-1 grid grid-cols-2 gap-2">
+        {fields.map((f) => (
+          <div key={f.label} className={f.label === "Caption" ? "col-span-2" : ""}>
+            <label className="block text-[10px] font-semibold text-admin-muted uppercase tracking-wider mb-1">{f.label}</label>
+            <input
+              type="text"
+              value={f.value}
+              onChange={(e) => f.onChange(e.target.value)}
+              placeholder={f.placeholder}
+              className="w-full bg-admin-surface border border-admin-border rounded-md px-2.5 py-1.5 text-xs text-white placeholder:text-white/20 focus:outline-none focus:border-white/30 transition-colors"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Remove */}
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg text-admin-muted hover:bg-red-500/10 hover:text-red-400 transition-colors mt-0.5"
+          title="Remove"
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
     </div>
   );
 }

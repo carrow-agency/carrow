@@ -1,9 +1,29 @@
-import React from "react";
-import { X, TrendingUp, Users, Eye, BarChart3, Heart, MessageCircle, Share2, Bookmark } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useEffect } from "react";
+import {
+  X, Eye, Users, TrendingUp, MousePointerClick, FileImage,
+  Heart, MessageCircle, Share2, Bookmark, ChevronUp,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
-type ReportData = {
+// ─── types ────────────────────────────────────────────────────────────────────
+interface ReelItem {
+  thumbnailUrl?: string | null;
+  views: string;
+  date: string;
+  caption?: string;
+}
+
+interface PostItem {
+  thumbnailUrl?: string | null;
+  viewsOrReach: string;
+  date: string;
+  caption?: string;
+}
+
+interface ReportData {
+  _id: string;
   monthYear: string;
+  _creationTime: number;
   kpiCards: {
     totalViews: string;
     accountsReached: string;
@@ -22,18 +42,8 @@ type ReportData = {
     shares: string;
     saves: string;
   };
-  topReels: Array<{
-    thumbnailUrl: string;
-    views: string;
-    date: string;
-    caption?: string;
-  }>;
-  topPosts: Array<{
-    thumbnailUrl: string;
-    viewsOrReach: string;
-    date: string;
-    caption?: string;
-  }>;
+  topReels: ReelItem[];
+  topPosts: PostItem[];
   strategicInsights: {
     performanceSummary: string;
     bestContentType: string;
@@ -44,86 +54,148 @@ type ReportData = {
     reach: string;
     interactions: string;
   };
-};
+}
 
-export function MonthlyReportViewer({ report, onClose }: { report: ReportData; onClose: () => void }) {
-  if (!report) return null;
+interface Props {
+  report: ReportData;
+  onClose: () => void;
+}
+
+// ─── component ────────────────────────────────────────────────────────────────
+export function MonthlyReportViewer({ report, onClose }: Props) {
+  // Escape key to close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  // Prevent body scroll when open
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const kpis = [
+    { label: "Total Views",       value: report.kpiCards.totalViews,         icon: Eye,               color: "bg-blue-50 text-blue-600" },
+    { label: "Accounts Reached",  value: report.kpiCards.accountsReached,     icon: Users,             color: "bg-indigo-50 text-indigo-600" },
+    { label: "Interactions",      value: report.kpiCards.totalInteractions,   icon: TrendingUp,        color: "bg-emerald-50 text-emerald-600" },
+    { label: "Profile Visits",    value: report.kpiCards.profileVisits,       icon: MousePointerClick, color: "bg-orange-50 text-orange-600" },
+    { label: "Content Posted",    value: report.kpiCards.totalContentPosted,  icon: FileImage,         color: "bg-gray-100 text-gray-600" },
+  ];
+
+  const engagementItems = [
+    { label: "Likes",    value: report.engagement.likes,    icon: Heart,         color: "text-rose-500" },
+    { label: "Comments", value: report.engagement.comments, icon: MessageCircle, color: "text-blue-500" },
+    { label: "Shares",   value: report.engagement.shares,   icon: Share2,        color: "text-green-500" },
+    { label: "Saves",    value: report.engagement.saves,    icon: Bookmark,      color: "text-purple-500" },
+  ];
+
+  const contentRows = [
+    { label: "Reels",   percent: report.contentType.reels,   color: "bg-violet-500" },
+    { label: "Stories", percent: report.contentType.stories, color: "bg-pink-500" },
+    { label: "Posts",   percent: report.contentType.posts,   color: "bg-blue-500" },
+  ];
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-center bg-[#f8f8f8] overflow-y-auto">
-      {/* Top Navbar */}
-      <div className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-10 flex items-center justify-between px-6">
-        <div>
-          <h2 className="font-serif font-bold text-xl text-gray-900">Performance Report</h2>
-          <p className="text-xs text-gray-500 font-sans uppercase tracking-wider">{report.monthYear}</p>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 bg-[#f5f5f5] overflow-y-auto"
+      >
+        {/* Sticky Top Bar */}
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Performance Report</span>
+            <span className="text-gray-300">·</span>
+            <span className="text-sm font-bold text-gray-900">{report.monthYear}</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+            title="Close (Esc)"
+          >
+            <X size={16} />
+          </button>
         </div>
-        <button onClick={onClose} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors text-gray-600">
-          <X size={20} />
-        </button>
-      </div>
 
-      <div className="w-full max-w-5xl mx-auto pt-24 pb-24 px-4 sm:px-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-12">
-          
-          {/* Section: KPIs */}
+        {/* Content */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-12">
+
+          {/* KPI Cards */}
           <section>
-            <h3 className="font-serif text-2xl font-bold text-gray-900 mb-6">Overview</h3>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              {[
-                { label: "Total Views", value: report.kpiCards.totalViews, icon: Eye, color: "text-blue-500", bg: "bg-blue-50" },
-                { label: "Reached", value: report.kpiCards.accountsReached, icon: Users, color: "text-purple-500", bg: "bg-purple-50" },
-                { label: "Interactions", value: report.kpiCards.totalInteractions, icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-50" },
-                { label: "Profile Visits", value: report.kpiCards.profileVisits, icon: BarChart3, color: "text-orange-500", bg: "bg-orange-50" },
-                { label: "Content Posted", value: report.kpiCards.totalContentPosted, icon: BarChart3, color: "text-gray-500", bg: "bg-gray-100" }
-              ].map((kpi, i) => (
-                <div key={i} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col items-center text-center hover:border-gray-300 transition-colors">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${kpi.bg} ${kpi.color}`}>
-                    <kpi.icon size={18} />
+            <SectionLabel>Overview</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-4">
+              {kpis.map((kpi) => (
+                <div key={kpi.label} className="bg-white rounded-2xl border border-gray-200 p-5 flex flex-col items-center text-center shadow-sm hover:shadow-md transition-shadow">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${kpi.color}`}>
+                    <kpi.icon size={17} />
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 mb-1">{kpi.value}</p>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{kpi.label}</p>
+                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight">{kpi.value}</p>
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mt-1">{kpi.label}</p>
                 </div>
               ))}
             </div>
-          </section>
 
-          {/* Section: Content & Engagement */}
-          <section className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
-              <h3 className="font-serif text-xl font-bold text-gray-900 mb-6">Content Breakdown</h3>
-              <div className="space-y-6">
+            {/* Previous month comparison */}
+            {report.previousMonth && (
+              <div className="mt-4 grid grid-cols-3 gap-3">
                 {[
-                  { label: "Reels", percent: report.contentType.reels, color: "bg-purple-500" },
-                  { label: "Stories", percent: report.contentType.stories, color: "bg-pink-500" },
-                  { label: "Posts", percent: report.contentType.posts, color: "bg-blue-500" }
-                ].map(item => (
-                  <div key={item.label}>
-                    <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
-                      <span>{item.label}</span>
-                      <span>{item.percent}%</span>
-                    </div>
-                    <div className="w-full bg-gray-100 rounded-full h-3">
-                      <div className={`${item.color} h-3 rounded-full`} style={{ width: `${item.percent}%` }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-3xl border border-gray-200 shadow-sm">
-              <h3 className="font-serif text-xl font-bold text-gray-900 mb-6">Engagement Details</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Likes", value: report.engagement.likes, icon: Heart, color: "text-red-500" },
-                  { label: "Comments", value: report.engagement.comments, icon: MessageCircle, color: "text-blue-500" },
-                  { label: "Shares", value: report.engagement.shares, icon: Share2, color: "text-green-500" },
-                  { label: "Saves", value: report.engagement.saves, icon: Bookmark, color: "text-purple-500" }
-                ].map(stat => (
-                  <div key={stat.label} className="p-4 bg-gray-50 rounded-2xl flex items-center gap-4">
-                    <stat.icon size={24} className={stat.color} />
+                  { label: "Prev. Views",        value: report.previousMonth.views },
+                  { label: "Prev. Reach",         value: report.previousMonth.reach },
+                  { label: "Prev. Interactions",  value: report.previousMonth.interactions },
+                ].map((item) => (
+                  <div key={item.label} className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center gap-3">
+                    <ChevronUp size={14} className="text-gray-400 shrink-0" />
                     <div>
-                      <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{stat.label}</p>
+                      <p className="text-sm font-bold text-gray-700">{item.value}</p>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{item.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Engagement + Content Breakdown */}
+          <section className="grid md:grid-cols-2 gap-6">
+            {/* Engagement */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-7 shadow-sm">
+              <SectionLabel>Engagement</SectionLabel>
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                {engagementItems.map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 bg-gray-50 rounded-xl p-4">
+                    <item.icon size={22} className={item.color} />
+                    <div>
+                      <p className="text-xl font-extrabold text-gray-900">{item.value}</p>
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{item.label}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Breakdown */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-7 shadow-sm">
+              <SectionLabel>Content Breakdown</SectionLabel>
+              <div className="space-y-5 mt-4">
+                {contentRows.map((row) => (
+                  <div key={row.label}>
+                    <div className="flex justify-between text-sm font-semibold text-gray-700 mb-2">
+                      <span>{row.label}</span>
+                      <span>{row.percent}%</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${row.percent}%` }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className={`h-full rounded-full ${row.color}`}
+                      />
                     </div>
                   </div>
                 ))}
@@ -131,87 +203,125 @@ export function MonthlyReportViewer({ report, onClose }: { report: ReportData; o
             </div>
           </section>
 
-          {/* Section: Strategic Insights */}
-          <section className="bg-gray-900 text-white p-8 md:p-12 rounded-3xl shadow-lg relative overflow-hidden">
+          {/* Strategic Insights */}
+          <section className="bg-gray-900 text-white rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+              <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-white/3 rounded-full blur-3xl" />
+            </div>
             <div className="relative z-10">
-              <h3 className="font-serif text-3xl font-bold mb-8">Strategic Insights</h3>
-              <div className="grid md:grid-cols-3 gap-8">
-                <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Performance Summary</p>
-                  <p className="text-sm leading-relaxed text-gray-200">{report.strategicInsights.performanceSummary}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Best Content Type</p>
-                  <p className="text-lg font-bold text-white mb-2">{report.strategicInsights.bestContentType}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Growth Opportunity</p>
-                  <p className="text-sm leading-relaxed text-gray-200">{report.strategicInsights.growthOpportunity}</p>
-                </div>
+              <SectionLabel light>Strategic Insights</SectionLabel>
+              <div className="grid md:grid-cols-3 gap-8 mt-6">
+                <InsightBlock label="Performance Summary" text={report.strategicInsights.performanceSummary} />
+                <InsightBlock label="Best Content Type"   text={report.strategicInsights.bestContentType} large />
+                <InsightBlock label="Growth Opportunity"  text={report.strategicInsights.growthOpportunity} />
               </div>
             </div>
-            {/* Decorative background element */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl"></div>
           </section>
 
-          {/* Section: Top Content */}
-          <section className="space-y-12">
-            <div>
-              <h3 className="font-serif text-2xl font-bold text-gray-900 mb-6">Top Performing Reels</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {/* Top Reels */}
+          {report.topReels.length > 0 && (
+            <section>
+              <SectionLabel>Top Reels</SectionLabel>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 mt-4">
                 {report.topReels.map((reel, i) => (
-                  <div key={i} className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="aspect-[9/16] bg-gray-100 relative">
-                      {reel.thumbnailUrl ? (
-                        <img src={reel.thumbnailUrl} alt="Reel Thumbnail" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 text-white">
-                        <p className="text-sm line-clamp-3">{reel.caption}</p>
-                      </div>
-                    </div>
-                    <div className="p-4 flex justify-between items-center bg-white">
-                      <div>
-                        <p className="text-lg font-bold text-gray-900">{reel.views}</p>
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Views</p>
-                      </div>
-                      <span className="text-xs font-medium text-gray-400">{reel.date}</span>
-                    </div>
-                  </div>
+                  <ContentCard
+                    key={i}
+                    thumbnailUrl={reel.thumbnailUrl ?? null}
+                    primaryStat={reel.views}
+                    primaryLabel="Views"
+                    date={reel.date}
+                    caption={reel.caption}
+                    aspectRatio="9/16"
+                  />
                 ))}
               </div>
-            </div>
+            </section>
+          )}
 
-            <div>
-              <h3 className="font-serif text-2xl font-bold text-gray-900 mb-6">Top Performing Posts</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {/* Top Posts */}
+          {report.topPosts.length > 0 && (
+            <section>
+              <SectionLabel>Top Posts</SectionLabel>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 mt-4">
                 {report.topPosts.map((post, i) => (
-                  <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="aspect-square bg-gray-100 relative group">
-                      {post.thumbnailUrl ? (
-                        <img src={post.thumbnailUrl} alt="Post Thumbnail" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 text-white">
-                        <p className="text-sm line-clamp-3">{post.caption}</p>
-                      </div>
-                    </div>
-                    <div className="p-4 flex justify-between items-center">
-                      <div>
-                        <p className="text-lg font-bold text-gray-900">{post.viewsOrReach}</p>
-                        <p className="text-xs text-gray-500 uppercase tracking-wider">Views / Reach</p>
-                      </div>
-                      <span className="text-xs font-medium text-gray-400">{post.date}</span>
-                    </div>
-                  </div>
+                  <ContentCard
+                    key={i}
+                    thumbnailUrl={post.thumbnailUrl ?? null}
+                    primaryStat={post.viewsOrReach}
+                    primaryLabel="Views / Reach"
+                    date={post.date}
+                    caption={post.caption}
+                    aspectRatio="1/1"
+                  />
                 ))}
               </div>
-            </div>
-          </section>
+            </section>
+          )}
 
-        </motion.div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ─── sub-components ────────────────────────────────────────────────────────────
+function SectionLabel({ children, light }: { children: React.ReactNode; light?: boolean }) {
+  return (
+    <p className={`text-[11px] font-extrabold uppercase tracking-[0.18em] ${light ? "text-gray-400" : "text-gray-400"}`}>
+      {children}
+    </p>
+  );
+}
+
+function InsightBlock({ label, text, large }: { label: string; text: string; large?: boolean }) {
+  return (
+    <div>
+      <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest mb-2">{label}</p>
+      {large ? (
+        <p className="text-2xl font-extrabold text-white">{text}</p>
+      ) : (
+        <p className="text-sm leading-relaxed text-gray-300">{text}</p>
+      )}
+    </div>
+  );
+}
+
+function ContentCard({
+  thumbnailUrl, primaryStat, primaryLabel, date, caption, aspectRatio,
+}: {
+  thumbnailUrl: string | null;
+  primaryStat: string;
+  primaryLabel: string;
+  date: string;
+  caption?: string;
+  aspectRatio: "9/16" | "1/1";
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+      <div
+        className="relative bg-gray-100 overflow-hidden"
+        style={{ aspectRatio }}
+      >
+        {thumbnailUrl ? (
+          <img src={thumbnailUrl} alt="Content" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <FileImage size={28} />
+          </div>
+        )}
+        {caption && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+            <p className="text-xs text-white line-clamp-3 leading-relaxed">{caption}</p>
+          </div>
+        )}
+      </div>
+      <div className="px-3 py-2.5 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-extrabold text-gray-900">{primaryStat}</p>
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{primaryLabel}</p>
+        </div>
+        <span className="text-[11px] text-gray-400 font-medium">{date}</span>
       </div>
     </div>
   );

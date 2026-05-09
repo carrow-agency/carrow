@@ -109,22 +109,22 @@ export function useUpdateSettings() {
   return useMutation(api.settings.update);
 }
 
-export function useClientFiles(userId?: string) {
-  const files = useQuery(api.files.getClientFiles, userId ? { userId: userId as any } : "skip");
-  if (!files) return null;
-  return files;
-}
-
 export function useMyFiles() {
   const files = useQuery(api.files.getClientFiles, {});
-  if (!files) return null;
-  return files;
+  return files ?? null;
+}
+
+export function useClientFiles(userId?: string, fileLabel?: string) {
+  const files = useQuery(
+    api.files.getClientFiles,
+    userId ? { userId: userId as any, fileLabel } : "skip"
+  );
+  return files ?? null;
 }
 
 export function useAllFiles() {
   const files = useQuery(api.files.getAllFiles);
-  if (!files) return null;
-  return files;
+  return files ?? null;
 }
 
 export function useGenerateUploadUrl() {
@@ -374,8 +374,11 @@ export function useCreateMonthlyReport() {
   return useMutation(api.monthlyReports.createReport);
 }
 
-export function useMonthlyReportsByUser(clientId?: string) {
-  return useQuery(api.monthlyReports.getReportsByUser, clientId ? { clientId: clientId as any } : "skip");
+export function useMonthlyReportsByUser(clientId?: string | null) {
+  return useQuery(
+    api.monthlyReports.getReportsByUser,
+    clientId ? { clientId: clientId as any } : "skip"
+  );
 }
 
 export function useDeleteMonthlyReport() {

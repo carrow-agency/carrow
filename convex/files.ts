@@ -6,7 +6,7 @@ import { captureError } from "./sentry";
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    await requireAuth(ctx);
     return await ctx.storage.generateUploadUrl();
   },
 });
@@ -15,37 +15,36 @@ export const saveClientFile = mutation({
   args: {
     storageId: v.id("_storage"),
     userId: v.optional(v.id("users")),
-    type: v.string(),
+    fileLabel: v.optional(v.string()), // "Contract" | "Report" | "Media"
     name: v.string(),
     size: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     try {
       const currentUser = await getCurrentUser(ctx);
-      if (!currentUser) {
-        throw new Error("Authentication required");
-      }
-      
-      const targetUserId = args.userId || currentUser._id;
-      
+      if (!currentUser) throw new Error("Authentication required");
+
+      const targetUserId = args.userId ?? currentUser._id;
       if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
         throw new Error("Unauthorized to save files for this user");
       }
-      
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-      if (!allowedTypes.includes(args.type)) {
-        throw new Error("File type not allowed. Use JPEG, PNG, WebP, or PDF.");
-      }
-      
-      const maxSize = 10 * 1024 * 1024;
+
+      const maxSize = 20 * 1024 * 1024; // 20MB
       if (args.size && args.size > maxSize) {
-        throw new Error("File too large. Maximum 10MB allowed.");
+        throw new Error("File too large. Maximum 20 MB allowed.");
       }
-      
+
+      // Determine MIME type from the storage object
+      const storageMetadata = await ctx.storage.getMetadata(args.storageId);
+      const mimeType = storageMetadata?.contentType ?? "application/octet-stream";
+
+      const label = args.fileLabel ?? "Media";
+
       await ctx.db.insert("clientFiles", {
         storageId: args.storageId,
         userId: targetUserId,
-        type: args.type,
+        type: mimeType,
+        fileLabel: label,
         name: args.name,
         size: args.size,
       });
@@ -63,78 +62,70 @@ export const getAllFiles = query({
     if (!currentUser || currentUser.role !== "admin") {
       throw new Error("Admin access required");
     }
-    
+
     const files = await ctx.db.query("clientFiles").order("desc").take(1000);
-    
+
     const filesWithUrls = await Promise.all(
       files.map(async (f) => {
         const url = await ctx.storage.getUrl(f.storageId);
         return { ...f, url };
       })
     );
-    
+
     return filesWithUrls;
   },
 });
 
 export const getClientFiles = query({
-  args: { userId: v.optional(v.id("users")), type: v.optional(v.string()) },
+  args: {
+    userId: v.optional(v.id("users")),
+    fileLabel: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUser(ctx);
-    if (!currentUser) {
-      throw new Error("Authentication required");
-    }
-    
-    const targetUserId = args.userId ?? currentUser._id;
+    if (!currentUser) throw new Error("Authentication required");
 
+    const targetUserId = args.userId ?? currentUser._id;
     if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
       throw new Error("Unauthorized to view this user's files");
     }
-    
+
     let files = await ctx.db
       .query("clientFiles")
       .withIndex("by_user", (q) => q.eq("userId", targetUserId))
       .order("desc")
       .take(500);
-      
-    if (args.type) {
-      files = files.filter(f => f.type === args.type);
+
+    if (args.fileLabel) {
+      files = files.filter((f) => f.fileLabel === args.fileLabel);
     }
-    
+
     const filesWithUrls = await Promise.all(
       files.map(async (f) => {
         const url = await ctx.storage.getUrl(f.storageId);
         return { ...f, url };
       })
     );
-    
+
     return filesWithUrls;
   },
 });
 
 export const deleteClientFile = mutation({
-  args: { id: v.id("clientFiles"), storageId: v.id("_storage") },
+  args: { id: v.id("clientFiles") },
   handler: async (ctx, args) => {
     try {
       const currentUser = await getCurrentUser(ctx);
-      if (!currentUser) {
-        throw new Error("Authentication required");
-      }
-      
+      if (!currentUser) throw new Error("Authentication required");
+
       const file = await ctx.db.get(args.id);
-      if (!file) {
-        throw new Error("File not found");
-      }
-      
+      if (!file) throw new Error("File not found");
+
       if (file.userId !== currentUser._id && currentUser.role !== "admin") {
         throw new Error("Unauthorized to delete this file");
       }
 
-      if (file.storageId !== args.storageId) {
-        throw new Error("File storage reference mismatch");
-      }
-
-      await ctx.storage.delete(args.storageId);
+      await ctx.storage.delete(file.storageId);
       await ctx.db.delete(args.id);
     } catch (error) {
       captureError(error as Error, { fileId: args.id, action: "deleteClientFile" });
