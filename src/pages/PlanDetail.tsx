@@ -258,7 +258,8 @@ export default function PlanDetail() {
               { n: '03', t: 'We Begin on WhatsApp', d: 'We connect instantly to onboard your brand.' }
             ].map((step, i) => (
                <FadeIn key={i} delay={i * 0.1} className="relative">
-                  <div className="absolute left-0 md:-left-[59px] top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10"></div>
+                  <div className="absolute left-0 top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10 hidden md:block" style={{ marginLeft: i === 0 ? '0' : i === 1 ? '-59px' : '-59px' }}></div>
+                  <div className="md:hidden absolute left-0 top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10"></div>
                   <div className="font-sans font-semibold text-[12px] uppercase text-brand-white mb-2">{step.n}</div>
                   <h3 className="font-serif font-semibold text-[28px] text-brand-white mb-2">{step.t}</h3>
                   <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8]">{step.d}</p>

@@ -67,9 +67,9 @@ export default function Home() {
               <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Brands Who Trust Us.</h2>
             </FadeIn>
             
-            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:space-x-12 mb-[100px]">
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:-space-x-12 mb-[100px]">
               {['Rumis', 'Shawok', 'Croustile'].map((brand, i) => (
-                 <span key={i} className="font-serif font-bold text-[36px] sm:text-[48px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none">{brand}</span>
+                <span key={i} className="font-serif font-bold text-[36px] sm:text-[48px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none cursor-pointer whitespace-nowrap">{brand}{i < 2 ? '\u00A0' : ''}</span>
               ))}
             </div>
          </div>
