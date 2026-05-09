@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import { useAuthFunctions, useCurrentUser, useCurrentUserFromConvex } from '../lib/useConvex';
+import { useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 const inputClass =
   'w-full bg-brand-off-white border border-brand-border rounded-[12px] px-5 py-4 font-sans text-[15px] text-brand-black placeholder:text-brand-mid-grey focus:outline-none focus:border-brand-black transition-colors duration-200';
@@ -54,6 +56,7 @@ export default function SignupPage() {
   const next = searchParams.get('next') || '/account';
 
   const { signUp } = useAuthFunctions();
+  const checkRateLimit = useMutation(api.rateLimit.checkRateLimit);
   const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
   const currentUser = useCurrentUserFromConvex();
   const isLoading = isAuthLoading || currentUser === undefined;
@@ -95,6 +98,15 @@ export default function SignupPage() {
     }
     setErrors({});
     setLoading(true);
+
+    try {
+      await checkRateLimit({ identifier: email.trim().toLowerCase() });
+    } catch (err: any) {
+      setGlobalError(err.message || 'Too many attempts.');
+      setLoading(false);
+      return;
+    }
+
     const result = await signUp(email.trim().toLowerCase(), password, name.trim());
     if (!result.success) {
       setGlobalError(result.error || 'Unable to create account. Please try again.');

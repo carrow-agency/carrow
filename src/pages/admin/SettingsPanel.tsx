@@ -5,7 +5,7 @@ import { Button } from "./components/Button";
 import { useSettings, useUpdateSettings } from "../../lib/useConvex";
 import { CheckCircle2 } from "lucide-react";
 
-const TABS = ["General", "Home page", "SEO"] as const;
+const TABS = ["General", "Home page", "About page"] as const;
 
 export default function SettingsPanel() {
   const settings       = useSettings();
@@ -16,7 +16,7 @@ export default function SettingsPanel() {
 
   const [general, setGeneral] = useState({ siteName: "", tagline: "", email: "", whatsapp: "" });
   const [home, setHome]       = useState({ h1: "", h2: "", cta1: "", cta2: "" });
-  const [seo, setSeo]         = useState({ seoTitle: "", seoDescription: "" });
+  const [about, setAbout]     = useState({ founderName: "", founderRole: "", founderBio: "", founderImage: "" });
 
   useEffect(() => {
     if (!settings) return;
@@ -32,16 +32,18 @@ export default function SettingsPanel() {
       cta1: settings.home?.cta1 || "",
       cta2: settings.home?.cta2 || "",
     });
-    setSeo({
-      seoTitle:       settings.seoTitle       || "",
-      seoDescription: settings.seoDescription || "",
+    setAbout({
+      founderName:  settings.aboutPage?.founderName  || "",
+      founderRole:  settings.aboutPage?.founderRole  || "",
+      founderBio:   settings.aboutPage?.founderBio   || "",
+      founderImage: settings.aboutPage?.founderImage || "",
     });
   }, [settings]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateSettings({ general, home, seoTitle: seo.seoTitle, seoDescription: seo.seoDescription });
+      await updateSettings({ general, home, aboutPage: about });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e) { console.error(e); }
@@ -114,28 +116,43 @@ export default function SettingsPanel() {
             </div>
           )}
 
-          {tab === "SEO" && (
+          {tab === "About page" && (
             <div className="space-y-5">
               <Input
-                label="SEO title"
-                value={seo.seoTitle}
-                onChange={e => setSeo({...seo, seoTitle: e.target.value})}
-                placeholder="Carrow — Digital Agency"
+                label="Founder Name"
+                value={about.founderName}
+                onChange={e => setAbout({...about, founderName: e.target.value})}
+                placeholder="Jane Doe"
+              />
+              <Input
+                label="Founder Role"
+                value={about.founderRole}
+                onChange={e => setAbout({...about, founderRole: e.target.value})}
+                placeholder="Founder & Strategy Director"
               />
               <Textarea
-                label="SEO description"
-                value={seo.seoDescription}
-                onChange={e => setSeo({...seo, seoDescription: e.target.value})}
-                placeholder="Describe your site for search engines…"
+                label="Founder Bio"
+                value={about.founderBio}
+                onChange={e => setAbout({...about, founderBio: e.target.value})}
+                placeholder="Short bio about the founder..."
+              />
+              <Input
+                label="Founder Image URL"
+                value={about.founderImage}
+                onChange={e => setAbout({...about, founderImage: e.target.value})}
+                placeholder="https://..."
               />
 
-              {/* Search preview — shows actual seo state */}
+              {/* Preview */}
               <div>
-                <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-admin-muted">Search Preview</p>
-                <div className="rounded-xl border border-admin-border bg-admin-surface2 p-5">
-                  <p className="text-xs text-admin-accent">carrow.com</p>
-                  <p className="mt-1 text-base font-medium text-white">{seo.seoTitle || "Your SEO title"}</p>
-                  <p className="mt-1 text-sm text-admin-muted line-clamp-2">{seo.seoDescription || "Your SEO description will appear here…"}</p>
+                <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-admin-muted">About Preview</p>
+                <div className="rounded-xl border border-admin-border bg-admin-surface2 p-5 text-center">
+                  {about.founderImage && (
+                    <img src={about.founderImage} alt="Founder" className="w-20 h-20 rounded-full mx-auto object-cover mb-4" />
+                  )}
+                  <p className="mt-1 text-base font-medium text-white">{about.founderName || "Founder Name"}</p>
+                  <p className="text-xs text-admin-accent">{about.founderRole || "Founder Role"}</p>
+                  <p className="mt-2 text-sm text-admin-muted">{about.founderBio || "Bio..."}</p>
                 </div>
               </div>
             </div>

@@ -24,8 +24,12 @@ export const update = mutation({
       cta1: v.string(),
       cta2: v.string(),
     })),
-    seoTitle: v.optional(v.string()),
-    seoDescription: v.optional(v.string()),
+    aboutPage: v.optional(v.object({
+      founderName: v.string(),
+      founderRole: v.string(),
+      founderBio: v.string(),
+      founderImage: v.optional(v.string()),
+    })),
   },
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
@@ -43,11 +47,8 @@ export const update = mutation({
       if (args.home) {
         updateData.home = args.home;
       }
-      if (args.seoTitle !== undefined) {
-        updateData.seoTitle = args.seoTitle;
-      }
-      if (args.seoDescription !== undefined) {
-        updateData.seoDescription = args.seoDescription;
+      if (args.aboutPage !== undefined) {
+        updateData.aboutPage = args.aboutPage;
       }
       
       await ctx.db.patch(settings._id, updateData);
@@ -62,8 +63,7 @@ export const update = mutation({
         whatsapp: args.general?.whatsapp,
       },
       home: args.home,
-      seoTitle: args.seoTitle,
-      seoDescription: args.seoDescription,
+      aboutPage: args.aboutPage,
     });
     return createdId;
   },

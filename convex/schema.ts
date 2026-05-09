@@ -67,8 +67,12 @@ export default defineSchema({
       cta1: v.string(),
       cta2: v.string(),
     })),
-    seoTitle: v.optional(v.string()),
-    seoDescription: v.optional(v.string()),
+    aboutPage: v.optional(v.object({
+      founderName: v.string(),
+      founderRole: v.string(),
+      founderBio: v.string(),
+      founderImage: v.optional(v.string()),
+    })),
   }),
 
   // fileLabel: semantic category set by admin ("Contract" | "Report" | "Media")
@@ -176,4 +180,10 @@ export default defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_resolved_and_timestamp", ["resolved", "timestamp"])
     .index("by_source_and_timestamp", ["source", "timestamp"]),
+
+  rateLimits: defineTable({
+    identifier: v.string(),
+    attempts: v.number(),
+    lastAttempt: v.number(),
+  }).index("by_identifier", ["identifier"]),
 });

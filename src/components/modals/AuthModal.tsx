@@ -4,12 +4,15 @@ import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../lib/store';
 import { useAuthFunctions } from '../../lib/useConvex';
+import { useMutation } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
 
 
 export function AuthModal() {
   const navigate = useNavigate();
   const { setAuthOpen, cart } = useAppStore();
   const { signIn, signUp } = useAuthFunctions();
+  const checkRateLimit = useMutation(api.rateLimit.checkRateLimit);
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -41,6 +44,14 @@ export function AuthModal() {
     }
     if (!loginPassword) {
       setError('Please enter your password.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await checkRateLimit({ identifier: loginEmail });
+    } catch (err: any) {
+      setError(err.message || 'Too many attempts.');
       setLoading(false);
       return;
     }
@@ -98,6 +109,14 @@ export function AuthModal() {
     }
     if (!/[A-Za-z]/.test(signupPassword) || !/[0-9]/.test(signupPassword)) {
       setError('Password must contain both letters and numbers.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await checkRateLimit({ identifier: signupEmail });
+    } catch (err: any) {
+      setError(err.message || 'Too many attempts.');
       setLoading(false);
       return;
     }

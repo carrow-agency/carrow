@@ -19,6 +19,7 @@ import type * as monthlyReports from "../monthlyReports.js";
 import type * as orders from "../orders.js";
 import type * as planRequests from "../planRequests.js";
 import type * as plans from "../plans.js";
+import type * as rateLimit from "../rateLimit.js";
 import type * as reports from "../reports.js";
 import type * as reset from "../reset.js";
 import type * as seed from "../seed.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   orders: typeof orders;
   planRequests: typeof planRequests;
   plans: typeof plans;
+  rateLimit: typeof rateLimit;
   reports: typeof reports;
   reset: typeof reset;
   seed: typeof seed;

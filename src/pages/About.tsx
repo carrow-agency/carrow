@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import FadeIn from '../components/common/FadeIn';
+import { useSettings } from '../lib/useConvex';
 
 function StatCounter({ end, suffix }: { end: number; suffix: string }) {
   const [count, setCount] = useState(0);
@@ -29,6 +30,8 @@ function StatCounter({ end, suffix }: { end: number; suffix: string }) {
 
 export default function About() {
   const navigate = useNavigate();
+  const settings = useSettings();
+  const about = settings?.aboutPage;
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -94,20 +97,24 @@ export default function About() {
           <FadeIn>
              <h2 className="font-serif font-bold text-[28px] md:text-[48px] text-brand-black mb-16 text-center">The Leadership.</h2>
           </FadeIn>
-          <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { n: 'Jane Doe', r: 'Founder & Strategy Director' },
-              { n: 'John Smith', r: 'Creative Director' },
-              { n: 'Emma Watson', r: 'Head of Analytics' }
-            ].map((t, i) => (
-               <FadeIn key={i} delay={i * 0.1} className="text-center flex flex-col items-center">
+          
+          <div className="flex justify-center">
+            {about?.founderName ? (
+               <FadeIn delay={0.1} className="text-center flex flex-col items-center max-w-[400px]">
                  <div className="w-[160px] h-[160px] rounded-full bg-brand-black mb-8 relative overflow-hidden flex items-center justify-center">
-                   <div className="noise-overlay opacity-40"></div>
+                   {about.founderImage ? (
+                     <img src={about.founderImage} alt={about.founderName} className="w-full h-full object-cover" />
+                   ) : (
+                     <div className="noise-overlay opacity-40"></div>
+                   )}
                  </div>
-                 <h4 className="font-sans font-semibold text-[20px] text-brand-black mb-1">{t.n}</h4>
-                 <p className="font-sans text-[15px] text-brand-mid-grey">{t.r}</p>
+                 <h4 className="font-sans font-semibold text-[20px] text-brand-black mb-1">{about.founderName}</h4>
+                 <p className="font-sans text-[15px] text-brand-mid-grey mb-4">{about.founderRole}</p>
+                 <p className="font-sans text-[15px] text-brand-mid-grey leading-relaxed">{about.founderBio}</p>
                </FadeIn>
-            ))}
+            ) : (
+              <p className="text-brand-mid-grey text-center w-full">Leadership details not configured yet.</p>
+            )}
           </div>
         </div>
       </section>
