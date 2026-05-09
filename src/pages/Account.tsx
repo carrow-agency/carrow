@@ -56,10 +56,14 @@ export default function Account() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [requestType, setRequestType] = useState<'renewal' | 'upgrade' | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [requesting, setRequesting] = useState(false);
 
   const myWorks = useMyWorks();
   const myContracts = useMyContracts();
   const myReports = useMyReports();
+  const createPlanRequest = useCreatePlanRequest();
 
   if (currentUser === undefined) {
     return (
@@ -90,11 +94,6 @@ export default function Account() {
     await signOut();
     navigate('/');
   };
-
-  const createPlanRequest = useCreatePlanRequest();
-  const [requestType, setRequestType] = useState<'renewal' | 'upgrade' | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState('');
-  const [requesting, setRequesting] = useState(false);
 
   const handleRequest = async () => {
     if (!requestType || !currentUser) return;
