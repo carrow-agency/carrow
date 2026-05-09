@@ -18,7 +18,7 @@ interface OrderData {
 }
 
 export default function OrdersPanel() {
-  const orders = useOrders();
+  const { orders, status, loadMore } = useOrders() || { orders: [] };
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
   const [tab, setTab] = useState<"All"|"Pending"|"Active"|"Cancelled">("All");
@@ -115,6 +115,15 @@ export default function OrdersPanel() {
       </div>
 
       <DataTable columns={cols} data={data} />
+      
+      {status === "CanLoadMore" && (
+        <div className="flex justify-center mt-6">
+          <Button variant="secondary" onClick={() => loadMore(50)}>Load More</Button>
+        </div>
+      )}
+      {status === "LoadingMore" && (
+        <div className="flex justify-center mt-6 text-sm text-gray-500">Loading more orders...</div>
+      )}
     </div>
   );
 }

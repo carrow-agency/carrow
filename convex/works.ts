@@ -2,26 +2,28 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin, getCurrentUser, requireAuth } from "./access";
 
+import { paginationOptsValidator } from "convex/server";
+
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     const works = await ctx.db
       .query("works")
       .withIndex("by_published", (q) => q.eq("published", true))
       .order("desc")
-      .take(300);
+      .paginate(args.paginationOpts);
     return works;
   },
 });
 
 export const listAll = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     const currentUser = await getCurrentUser(ctx);
     if (!currentUser || currentUser.role !== "admin") {
       throw new Error("Admin access required");
     }
-    const works = await ctx.db.query("works").order("desc").take(500);
+    const works = await ctx.db.query("works").order("desc").paginate(args.paginationOpts);
     return works;
   },
 });

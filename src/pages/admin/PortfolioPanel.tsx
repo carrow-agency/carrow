@@ -20,7 +20,7 @@ interface WorkData {
 const categories = ["Brand Identity", "Web Design", "Social Media", "Print", "Motion"];
 
 export default function PortfolioPanel() {
-  const works = useWorksAll();
+  const { works, status, loadMore } = useWorksAll() || { works: [] };
   const createWork = useCreateWork();
   const updateWork = useUpdateWork();
   const deleteWork = useDeleteWork();
@@ -222,6 +222,15 @@ export default function PortfolioPanel() {
             </article>
           ))}
         </section>
+      )}
+      
+      {status === "CanLoadMore" && (
+        <div className="flex justify-center mt-6">
+          <Button variant="secondary" onClick={() => loadMore(50)}>Load More</Button>
+        </div>
+      )}
+      {status === "LoadingMore" && (
+        <div className="flex justify-center mt-6 text-sm text-gray-500">Loading more items...</div>
       )}
 
       <Modal

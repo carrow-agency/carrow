@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { api } from "./generated/api";
 
@@ -17,73 +17,88 @@ export function usePlans() {
 }
 
 export function useWorks() {
-  const works = useQuery(api.works.list);
-  if (!works) return null;
-  return works.map(w => ({
-    id: w._id,
-    url: w.url,
-    title: w.title,
-    category: w.category,
-    client: w.client ?? "",
-    published: w.published ?? true,
-  }));
+  const { results, status, loadMore } = usePaginatedQuery(api.works.list, {}, { initialNumItems: 50 });
+  return {
+    works: results.map(w => ({
+      id: w._id,
+      url: w.url,
+      title: w.title,
+      category: w.category,
+      client: w.client ?? "",
+      published: w.published ?? true,
+    })),
+    status,
+    loadMore
+  };
 }
 
 export function useWorksAll() {
-  const works = useQuery(api.works.listAll);
-  if (!works) return null;
-  return works.map(w => ({
-    id: w._id,
-    url: w.url,
-    title: w.title,
-    category: w.category,
-    client: w.client ?? "",
-    clientId: w.clientId ?? null,
-    published: w.published ?? true,
-  }));
+  const { results, status, loadMore } = usePaginatedQuery(api.works.listAll, {}, { initialNumItems: 50 });
+  return {
+    works: results.map(w => ({
+      id: w._id,
+      url: w.url,
+      title: w.title,
+      category: w.category,
+      client: w.client ?? "",
+      clientId: w.clientId ?? null,
+      published: w.published ?? true,
+    })),
+    status,
+    loadMore
+  };
 }
 
 export function useOrders() {
-  const orders = useQuery(api.orders.list);
-  if (!orders) return null;
-  return orders.map(o => ({
-    id: o._id,
-    clientId: o.clientId,
-    clientName: o.clientName,
-    clientEmail: o.clientEmail,
-    plan: o.plan,
-    date: o.date,
-    status: o.status as "Pending" | "Active" | "Cancelled",
-  }));
+  const { results, status, loadMore } = usePaginatedQuery(api.orders.list, {}, { initialNumItems: 50 });
+  return {
+    orders: results.map(o => ({
+      id: o._id,
+      clientId: o.clientId,
+      clientName: o.clientName,
+      clientEmail: o.clientEmail,
+      plan: o.plan,
+      date: o.date,
+      status: o.status as "Pending" | "Active" | "Cancelled",
+    })),
+    status,
+    loadMore
+  };
 }
 
 export function useMyOrders() {
-  const orders = useQuery(api.orders.listMine);
-  if (!orders) return null;
-  return orders.map(o => ({
-    id: o._id,
-    clientId: o.clientId,
-    clientName: o.clientName,
-    clientEmail: o.clientEmail,
-    plan: o.plan,
-    date: o.date,
-    status: o.status as "Pending" | "Active" | "Cancelled",
-  }));
+  const { results, status, loadMore } = usePaginatedQuery(api.orders.listMine, {}, { initialNumItems: 50 });
+  return {
+    orders: results.map(o => ({
+      id: o._id,
+      clientId: o.clientId,
+      clientName: o.clientName,
+      clientEmail: o.clientEmail,
+      plan: o.plan,
+      date: o.date,
+      status: o.status as "Pending" | "Active" | "Cancelled",
+    })),
+    status,
+    loadMore
+  };
 }
 
 export function useUsers() {
-  const users = useQuery(api.users.list);
-  if (!users) return null;
-  return users.map(u => ({
-    id: u._id,
-    name: u.name ?? "",
-    email: u.email ?? "",
-    phone: u.phone ?? "",
-    planId: u.planId ?? null,
-    planStatus: (u.planStatus ?? "none") as "none" | "pending" | "active",
-    registered: u.registered ?? "",
-    role: u.role ?? "user",
-  }));
+  const { results, status, loadMore } = usePaginatedQuery(api.users.list, {}, { initialNumItems: 50 });
+  return {
+    users: results.map(u => ({
+      id: u._id,
+      name: u.name ?? "",
+      email: u.email ?? "",
+      phone: u.phone ?? "",
+      planId: u.planId ?? null,
+      planStatus: (u.planStatus ?? "none") as "none" | "pending" | "active",
+      registered: u.registered ?? "",
+      role: u.role ?? "user",
+    })),
+    status,
+    loadMore
+  };
 }
 
 export function useSettings() {

@@ -1,7 +1,6 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "admin@carrow.com").toLowerCase();
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
@@ -15,7 +14,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return {
           email,
           name,
-          role: email === ADMIN_EMAIL ? "admin" : "user",
+          role: "user",
           planStatus: "none",
           registered: new Date().toISOString().slice(0, 10),
         };

@@ -27,7 +27,7 @@ export default function FilesPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const files = useAllFiles();
-  const users = useUsers();
+  const { users } = useUsers() || { users: [] };
   const generateUploadUrl = useGenerateUploadUrl();
   const saveClientFile = useSaveClientFile();
   const deleteClientFile = useDeleteClientFile();

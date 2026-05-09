@@ -17,7 +17,7 @@ interface Project {
 
 export default function OurWork() {
   const navigate = useNavigate();
-  const works = useWorks() ?? [];
+  const { works } = useWorks() || { works: [] };
   
   useEffect(() => {
     window.scrollTo(0, 0);

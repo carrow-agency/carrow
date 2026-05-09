@@ -22,7 +22,7 @@ interface UserData {
 }
 
 export default function UsersPanel() {
-  const users = useUsers();
+  const { users, status, loadMore } = useUsers();
   const plans = usePlans();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
@@ -143,6 +143,14 @@ export default function UsersPanel() {
       </div>
 
       <DataTable columns={cols} data={filtered} />
+      {status === "CanLoadMore" && (
+        <div className="flex justify-center mt-6">
+          <Button variant="secondary" onClick={() => loadMore(50)}>Load More</Button>
+        </div>
+      )}
+      {status === "LoadingMore" && (
+        <div className="flex justify-center mt-6 text-sm text-admin-muted">Loading more users...</div>
+      )}
 
       <Modal
         open={!!open}

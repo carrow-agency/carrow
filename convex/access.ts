@@ -13,8 +13,7 @@ async function getUserFromCtx(ctx: Ctx): Promise<Doc<"users"> | null> {
 export async function requireAdmin(ctx: Ctx): Promise<boolean> {
   const user = await getUserFromCtx(ctx);
   if (!user) return false;
-  if (user.role === "admin") return true;
-  return user.email?.toLowerCase() === (process.env.ADMIN_EMAIL ?? "admin@carrow.com").toLowerCase();
+  return user.role === "admin";
 }
 
 export async function requireAuth(ctx: Ctx): Promise<Id<"users">> {

@@ -12,18 +12,23 @@ export const current = query({
   },
 });
 
+import { paginationOptsValidator } from "convex/server";
+
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
     if (!isAdmin) {
       throw new Error("Unauthorized");
     }
-    const users = await ctx.db.query("users").order("desc").take(500);
-    return users.map(user => {
-      const { passwordHash, ...safeUser } = user;
-      return safeUser;
-    });
+    const paginatedUsers = await ctx.db.query("users").order("desc").paginate(args.paginationOpts);
+    return {
+      ...paginatedUsers,
+      page: paginatedUsers.page.map(user => {
+        const { passwordHash, ...safeUser } = user;
+        return safeUser;
+      })
+    };
   },
 });
 
@@ -144,6 +149,25 @@ export const remove = mutation({
       throw new Error("Cannot delete admin users");
     }
     
+    // Cascade deletes for referential integrity
+    const orders = await ctx.db.query("orders").withIndex("by_clientId_and_date", q => q.eq("clientId", args.id)).collect();
+    for (const order of orders) await ctx.db.delete(order._id);
+    
+    const files = await ctx.db.query("clientFiles").withIndex("by_user", q => q.eq("userId", args.id)).collect();
+    for (const file of files) await ctx.db.delete(file._id);
+
+    const planRequests = await ctx.db.query("planRequests").withIndex("by_userId_and_createdAt", q => q.eq("userId", args.id)).collect();
+    for (const req of planRequests) await ctx.db.delete(req._id);
+
+    const contracts = await ctx.db.query("contracts").withIndex("by_clientId_and_createdAt", q => q.eq("clientId", args.id)).collect();
+    for (const contract of contracts) await ctx.db.delete(contract._id);
+
+    const reports = await ctx.db.query("reports").withIndex("by_clientId_and_period", q => q.eq("clientId", args.id)).collect();
+    for (const report of reports) await ctx.db.delete(report._id);
+
+    const works = await ctx.db.query("works").withIndex("by_clientId", q => q.eq("clientId", args.id)).collect();
+    for (const work of works) await ctx.db.delete(work._id);
+
     await ctx.db.delete(args.id);
     return { success: true };
   },

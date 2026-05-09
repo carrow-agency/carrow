@@ -57,7 +57,7 @@ export const create = mutation({
 export const updateStatus = mutation({
   args: {
     id: v.id("planRequests"),
-    status: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
   },
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);

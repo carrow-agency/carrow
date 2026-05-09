@@ -15,10 +15,10 @@ export default defineSchema({
     isAnonymous: v.optional(v.boolean()),
     passwordHash: v.optional(v.string()),
     planId: v.optional(v.id("plans")),
-    planStatus: v.optional(v.string()),
+    planStatus: v.optional(v.union(v.literal("none"), v.literal("pending"), v.literal("active"))),
     planExpiry: v.optional(v.string()),
     registered: v.optional(v.string()),
-    role: v.optional(v.string()),
+    role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
   })
     .index("email", ["email"])
     .index("phone", ["phone"]),
@@ -29,7 +29,7 @@ export default defineSchema({
     clientEmail: v.string(),
     plan: v.string(),
     date: v.string(),
-    status: v.string(),
+    status: v.union(v.literal("Pending"), v.literal("Active"), v.literal("Cancelled")),
   })
     .index("by_clientId_and_date", ["clientId", "date"])
     .index("by_status_and_date", ["status", "date"]),
@@ -104,7 +104,7 @@ export default defineSchema({
     type: v.string(),
     planName: v.optional(v.string()),
     previousPlan: v.optional(v.string()),
-    status: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
     createdAt: v.string(),
   })
     .index("by_userId_and_createdAt", ["userId", "createdAt"])

@@ -2,27 +2,29 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin, requireAuth } from "./access";
 
+import { paginationOptsValidator } from "convex/server";
+
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
     if (!isAdmin) {
       throw new Error("Admin access required");
     }
-    const orders = await ctx.db.query("orders").order("desc").take(500);
+    const orders = await ctx.db.query("orders").order("desc").paginate(args.paginationOpts);
     return orders;
   },
 });
 
 export const listMine = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
     return await ctx.db
       .query("orders")
       .withIndex("by_clientId_and_date", (q) => q.eq("clientId", userId))
       .order("desc")
-      .take(200);
+      .paginate(args.paginationOpts);
   },
 });
 

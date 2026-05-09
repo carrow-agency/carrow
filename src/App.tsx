@@ -51,10 +51,22 @@ function AdminWrapper() {
 }
 
 const Loading = () => (
-  <div className="min-h-screen bg-brand-white flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-brand-border border-t-brand-black rounded-full animate-spin"></div>
-      <p className="font-sans text-brand-mid-grey">Loading...</p>
+  <div className="min-h-screen bg-brand-white flex flex-col pt-[100px] px-6 md:px-12 max-w-[1280px] mx-auto w-full animate-pulse">
+    {/* Skeleton Header */}
+    <div className="flex justify-between items-center mb-16">
+      <div className="w-32 h-8 bg-brand-mid-grey/20 rounded-md"></div>
+      <div className="w-24 h-8 bg-brand-mid-grey/20 rounded-full"></div>
+    </div>
+    
+    {/* Skeleton Hero Section */}
+    <div className="w-3/4 md:w-1/2 h-16 bg-brand-mid-grey/20 rounded-md mb-6"></div>
+    <div className="w-1/2 md:w-1/3 h-6 bg-brand-mid-grey/20 rounded-md mb-12"></div>
+    
+    {/* Skeleton Content Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="w-full h-64 bg-brand-mid-grey/20 rounded-2xl"></div>
+      <div className="w-full h-64 bg-brand-mid-grey/20 rounded-2xl"></div>
+      <div className="w-full h-64 bg-brand-mid-grey/20 rounded-2xl"></div>
     </div>
   </div>
 );

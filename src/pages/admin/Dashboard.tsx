@@ -18,10 +18,10 @@ interface OrderData {
 }
 
 export default function Dashboard() {
-  const users = useUsers();
-  const orders = useOrders();
+  const { users } = useUsers() || { users: [] };
+  const { orders } = useOrders() || { orders: [] };
   const plans = usePlans();
-  const works = useWorks();
+  const { works } = useWorks() || { works: [] };
   const orderStats = useOrdersStats();
   const contracts = useContracts();
   const navigate = useNavigate();

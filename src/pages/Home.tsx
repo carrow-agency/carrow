@@ -103,7 +103,7 @@ export default function Home() {
             <FadeIn key={i} delay={i * 0.15}>
               <div className="group relative bg-[#F7F7F7] rounded-[24px] overflow-hidden min-h-[400px] flex flex-col justify-end p-8 hover:bg-brand-black transition-colors duration-500">
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                   <img src={item.img} className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000" alt={item.t} />
+                   <img src={item.img} loading="lazy" decoding="async" className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000" alt={item.t} />
                    <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
                 </div>
                 

@@ -17,7 +17,7 @@ export default function WorkDetail() {
   const { companyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   
-  const works = useWorks() ?? [];
+  const { works } = useWorks() || { works: [] };
 
   useEffect(() => {
     window.scrollTo(0, 0);
