@@ -129,6 +129,14 @@ export function useWorkMediaByWork(workId?: string) {
   return useQuery(api.workMedia.listByWork, workId ? { workId: workId as any } : "skip") ?? [];
 }
 
+export function useWorkMediaBatch(workIds: string[]) {
+  // only call when we actually have IDs to avoid unnecessary queries
+  return useQuery(
+    api.workMedia.listByWorks,
+    workIds.length > 0 ? { workIds: workIds as any[] } : "skip"
+  ) as Record<string, any[]> | undefined;
+}
+
 export function useAddWorkMedia() {
   return useMutation(api.workMedia.addMedia);
 }

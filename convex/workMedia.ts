@@ -21,6 +21,31 @@ export const listByWork = query({
   },
 });
 
+// Batch: fetch media for multiple works at once
+export const listByWorks = query({
+  args: { workIds: v.array(v.id("works")) },
+  handler: async (ctx, { workIds }) => {
+    const results = await Promise.all(
+      workIds.map(async (workId) => {
+        const media = await ctx.db
+          .query("workMedia")
+          .withIndex("by_workId", (q) => q.eq("workId", workId))
+          .order("asc")
+          .take(100);
+        const resolved = await Promise.all(
+          media.map(async (m) => {
+            const url = await ctx.storage.getUrl(m.storageId as any);
+            return { ...m, url: url ?? m.url };
+          })
+        );
+        return { workId, media: resolved };
+      })
+    );
+    // Return as a flat map: workId → media[]
+    return Object.fromEntries(results.map(r => [r.workId, r.media]));
+  },
+});
+
 export const addMedia = mutation({
   args: {
     workId: v.id("works"),

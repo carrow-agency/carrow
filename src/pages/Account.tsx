@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest, useMonthlyReportsByUser } from '../lib/useConvex';
+import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest, useMonthlyReportsByUser, useWorkMediaBatch } from '../lib/useConvex';
 import { useAppStore } from '../lib/store';
 import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -67,6 +67,23 @@ export default function Account() {
   const myFiles = useMyFiles();
   const monthlyReports = useMonthlyReportsByUser(currentUser?.id ?? null);
   const createPlanRequest = useCreatePlanRequest();
+
+  // Batch-fetch all extra media for this client's works
+  const myWorkIds = useMemo(() => (myWorks ?? []).map((w: any) => w._id).filter(Boolean), [myWorks]);
+  const workMediaMap = useWorkMediaBatch(myWorkIds);
+
+  // Flatten: cover + all workMedia for each work
+  const allMyMedia = useMemo(() => {
+    const items: { id: string; url: string; title: string; category: string }[] = [];
+    for (const w of (myWorks ?? []) as any[]) {
+      if (w.url) items.push({ id: `cover-${w._id}`, url: w.url, title: w.title, category: w.category });
+      const extras = workMediaMap?.[w._id] ?? [];
+      for (const m of extras) {
+        if (m.url) items.push({ id: m._id, url: m.url, title: m.caption || w.title, category: w.category });
+      }
+    }
+    return items;
+  }, [myWorks, workMediaMap]);
 
   const filesLoading = myFiles === null && currentUser !== null;
   const reportsLoading = monthlyReports === undefined;
@@ -365,19 +382,25 @@ export default function Account() {
           {activeTab === 'works' && (
             <div>
               <p className="text-sm text-gray-500 mb-6">Media files your account manager has uploaded for you.</p>
-              {myWorks && myWorks.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {myWorks.map(work => (
-                    <div key={work._id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                      <div className="aspect-video bg-gray-100 relative overflow-hidden">
-                        <img src={work.url} alt={work.title} className="w-full h-full object-cover" />
+              {allMyMedia.length > 0 ? (
+                <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
+                  {allMyMedia.map((item, i) => (
+                    <div key={item.id} className="break-inside-avoid bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                      <div className="relative overflow-hidden bg-gray-100">
+                        {item.url.match(/\.(mp4|webm|mov)$/i) ? (
+                          <video src={item.url} className="w-full object-cover" autoPlay loop muted playsInline />
+                        ) : (
+                          <img src={item.url} alt={item.title} className="w-full object-cover" loading="lazy" />
+                        )}
                         <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider bg-black/60 text-white px-2 py-1 rounded-full backdrop-blur">
-                          {work.category}
+                          {item.category}
                         </span>
                       </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-gray-900 text-sm">{work.title}</h4>
-                      </div>
+                      {item.title && (
+                        <div className="px-4 py-3">
+                          <p className="text-sm font-semibold text-gray-900">{item.title}</p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -391,98 +414,38 @@ export default function Account() {
             </div>
           )}
 
-          {/* FILES TAB */}
+          {/* FILES TAB — analysis reports only */}
           {activeTab === 'files' && (
-            <div className="space-y-8">
-
-              {/* Monthly Analysis Reports */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Analysis</h3>
-                {reportsLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {[1,2,3,4].map(i => (
-                      <div key={i} className="h-36 rounded-xl border border-gray-200 bg-gray-100 animate-pulse" />
-                    ))}
-                  </div>
-                ) : monthlyReports && monthlyReports.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {monthlyReports.map(report => (
-                      <button
-                        key={report._id}
-                        onClick={() => setSelectedReport(report)}
-                        className="bg-white p-5 rounded-xl border border-gray-200 hover:border-gray-900 hover:shadow-md transition-all text-left flex flex-col items-center gap-3 group"
-                      >
-                        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <FolderOpen size={26} />
-                        </div>
-                        {/* Only show monthYear once — no duplicate date below */}
-                        <p className="font-bold text-gray-900 text-sm text-center">{report.monthYear}</p>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                    <BarChart3 size={24} className="mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm font-medium text-gray-500">No analysis reports yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Reports will appear here once your account manager generates them.</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Documents only (contracts + reports — NO media/images) */}
-              {(() => {
-                const docsOnly = (myFiles ?? []).filter(f => {
-                  const label = (f as any).fileLabel;
-                  return label === 'Contract' || label === 'Report';
-                });
-                return (
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">Documents</h3>
-                    {filesLoading ? (
-                      <div className="space-y-3">
-                        {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl border border-gray-200 bg-gray-100 animate-pulse" />)}
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Analysis</h3>
+              {reportsLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="h-36 rounded-xl border border-gray-200 bg-gray-100 animate-pulse" />
+                  ))}
+                </div>
+              ) : monthlyReports && monthlyReports.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {monthlyReports.map(report => (
+                    <button
+                      key={report._id}
+                      onClick={() => setSelectedReport(report)}
+                      className="bg-white p-5 rounded-xl border border-gray-200 hover:border-gray-900 hover:shadow-md transition-all text-left flex flex-col items-center gap-3 group"
+                    >
+                      <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <FolderOpen size={26} />
                       </div>
-                    ) : docsOnly.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {docsOnly.map(file => {
-                          const label = (file as any).fileLabel ?? 'Document';
-                          return (
-                            <div key={file._id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 hover:shadow-sm transition-shadow">
-                              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                                {label === 'Contract' ? (
-                                  <FileText size={20} className="text-blue-500" />
-                                ) : (
-                                  <BarChart3 size={20} className="text-green-500" />
-                                )}
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="font-semibold text-gray-900 text-sm truncate">{file.name}</p>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{label}</span>
-                                  {file.size && <span className="text-xs text-gray-400">{(file.size / 1024 / 1024).toFixed(1)} MB</span>}
-                                </div>
-                              </div>
-                              {file.url && (
-                                <a href={file.url} target="_blank" rel="noopener noreferrer" download={file.name}
-                                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-gray-800 transition-colors">
-                                  <Download size={13} />Download
-                                </a>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                        <FileText size={24} className="mx-auto text-gray-300 mb-2" />
-                        <p className="text-sm font-medium text-gray-500">No documents yet</p>
-                        <p className="text-xs text-gray-400 mt-1">Contracts and reports shared by your account manager will appear here.</p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
+                      <p className="font-bold text-gray-900 text-sm text-center">{report.monthYear}</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-gray-200 p-10 text-center">
+                  <BarChart3 size={24} className="mx-auto text-gray-300 mb-2" />
+                  <p className="text-sm font-medium text-gray-500">No analysis reports yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Reports will appear here once your account manager generates them.</p>
+                </div>
+              )}
             </div>
           )}
 
