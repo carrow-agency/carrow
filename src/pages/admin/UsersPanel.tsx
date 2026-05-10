@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "./components/PageHeader";
 import { DataTable, Column } from "./components/DataTable";
 import { StatusBadge } from "./components/StatusBadge";
@@ -126,8 +127,11 @@ export default function UsersPanel() {
         title="Users"
         description="Every individual with access to the Carrow client space."
         actions={
-          <Button onClick={() => window.alert("Invite user: share the signup link with your client.")}>
-            <Plus size={14} /> Invite user
+          <Button onClick={() => {
+            navigator.clipboard.writeText(window.location.origin + "/signup");
+            toast.success("Signup link copied to clipboard");
+          }}>
+            <Plus size={14} /> Copy Invite Link
           </Button>
         }
       />

@@ -208,37 +208,9 @@ export default defineSchema({
   })
     .index("by_userId_and_createdAt", ["userId", "createdAt"])
     .index("by_status_and_createdAt", ["status", "createdAt"]),
-
-  errorLogs: defineTable({
-    message: v.string(),
-    stack: v.optional(v.string()),
-    source: v.string(),
-    url: v.optional(v.string()),
-    userId: v.optional(v.id("users")),
-    timestamp: v.string(),
-    resolved: v.optional(v.boolean()),
-  })
-    .index("by_timestamp", ["timestamp"])
-    .index("by_resolved_and_timestamp", ["resolved", "timestamp"])
-    .index("by_source_and_timestamp", ["source", "timestamp"]),
-
   rateLimits: defineTable({
     identifier: v.string(),
     attempts: v.number(),
     lastAttempt: v.number(),
   }).index("by_identifier", ["identifier"]),
-
-  // Immutable audit trail — records every significant admin action
-  auditLogs: defineTable({
-    adminId: v.id("users"),
-    adminName: v.string(),
-    action: v.string(),          // e.g. "order.activate", "plan.delete", "user.delete"
-    targetId: v.optional(v.string()),   // stringified ID of affected record
-    targetType: v.optional(v.string()), // table name e.g. "orders", "users"
-    metadata: v.optional(v.string()),   // JSON stringified extra context
-    createdAt: v.string(),
-  })
-    .index("by_adminId", ["adminId"])
-    .index("by_createdAt", ["createdAt"])
-    .index("by_action", ["action"]),
 });

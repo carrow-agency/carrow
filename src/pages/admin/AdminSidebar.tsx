@@ -13,8 +13,6 @@ const items = [
   { to: "/admin/portfolio", label: "Portfolio",  icon: Image },
   { to: "/admin/files",     label: "Files",      icon: FolderOpen },
   { to: "/admin/settings",  label: "Settings",   icon: Settings },
-  { to: "/admin/errors",    label: "Error Logs", icon: AlertCircle },
-  { to: "/admin/audit",     label: "Audit Logs", icon: Shield },
   { to: "/admin/reviews",   label: "Reviews",    icon: Star },
 ];
 

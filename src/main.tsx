@@ -2,7 +2,6 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
-import * as Sentry from "@sentry/react";
 import App from './App.tsx';
 import './index.css';
 
@@ -14,11 +13,6 @@ if (!convexUrl) {
 }
 
 const convex = new ConvexReactClient(convexUrl);
-
-// Initialize Sentry
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN || "",
-});
 
 const root = createRoot(document.getElementById('root')!);
 

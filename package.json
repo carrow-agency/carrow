@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build --outDir dist-build",
-    "preview": "vite preview --outDir dist-build",
-    "clean": "rm -rf dist-build",
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "ci": "npm run typecheck",
@@ -21,8 +21,6 @@
     "@fontsource-variable/geist": "^5.2.8",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
-    "@sentry/node": "^10.52.0",
-    "@sentry/react": "^10.52.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "bcryptjs": "^3.0.3",
@@ -46,7 +44,6 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@sentry/vite-plugin": "^5.2.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.14",

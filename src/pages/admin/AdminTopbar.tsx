@@ -9,7 +9,6 @@ const titles: Record<string, string> = {
   "/admin/portfolio": "Portfolio",
   "/admin/files":     "Files",
   "/admin/settings":  "Settings",
-  "/admin/errors":    "Error Logs",
 };
 
 interface Props {

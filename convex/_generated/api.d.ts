@@ -9,10 +9,8 @@
  */
 
 import type * as access from "../access.js";
-import type * as auditLogs from "../auditLogs.js";
 import type * as auth from "../auth.js";
 import type * as contracts from "../contracts.js";
-import type * as errorLogs from "../errorLogs.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
@@ -26,7 +24,6 @@ import type * as rateLimit from "../rateLimit.js";
 import type * as reports from "../reports.js";
 import type * as reset from "../reset.js";
 import type * as seed from "../seed.js";
-import type * as sentry from "../sentry.js";
 import type * as settings from "../settings.js";
 import type * as teamMembers from "../teamMembers.js";
 import type * as users from "../users.js";
@@ -42,10 +39,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   access: typeof access;
-  auditLogs: typeof auditLogs;
   auth: typeof auth;
   contracts: typeof contracts;
-  errorLogs: typeof errorLogs;
   files: typeof files;
   http: typeof http;
   init: typeof init;
@@ -59,7 +54,6 @@ declare const fullApi: ApiFromModules<{
   reports: typeof reports;
   reset: typeof reset;
   seed: typeof seed;
-  sentry: typeof sentry;
   settings: typeof settings;
   teamMembers: typeof teamMembers;
   users: typeof users;

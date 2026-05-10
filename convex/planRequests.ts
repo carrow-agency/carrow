@@ -147,21 +147,6 @@ export const updateStatus = mutation({
       }
     }
 
-    // Audit trail
-    await ctx.db.insert("auditLogs", {
-      adminId: admin._id,
-      adminName: admin.name ?? "Admin",
-      action: `planRequest.${args.status}`,
-      targetId: args.id,
-      targetType: "planRequests",
-      metadata: JSON.stringify({
-        clientName: request.clientName,
-        type: request.type,
-        planName: request.planName,
-      }),
-      createdAt: new Date().toISOString(),
-    });
-
     return { success: true };
   },
 });
@@ -177,15 +162,6 @@ export const remove = mutation({
     if (!request) throw new Error("Plan request not found");
 
     await ctx.db.delete(args.id);
-
-    await ctx.db.insert("auditLogs", {
-      adminId: admin._id,
-      adminName: admin.name ?? "Admin",
-      action: "planRequest.delete",
-      targetId: args.id,
-      targetType: "planRequests",
-      createdAt: new Date().toISOString(),
-    });
 
     return { success: true };
   },

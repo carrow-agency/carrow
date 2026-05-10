@@ -206,17 +206,6 @@ export const remove = mutation({
     // 7. Delete user record
     await ctx.db.delete(args.id);
 
-    // 8. Audit trail
-    await ctx.db.insert("auditLogs", {
-      adminId: admin._id,
-      adminName: admin.name ?? "Admin",
-      action: "user.delete",
-      targetId: args.id,
-      targetType: "users",
-      metadata: JSON.stringify({ name: targetUser.name, email: targetUser.email }),
-      createdAt: new Date().toISOString(),
-    });
-
     return { success: true };
   },
 });

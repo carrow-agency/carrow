@@ -591,13 +591,7 @@ export default function SettingsPanel() {
                         desc: "Resets site name, social links, and homepage copy to defaults. Client data is unaffected.",
                         label: "Clear settings",
                         onClick: () => setConfirmClearOpen(true)
-                      },
-                      {
-                        title: "Purge error logs",
-                        desc: "Permanently deletes all logged errors. Cannot be undone.",
-                        label: "Purge logs",
-                        onClick: () => alert("Purge logs coming soon")
-                      },
+                      }
                     ].map(action => (
                       <div key={action.title} className="flex items-center justify-between p-5 bg-[#0c0c0c] border border-[#1a1a1a] rounded-xl">
                         <div>

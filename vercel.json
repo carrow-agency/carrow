@@ -1,5 +1,5 @@
 {
-  "outputDirectory": "dist-build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/((?!api/.*|_next/.*|_static/.*|.*\\.(?:[^?]+)?$).*)",
@@ -32,7 +32,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://browser.sentry-cdn.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.convex.cloud; connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://*.sentry.io https://o4511353759006720.ingest.de.sentry.io; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://*.convex.cloud; connect-src 'self' https://*.convex.cloud wss://*.convex.cloud; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }

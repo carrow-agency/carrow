@@ -108,21 +108,6 @@ export const updateStatus = mutation({
         planExpiry: undefined,
       });
     }
-
-    // Audit trail
-    await ctx.db.insert("auditLogs", {
-      adminId: admin._id,
-      adminName: admin.name ?? "Admin",
-      action: `order.${args.status.toLowerCase()}`,
-      targetId: args.id,
-      targetType: "orders",
-      metadata: JSON.stringify({
-        clientName: order.clientName,
-        plan: order.plan,
-        previousStatus: order.status,
-      }),
-      createdAt: new Date().toISOString(),
-    });
   },
 });
 
@@ -135,16 +120,6 @@ export const remove = mutation({
     if (!order) throw new Error("Order not found");
 
     await ctx.db.delete(args.id);
-
-    await ctx.db.insert("auditLogs", {
-      adminId: admin._id,
-      adminName: admin.name ?? "Admin",
-      action: "order.delete",
-      targetId: args.id,
-      targetType: "orders",
-      metadata: JSON.stringify({ clientName: order.clientName, plan: order.plan }),
-      createdAt: new Date().toISOString(),
-    });
 
     return { success: true };
   },
@@ -168,16 +143,6 @@ export const renew = mutation({
     await ctx.db.patch(order.clientId, {
       planStatus: "active",
       planExpiry: newExpiry,
-    });
-
-    await ctx.db.insert("auditLogs", {
-      adminId: admin._id,
-      adminName: admin.name ?? "Admin",
-      action: "order.renew",
-      targetId: args.id,
-      targetType: "orders",
-      metadata: JSON.stringify({ clientName: order.clientName, plan: order.plan, newExpiry }),
-      createdAt: new Date().toISOString(),
     });
 
     return { success: true };

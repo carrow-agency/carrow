@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, getCurrentUser } from "./access";
-import { captureError } from "./sentry";
 
 export const generateUploadUrl = mutation({
   args: {},
@@ -46,7 +45,7 @@ export const saveClientFile = mutation({
         size: args.size,
       });
     } catch (error) {
-      captureError(error as Error, { fileName: args.name, action: "saveClientFile" });
+      console.error("[saveClientFile]", (error as Error).message, { fileName: args.name });
       throw error;
     }
   },
@@ -125,7 +124,7 @@ export const deleteClientFile = mutation({
       await ctx.storage.delete(file.storageId);
       await ctx.db.delete(args.id);
     } catch (error) {
-      captureError(error as Error, { fileId: args.id, action: "deleteClientFile" });
+      console.error("[deleteClientFile]", (error as Error).message, { fileId: args.id });
       throw error;
     }
   },
