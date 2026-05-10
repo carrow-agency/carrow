@@ -101,18 +101,18 @@ export default function Home() {
             { t: "Your Brand Is Our Brand.", d: "We work as your in-house creative team, not an outside vendor.", img: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=400&h=300" },
           ].map((item, i) => (
             <FadeIn key={i} delay={i * 0.15}>
-              <div className="group relative bg-[#F7F7F7] rounded-[24px] overflow-hidden min-h-[400px] flex flex-col justify-end p-8 hover:bg-brand-black transition-colors duration-500">
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="group relative bg-brand-black rounded-[24px] overflow-hidden min-h-[400px] flex flex-col justify-end p-8">
+                <div className="absolute inset-0">
                    <img src={item.img} loading="lazy" decoding="async" className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-1000" alt={item.t} />
-                   <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/80 to-transparent"></div>
+                   <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-black/60 to-transparent"></div>
                 </div>
                 
-                <div className="relative z-10 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="w-12 h-12 rounded-full border border-brand-mid-grey/30 flex items-center justify-center mb-6 bg-white flex-shrink-0 group-hover:border-white/20 group-hover:bg-white/10 group-hover:backdrop-blur-sm transition-colors duration-500">
-                     <span className="font-serif font-bold text-brand-black group-hover:text-brand-white">0{i+1}</span>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center mb-6 bg-white/10 backdrop-blur-sm flex-shrink-0">
+                     <span className="font-serif font-bold text-brand-white">0{i+1}</span>
                   </div>
-                  <h3 className="font-serif font-bold text-[28px] md:text-[32px] text-brand-black group-hover:text-brand-white mb-4 transition-colors duration-500">{item.t}</h3>
-                  <p className="font-sans text-[16px] text-brand-mid-grey group-hover:text-brand-white/80 leading-[1.8] opacity-0 group-hover:opacity-100 transition-all duration-500 delay-100">{item.d}</p>
+                  <h3 className="font-serif font-bold text-[28px] md:text-[32px] text-brand-white mb-4">{item.t}</h3>
+                  <p className="font-sans text-[16px] text-brand-white/80 leading-[1.8]">{item.d}</p>
                 </div>
               </div>
             </FadeIn>
