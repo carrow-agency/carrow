@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "../../lib/generated/api";
+import { toWebP } from "../../lib/toWebP";
 import {
   useSettings,
   useUpdateSettings,
@@ -191,12 +192,14 @@ function MemberDrawer({ member, onSave, onClose }: {
   const handlePhotoClick = () => fileRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
+      const { blob, isConverted } = await toWebP(file);
+      const finalFile = isConverted ? new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }) : file;
       const uploadUrl = await generateUploadUrl();
-      const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+      const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": finalFile.type }, body: finalFile });
       const { storageId } = await res.json();
       // Build a direct storage URL for preview
       const convexUrl = uploadUrl.split("/api/storage/")[0];

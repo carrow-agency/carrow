@@ -41,6 +41,8 @@ const MODES = [
 
 type Mode = "public" | "client";
 
+import { toWebP } from "../../lib/toWebP";
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function formatSize(bytes?: number) {
@@ -63,15 +65,17 @@ function MediaUploadCell({
   const [uploading, setUploading] = useState(false);
 
   const handle = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
+      const { blob, isConverted } = await toWebP(file);
+      const finalFile = isConverted ? new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }) : file;
       const url = await generateUrl();
-      const res = await fetch(url, { method: "POST", body: file, headers: { "Content-Type": file.type } });
+      const res = await fetch(url, { method: "POST", body: finalFile, headers: { "Content-Type": finalFile.type } });
       if (!res.ok) throw new Error("Upload failed");
       const { storageId } = await res.json();
-      await onAdd(storageId, file.type);
+      await onAdd(storageId, finalFile.type);
     } catch (err) { console.error(err); }
     setUploading(false);
     if (ref.current) ref.current.value = "";
@@ -243,13 +247,15 @@ function WorkModal({
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    let file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     setPreviewUrl(URL.createObjectURL(file));
     try {
+      const { blob, isConverted } = await toWebP(file);
+      const finalFile = isConverted ? new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }) : file;
       const url = await generateUrl();
-      const res = await fetch(url, { method: "POST", body: file, headers: { "Content-Type": file.type } });
+      const res = await fetch(url, { method: "POST", body: finalFile, headers: { "Content-Type": finalFile.type } });
       if (!res.ok) throw new Error();
       const { storageId: sid } = await res.json();
       setStorageId(sid);
