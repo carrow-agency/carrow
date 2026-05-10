@@ -30,13 +30,13 @@ export default function Services() {
       title: 'Social Media Marketing',
       desc: 'Content that stops the scroll, starts conversations, and builds communities. We manage your social presence end-to-end so you don\'t have to worry about what to post next.',
       bullets: ['Content Strategy & Calendars', 'Platform Management (IG, TikTok, LinkedIn)', 'Community Engagement', 'Analytics & Growth Reporting'],
-      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800'
+      image: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Content Creation & Video',
       desc: 'High-end visuals, short-form video, and compelling copy. In a world of infinite content, we create assets that demand attention and clearly communicate your value.',
       bullets: ['Short-form Video (Reels/TikTok)', 'Photography & Art Direction', 'Copywriting & Storytelling', 'Graphic Design'],
-      image: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&q=80&w=800'
+      image: 'https://images.unsplash.com/photo-1574717024453-354056afd6bf?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Campaign Direction & Ads',
@@ -48,7 +48,7 @@ export default function Services() {
       title: 'Influencer Marketing',
       desc: 'We put your brand in the right hands. Forget vanity metrics; we partner with creators who actually have influence and align with your brand ethos.',
       bullets: ['Creator Discovery & Vetting', 'Campaign Briefs & Strategy', 'Relationship Management', 'Performance Tracking'],
-      image: 'https://images.unsplash.com/photo-1606770347238-77fbe25e4685?auto=format&fit=crop&q=80&w=800'
+      image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&q=80&w=800'
     }
   ];
 
