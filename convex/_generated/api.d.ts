@@ -16,6 +16,7 @@ import type * as errorLogs from "../errorLogs.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
+import type * as migrate from "../migrate.js";
 import type * as monthlyReports from "../monthlyReports.js";
 import type * as orders from "../orders.js";
 import type * as planRequests from "../planRequests.js";
@@ -29,6 +30,7 @@ import type * as sentry from "../sentry.js";
 import type * as settings from "../settings.js";
 import type * as teamMembers from "../teamMembers.js";
 import type * as users from "../users.js";
+import type * as utils from "../utils.js";
 import type * as workMedia from "../workMedia.js";
 import type * as works from "../works.js";
 
@@ -47,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   http: typeof http;
   init: typeof init;
+  migrate: typeof migrate;
   monthlyReports: typeof monthlyReports;
   orders: typeof orders;
   planRequests: typeof planRequests;
@@ -60,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   settings: typeof settings;
   teamMembers: typeof teamMembers;
   users: typeof users;
+  utils: typeof utils;
   workMedia: typeof workMedia;
   works: typeof works;
 }>;

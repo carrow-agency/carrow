@@ -108,7 +108,7 @@ function WorkMediaStrip({ workId }: { workId: string }) {
 
   const handleAdd = useCallback(
     async (storageId: string, type: string) => {
-      await addMedia({ workId: workId as Id<"works">, storageId, type, order: media.length });
+      await addMedia({ workId: workId as Id<"works">, storageId: storageId as Id<"_storage">, type, order: media.length });
     },
     [workId, addMedia, media.length]
   );

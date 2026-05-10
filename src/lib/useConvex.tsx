@@ -353,11 +353,35 @@ export const useAuthFunctions = () => {
     }
   };
 
+  const requestPasswordReset = async (email: string) => {
+    try {
+      await authSignIn("password", { flow: "reset", email });
+      return { success: true, error: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to send reset email",
+      };
+    }
+  };
+
+  const resetPassword = async (newPassword: string, code: string) => {
+    try {
+      await authSignIn("password", { flow: "reset-verification", code, newPassword });
+      return { success: true, error: undefined };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to reset password",
+      };
+    }
+  };
+
   const signOut = async () => {
     await authSignOut();
   };
 
-  return { signIn, signUp, signOut };
+  return { signIn, signUp, signOut, requestPasswordReset, resetPassword };
 };
 
 export const useCurrentUser = () => {

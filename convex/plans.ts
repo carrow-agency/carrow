@@ -89,6 +89,24 @@ export const remove = mutation({
     if (!isAdmin) {
       throw new Error("Admin access required");
     }
+
+    // 1. Delete associated plan reviews
+    const reviews = await ctx.db
+      .query("planReviews")
+      .withIndex("by_planId_and_status", (q) => q.eq("planId", args.id))
+      .collect();
+    for (const review of reviews) {
+      await ctx.db.delete(review._id);
+    }
+
+    // 2. Nullify planId on users
+    const users = await ctx.db.query("users").collect();
+    for (const user of users) {
+      if (user.planId === args.id) {
+        await ctx.db.patch(user._id, { planId: undefined });
+      }
+    }
+
     await ctx.db.delete(args.id);
   },
 });

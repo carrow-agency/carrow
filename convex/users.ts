@@ -169,10 +169,25 @@ export const remove = mutation({
       for (const contract of contracts) await ctx.db.delete(contract._id);
     } catch (e) { console.error("Failed to delete contracts", e); }
 
-    // 5. Delete reports
+    // 5. Delete reports and monthlyReports
     try {
       const reports = await ctx.db.query("reports").withIndex("by_clientId_and_period", q => q.eq("clientId", args.id)).collect();
       for (const report of reports) await ctx.db.delete(report._id);
+      
+      const monthlyReports = await ctx.db.query("monthlyReports").withIndex("by_clientId_and_monthYear", q => q.eq("clientId", args.id)).collect();
+      for (const mReport of monthlyReports) {
+        for (const reel of mReport.topReels) {
+          if (reel.thumbnailStorageId) {
+            try { await ctx.storage.delete(reel.thumbnailStorageId); } catch {}
+          }
+        }
+        for (const post of mReport.topPosts) {
+          if (post.thumbnailStorageId) {
+            try { await ctx.storage.delete(post.thumbnailStorageId); } catch {}
+          }
+        }
+        await ctx.db.delete(mReport._id);
+      }
     } catch (e) { console.error("Failed to delete reports", e); }
 
     // 6. Delete works + associated workMedia blobs

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAuthFunctions, useCurrentUser, useCurrentUserFromConvex } from '../lib/useConvex';
 import { useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
@@ -17,7 +17,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const next = searchParams.get('next') || '/account';
 
-  const { signIn, signOut } = useAuthFunctions();
+  const { signIn, signOut, requestPasswordReset, resetPassword } = useAuthFunctions();
   const checkRateLimit = useMutation(api.rateLimit.checkRateLimit);
   const { isAuthenticated, isLoading: isAuthLoading } = useCurrentUser();
   const currentUser = useCurrentUserFromConvex();
@@ -28,6 +28,17 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forgot password state
+  type ForgotStep = 'idle' | 'request' | 'verify';
+  const [forgotStep, setForgotStep] = useState<ForgotStep>('idle');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState('');
 
   // If already authenticated, redirect immediately
   useEffect(() => {
@@ -80,6 +91,41 @@ export default function LoginPage() {
     // DO NOT navigate immediately. Wait for currentUser to load so we don't hit race conditions or ghost users.
   };
 
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    if (!resetEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)) {
+      setResetError('Enter a valid email address.');
+      return;
+    }
+    setResetLoading(true);
+    const result = await requestPasswordReset(resetEmail.trim().toLowerCase());
+    setResetLoading(false);
+    if (!result.success) {
+      setResetError(result.error || 'Failed to send reset email.');
+      return;
+    }
+    setForgotStep('verify');
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    if (!resetCode.trim()) { setResetError('Enter the code from your email.'); return; }
+    if (newPassword.length < 8) { setResetError('Password must be at least 8 characters.'); return; }
+    setResetLoading(true);
+    const result = await resetPassword(newPassword, resetCode.trim());
+    setResetLoading(false);
+    if (!result.success) {
+      setResetError(result.error || 'Failed to reset password.');
+      return;
+    }
+    setResetSuccess('Password reset! Sign in with your new password.');
+    setForgotStep('idle');
+    setResetCode('');
+    setNewPassword('');
+  };
+
   return (
     <div className="min-h-screen bg-brand-white flex">
       {/* Left — Brand Panel */}
@@ -115,7 +161,7 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
-        className="flex-1 flex flex-col justify-center px-6 md:px-16 lg:px-24 py-14"
+        className="relative flex-1 flex flex-col justify-center px-6 md:px-16 lg:px-24 py-14 overflow-hidden"
       >
         {/* Mobile brand header */}
         <div className="lg:hidden mb-12">
@@ -142,13 +188,13 @@ export default function LoginPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-            {error && (
+            {(error || resetSuccess) && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="px-4 py-3 bg-red-50 border border-red-200 rounded-[10px]"
+                className={`px-4 py-3 border rounded-[10px] ${resetSuccess ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}
               >
-                <p className="font-sans text-[14px] text-red-700" role="alert">{error}</p>
+                <p className={`font-sans text-[14px] ${resetSuccess ? 'text-green-700' : 'text-red-700'}`} role="alert">{resetSuccess || error}</p>
               </motion.div>
             )}
 
@@ -189,6 +235,16 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => { setForgotStep('request'); setResetEmail(email); setResetError(''); setResetSuccess(''); }}
+                className="font-sans text-[13px] text-brand-mid-grey hover:text-brand-black underline underline-offset-2 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -201,6 +257,110 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Forgot password overlay */}
+          <AnimatePresence>
+            {forgotStep !== 'idle' && (
+              <motion.div
+                key="forgot"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                className="absolute inset-0 bg-brand-white flex flex-col justify-center px-6 md:px-16 lg:px-24 py-14"
+              >
+                <div className="w-full max-w-[440px]">
+                  <button
+                    onClick={() => { setForgotStep('idle'); setResetError(''); }}
+                    className="flex items-center gap-2 text-brand-mid-grey hover:text-brand-black transition-colors text-sm mb-8"
+                  >
+                    <ArrowLeft size={15} /> Back to sign in
+                  </button>
+
+                  {forgotStep === 'request' && (
+                    <>
+                      <h2 className="font-serif font-bold text-[32px] text-brand-black mb-2">Reset password</h2>
+                      <p className="font-sans text-[14px] text-brand-mid-grey mb-8">Enter your email and we'll send a reset code.</p>
+                      <form onSubmit={handleRequestReset} className="space-y-5" noValidate>
+                        {resetError && <p className="text-[13px] text-red-600 font-sans">{resetError}</p>}
+                        <div>
+                          <label htmlFor="reset-email" className={labelClass}>Email Address</label>
+                          <input
+                            id="reset-email"
+                            type="email"
+                            value={resetEmail}
+                            onChange={e => setResetEmail(e.target.value)}
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            className={inputClass}
+                            autoFocus
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={resetLoading}
+                          className="w-full flex items-center justify-center gap-3 bg-brand-black text-brand-white rounded-full py-[18px] font-sans font-semibold text-[15px] hover:bg-brand-dark-grey transition-colors duration-200 disabled:opacity-40"
+                        >
+                          {resetLoading ? <span className="inline-block w-4 h-4 border-2 border-brand-white/40 border-t-brand-white rounded-full animate-spin" /> : <>Send Code <ArrowRight size={16} /></>}
+                        </button>
+                      </form>
+                    </>
+                  )}
+
+                  {forgotStep === 'verify' && (
+                    <>
+                      <h2 className="font-serif font-bold text-[32px] text-brand-black mb-2">Enter reset code</h2>
+                      <p className="font-sans text-[14px] text-brand-mid-grey mb-8">Check your email for the reset code, then enter it below.</p>
+                      <form onSubmit={handleResetPassword} className="space-y-5" noValidate>
+                        {resetError && <p className="text-[13px] text-red-600 font-sans">{resetError}</p>}
+                        <div>
+                          <label htmlFor="reset-code" className={labelClass}>Reset Code</label>
+                          <input
+                            id="reset-code"
+                            type="text"
+                            value={resetCode}
+                            onChange={e => setResetCode(e.target.value)}
+                            placeholder="Enter code from email"
+                            autoComplete="one-time-code"
+                            className={inputClass}
+                            autoFocus
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="reset-new-password" className={labelClass}>New Password</label>
+                          <div className="relative">
+                            <input
+                              id="reset-new-password"
+                              type={showNewPassword ? 'text' : 'password'}
+                              value={newPassword}
+                              onChange={e => setNewPassword(e.target.value)}
+                              placeholder="Create new password"
+                              autoComplete="new-password"
+                              className={`${inputClass} pr-12`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-mid-grey hover:text-brand-black transition-colors"
+                              aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                            >
+                              {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={resetLoading}
+                          className="w-full flex items-center justify-center gap-3 bg-brand-black text-brand-white rounded-full py-[18px] font-sans font-semibold text-[15px] hover:bg-brand-dark-grey transition-colors duration-200 disabled:opacity-40"
+                        >
+                          {resetLoading ? <span className="inline-block w-4 h-4 border-2 border-brand-white/40 border-t-brand-white rounded-full animate-spin" /> : <>Set New Password <ArrowRight size={16} /></>}
+                        </button>
+                      </form>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="mt-10 pt-8 border-t border-brand-border">
             <p className="font-sans text-[13px] text-brand-mid-grey">

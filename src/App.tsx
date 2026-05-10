@@ -62,19 +62,20 @@ function AdminWrapper() {
   const auth = useCurrentUser();
   const currentUser = useCurrentUserFromConvex();
 
-  if (auth.isLoading) {
-    return <Loading />;
+  // Show nothing until both auth and role are confirmed — prevents shell leakage
+  if (auth.isLoading || currentUser === undefined) {
+    return (
+      <div className="min-h-screen bg-brand-white flex items-center justify-center">
+        <span className="inline-block w-5 h-5 border-2 border-brand-border border-t-brand-black rounded-full animate-spin" />
+      </div>
+    );
   }
 
   if (!auth.isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  if (!currentUser) {
-    return <Loading />;
-  }
-
-  if (currentUser.role !== 'admin') {
+  if (currentUser === null || currentUser.role !== 'admin') {
     return <Navigate to="/account" replace />;
   }
 

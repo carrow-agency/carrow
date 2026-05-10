@@ -6,7 +6,10 @@ import { sanitizeText } from "./utils";
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const settings = await ctx.db.query("settings").first();
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_singletonKey", (q) => q.eq("singletonKey", "default"))
+      .first();
     return settings ?? null;
   },
 });
@@ -66,7 +69,10 @@ export const update = mutation({
       founderImage: a.founderImage, // Allow raw for image URL/ID
     });
 
-    const settings = await ctx.db.query("settings").first();
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_singletonKey", (q) => q.eq("singletonKey", "default"))
+      .first();
     if (settings) {
       const updateData: {
         general?: ReturnType<typeof buildGeneral>;
@@ -83,6 +89,7 @@ export const update = mutation({
     }
 
     const createdId = await ctx.db.insert("settings", {
+      singletonKey: "default",
       general: args.general ? buildGeneral(args.general) : {
         siteName: "Carrow",
       },
@@ -104,7 +111,10 @@ export const clearSettings = mutation({
       throw new Error("Invalid confirmation token");
     }
 
-    const settings = await ctx.db.query("settings").first();
+    const settings = await ctx.db
+      .query("settings")
+      .withIndex("by_singletonKey", (q) => q.eq("singletonKey", "default"))
+      .first();
     if (settings) {
       await ctx.db.delete(settings._id);
     }

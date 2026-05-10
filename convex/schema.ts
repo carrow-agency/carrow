@@ -19,7 +19,6 @@ export default defineSchema({
     planExpiry: v.optional(v.string()),
     registered: v.optional(v.string()),
     role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
-    deletedAt: v.optional(v.number()), // soft-delete timestamp (ms epoch)
   })
     .index("email", ["email"])
     .index("phone", ["phone"]),
@@ -73,7 +72,7 @@ export default defineSchema({
   // Additional media files per portfolio project (multi-media per work)
   workMedia: defineTable({
     workId: v.id("works"),
-    storageId: v.string(),      // Convex storageId
+    storageId: v.id("_storage"),      // Convex storageId
     url: v.optional(v.string()), // resolved URL (cached)
     type: v.string(),            // MIME type
     caption: v.optional(v.string()),
@@ -81,6 +80,7 @@ export default defineSchema({
   }).index("by_workId", ["workId"]),
 
   settings: defineTable({
+    singletonKey: v.optional(v.string()),
     general: v.object({
       siteName: v.string(),
       tagline: v.optional(v.string()),
@@ -102,7 +102,7 @@ export default defineSchema({
       founderBio: v.string(),
       founderImage: v.optional(v.string()),
     })),
-  }),
+  }).index("by_singletonKey", ["singletonKey"]),
 
   teamMembers: defineTable({
     name: v.string(),
@@ -149,11 +149,11 @@ export default defineSchema({
     clientId: v.id("users"),
     monthYear: v.string(),
     kpiCards: v.object({
-      totalViews: v.string(),
-      accountsReached: v.string(),
-      totalInteractions: v.string(),
-      profileVisits: v.string(),
-      totalContentPosted: v.string(),
+      totalViews: v.number(),
+      accountsReached: v.number(),
+      totalInteractions: v.number(),
+      profileVisits: v.number(),
+      totalContentPosted: v.number(),
     }),
     contentType: v.object({
       reels: v.number(),
@@ -161,22 +161,22 @@ export default defineSchema({
       posts: v.number(),
     }),
     engagement: v.object({
-      likes: v.string(),
-      comments: v.string(),
-      shares: v.string(),
-      saves: v.string(),
+      likes: v.number(),
+      comments: v.number(),
+      shares: v.number(),
+      saves: v.number(),
     }),
     topReels: v.array(v.object({
       thumbnailStorageId: v.optional(v.id("_storage")),
       thumbnailUrl: v.optional(v.string()), // legacy field
-      views: v.string(),
+      views: v.number(),
       date: v.string(),
       caption: v.optional(v.string()),
     })),
     topPosts: v.array(v.object({
       thumbnailStorageId: v.optional(v.id("_storage")),
       thumbnailUrl: v.optional(v.string()), // legacy field
-      viewsOrReach: v.string(),
+      viewsOrReach: v.number(),
       date: v.string(),
       caption: v.optional(v.string()),
     })),
@@ -186,9 +186,9 @@ export default defineSchema({
       growthOpportunity: v.string(),
     }),
     previousMonth: v.optional(v.object({
-      views: v.string(),
-      reach: v.string(),
-      interactions: v.string(),
+      views: v.number(),
+      reach: v.number(),
+      interactions: v.number(),
     })),
     createdAt: v.string(),
   })

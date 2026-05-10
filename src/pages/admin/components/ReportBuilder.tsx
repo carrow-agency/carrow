@@ -98,16 +98,43 @@ export function ReportBuilder({ clientId, clientName, onClose }: Props) {
     setSaving(true);
     setError("");
     try {
+      const parseNum = (val: string | number) => {
+        if (typeof val === "number") return val;
+        const num = parseInt(val.replace(/,/g, ''), 10);
+        return isNaN(num) ? 0 : num;
+      };
+
+      const parsedKpi = {
+        totalViews: parseNum(kpi.totalViews),
+        accountsReached: parseNum(kpi.accountsReached),
+        totalInteractions: parseNum(kpi.totalInteractions),
+        profileVisits: parseNum(kpi.profileVisits),
+        totalContentPosted: parseNum(kpi.totalContentPosted),
+      };
+
+      const parsedEng = {
+        likes: parseNum(eng.likes),
+        comments: parseNum(eng.comments),
+        shares: parseNum(eng.shares),
+        saves: parseNum(eng.saves),
+      };
+
+      const parsedPrev = hasPrev ? {
+        views: parseNum(prev.views),
+        reach: parseNum(prev.reach),
+        interactions: parseNum(prev.interactions),
+      } : undefined;
+
       await createReport({
         clientId: clientId as Id<"users">,
         monthYear: monthYear.trim(),
-        kpiCards: kpi,
+        kpiCards: parsedKpi,
         contentType: ct,
-        engagement: eng,
-        topReels: reels.map(r => ({ thumbnailStorageId: r.storageId as Id<"_storage"> ?? undefined, views: r.stat, date: r.date, caption: r.caption || undefined })),
-        topPosts: posts.map(p => ({ thumbnailStorageId: p.storageId as Id<"_storage"> ?? undefined, viewsOrReach: p.stat, date: p.date, caption: p.caption || undefined })),
+        engagement: parsedEng,
+        topReels: reels.map(r => ({ thumbnailStorageId: r.storageId as Id<"_storage"> ?? undefined, views: parseNum(r.stat), date: r.date, caption: r.caption || undefined })),
+        topPosts: posts.map(p => ({ thumbnailStorageId: p.storageId as Id<"_storage"> ?? undefined, viewsOrReach: parseNum(p.stat), date: p.date, caption: p.caption || undefined })),
         strategicInsights: ins,
-        previousMonth: hasPrev ? prev : undefined,
+        previousMonth: parsedPrev,
       });
       onClose();
     } catch (e) {

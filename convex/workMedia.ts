@@ -50,7 +50,7 @@ export const listByWorks = query({
 export const addMedia = mutation({
   args: {
     workId: v.id("works"),
-    storageId: v.string(),
+    storageId: v.id("_storage"),
     type: v.string(),
     caption: v.optional(v.string()),
     order: v.optional(v.number()),
@@ -66,7 +66,7 @@ export const addMedia = mutation({
 
     return await ctx.db.insert("workMedia", {
       workId: args.workId,
-      storageId: args.storageId,
+      storageId: args.storageId as Id<"_storage">,
       type: args.type,
       caption: args.caption,
       order: args.order,
