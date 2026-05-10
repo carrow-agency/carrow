@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAdmin } from "./access";
+import { sanitizeText } from "./utils";
 
 export const get = query({
   args: {},
@@ -40,33 +41,53 @@ export const update = mutation({
       throw new Error("Admin access required");
     }
     
+    // Type-safe update payload builder with sanitization
+    const buildGeneral = (g: any) => ({
+      siteName: g?.siteName ? sanitizeText(g.siteName) : "Carrow",
+      tagline: g?.tagline ? sanitizeText(g.tagline) : undefined,
+      email: g?.email ? sanitizeText(g.email) : undefined,
+      whatsapp: g?.whatsapp ? sanitizeText(g.whatsapp) : undefined,
+      instagram: g?.instagram ? sanitizeText(g.instagram) : undefined,
+      facebook: g?.facebook ? sanitizeText(g.facebook) : undefined,
+      youtube: g?.youtube ? sanitizeText(g.youtube) : undefined,
+    });
+
+    const buildHome = (h: any) => ({
+      h1: sanitizeText(h.h1),
+      h2: sanitizeText(h.h2),
+      cta1: sanitizeText(h.cta1),
+      cta2: sanitizeText(h.cta2),
+    });
+
+    const buildAbout = (a: any) => ({
+      founderName: sanitizeText(a.founderName),
+      founderRole: sanitizeText(a.founderRole),
+      founderBio: sanitizeText(a.founderBio),
+      founderImage: a.founderImage, // Allow raw for image URL/ID
+    });
+
     const settings = await ctx.db.query("settings").first();
     if (settings) {
-      const updateData: Record<string, unknown> = {};
+      const updateData: {
+        general?: ReturnType<typeof buildGeneral>;
+        home?: ReturnType<typeof buildHome>;
+        aboutPage?: ReturnType<typeof buildAbout>;
+      } = {};
       
-      if (args.general) {
-        updateData.general = args.general;
-      }
-      if (args.home) {
-        updateData.home = args.home;
-      }
-      if (args.aboutPage !== undefined) {
-        updateData.aboutPage = args.aboutPage;
-      }
+      if (args.general) updateData.general = buildGeneral(args.general);
+      if (args.home) updateData.home = buildHome(args.home);
+      if (args.aboutPage) updateData.aboutPage = buildAbout(args.aboutPage);
       
       await ctx.db.patch(settings._id, updateData);
       return settings._id;
     }
 
     const createdId = await ctx.db.insert("settings", {
-      general: {
-        siteName: args.general?.siteName ?? "Carrow",
-        tagline: args.general?.tagline,
-        email: args.general?.email,
-        whatsapp: args.general?.whatsapp,
+      general: args.general ? buildGeneral(args.general) : {
+        siteName: "Carrow",
       },
-      home: args.home,
-      aboutPage: args.aboutPage,
+      home: args.home ? buildHome(args.home) : undefined,
+      aboutPage: args.aboutPage ? buildAbout(args.aboutPage) : undefined,
     });
     return createdId;
   },

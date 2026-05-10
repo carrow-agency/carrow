@@ -11,12 +11,18 @@ export const logError = mutation({
     userId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
+    // Only allow authenticated users to log errors
+    const currentUser = await getCurrentUser(ctx);
+    if (!currentUser) {
+      throw new Error("Authentication required");
+    }
+
     const errorId = await ctx.db.insert("errorLogs", {
-      message: args.message,
-      stack: args.stack,
-      source: args.source,
-      url: args.url,
-      userId: args.userId,
+      message: args.message.slice(0, 1000),
+      stack: args.stack?.slice(0, 3000),
+      source: args.source.slice(0, 100),
+      url: args.url?.slice(0, 500),
+      userId: currentUser._id,
       timestamp: new Date().toISOString(),
       resolved: false,
     });

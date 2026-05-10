@@ -40,7 +40,8 @@ export const getGlobal = query({
     await requireAuth(ctx);
     const contracts = await ctx.db
       .query("contracts")
-      .withIndex("by_clientId_and_createdAt", (q) => q.eq("clientId", undefined))
+      .withIndex("by_createdAt")
+      .filter((q) => q.eq(q.field("clientId"), undefined))
       .order("desc")
       .take(500);
     return contracts;
@@ -58,7 +59,8 @@ export const getMine = query({
       .take(500);
     const global = await ctx.db
       .query("contracts")
-      .withIndex("by_clientId_and_createdAt", (q) => q.eq("clientId", undefined))
+      .withIndex("by_createdAt")
+      .filter((q) => q.eq(q.field("clientId"), undefined))
       .order("desc")
       .take(500);
     return [...mine, ...global];

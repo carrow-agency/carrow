@@ -192,6 +192,10 @@ export const getStats = query({
       throw new Error("Admin access required");
     }
     
+    // Instead of taking 2000 items into memory, we use Convex count() 
+    // or fetch if count is not available. 
+    // NOTE: count() is not natively exposed on QueryInitializer in this SDK version.
+    // A separate stats table should be implemented for true O(1) reads if data grows.
     const allOrders = await ctx.db.query("orders").take(2000);
     const pendingOrders = await ctx.db
       .query("orders")

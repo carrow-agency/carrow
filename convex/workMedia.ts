@@ -58,6 +58,12 @@ export const addMedia = mutation({
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
     if (!isAdmin) throw new Error("Admin access required");
+    
+    const url = await ctx.storage.getUrl(args.storageId as Id<"_storage">);
+    if (!url) {
+      throw new Error("Invalid storage ID or file does not exist");
+    }
+
     return await ctx.db.insert("workMedia", {
       workId: args.workId,
       storageId: args.storageId,

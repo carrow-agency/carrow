@@ -143,38 +143,50 @@ export const remove = mutation({
     if (targetUser.role === "admin") throw new Error("Cannot delete admin users");
 
     // 1. Delete client files + storage blobs
-    const files = await ctx.db.query("clientFiles").withIndex("by_user", q => q.eq("userId", args.id)).collect();
-    for (const file of files) {
-      try { await ctx.storage.delete(file.storageId); } catch { /* blob may already be gone */ }
-      await ctx.db.delete(file._id);
-    }
+    try {
+      const files = await ctx.db.query("clientFiles").withIndex("by_user", q => q.eq("userId", args.id)).collect();
+      for (const file of files) {
+        try { await ctx.storage.delete(file.storageId); } catch { /* blob may already be gone */ }
+        await ctx.db.delete(file._id);
+      }
+    } catch (e) { console.error("Failed to delete clientFiles", e); }
 
     // 2. Delete orders
-    const orders = await ctx.db.query("orders").withIndex("by_clientId_and_date", q => q.eq("clientId", args.id)).collect();
-    for (const order of orders) await ctx.db.delete(order._id);
+    try {
+      const orders = await ctx.db.query("orders").withIndex("by_clientId_and_date", q => q.eq("clientId", args.id)).collect();
+      for (const order of orders) await ctx.db.delete(order._id);
+    } catch (e) { console.error("Failed to delete orders", e); }
 
     // 3. Delete plan requests
-    const planRequests = await ctx.db.query("planRequests").withIndex("by_userId_and_createdAt", q => q.eq("userId", args.id)).collect();
-    for (const req of planRequests) await ctx.db.delete(req._id);
+    try {
+      const planRequests = await ctx.db.query("planRequests").withIndex("by_userId_and_createdAt", q => q.eq("userId", args.id)).collect();
+      for (const req of planRequests) await ctx.db.delete(req._id);
+    } catch (e) { console.error("Failed to delete planRequests", e); }
 
     // 4. Delete contracts
-    const contracts = await ctx.db.query("contracts").withIndex("by_clientId_and_createdAt", q => q.eq("clientId", args.id)).collect();
-    for (const contract of contracts) await ctx.db.delete(contract._id);
+    try {
+      const contracts = await ctx.db.query("contracts").withIndex("by_clientId_and_createdAt", q => q.eq("clientId", args.id)).collect();
+      for (const contract of contracts) await ctx.db.delete(contract._id);
+    } catch (e) { console.error("Failed to delete contracts", e); }
 
     // 5. Delete reports
-    const reports = await ctx.db.query("reports").withIndex("by_clientId_and_period", q => q.eq("clientId", args.id)).collect();
-    for (const report of reports) await ctx.db.delete(report._id);
+    try {
+      const reports = await ctx.db.query("reports").withIndex("by_clientId_and_period", q => q.eq("clientId", args.id)).collect();
+      for (const report of reports) await ctx.db.delete(report._id);
+    } catch (e) { console.error("Failed to delete reports", e); }
 
     // 6. Delete works + associated workMedia blobs
-    const works = await ctx.db.query("works").withIndex("by_clientId", q => q.eq("clientId", args.id)).collect();
-    for (const work of works) {
-      const media = await ctx.db.query("workMedia").withIndex("by_workId", q => q.eq("workId", work._id)).collect();
-      for (const m of media) {
-        try { await ctx.storage.delete(m.storageId as any); } catch { /* blob may already be gone */ }
-        await ctx.db.delete(m._id);
+    try {
+      const works = await ctx.db.query("works").withIndex("by_clientId", q => q.eq("clientId", args.id)).collect();
+      for (const work of works) {
+        const media = await ctx.db.query("workMedia").withIndex("by_workId", q => q.eq("workId", work._id)).collect();
+        for (const m of media) {
+          try { await ctx.storage.delete(m.storageId as any); } catch { /* blob may already be gone */ }
+          await ctx.db.delete(m._id);
+        }
+        await ctx.db.delete(work._id);
       }
-      await ctx.db.delete(work._id);
-    }
+    } catch (e) { console.error("Failed to delete works", e); }
 
     // 7. Delete user record
     await ctx.db.delete(args.id);

@@ -25,10 +25,9 @@ export const saveClientFile = mutation({
       const currentUser = await getCurrentUser(ctx);
       if (!currentUser) throw new Error("Authentication required");
 
-      const targetUserId = args.userId ?? currentUser._id;
-      if (targetUserId !== currentUser._id && currentUser.role !== "admin") {
-        throw new Error("Unauthorized to save files for this user");
-      }
+      const targetUserId = (currentUser.role === "admin" && args.userId) 
+        ? args.userId 
+        : currentUser._id;
 
       const maxSize = 20 * 1024 * 1024; // 20MB
       if (args.size && args.size > maxSize) {
