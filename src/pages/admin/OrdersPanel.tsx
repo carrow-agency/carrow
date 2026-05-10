@@ -5,7 +5,7 @@ import { StatusBadge } from "./components/StatusBadge";
 import { StatsCard } from "./components/StatsCard";
 import { Button } from "./components/Button";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { useOrders, useUpdateOrderStatus, useDeleteOrder, usePlanRequests, useUpdatePlanRequestStatus, useDeletePlanRequest } from "../../lib/useConvex";
+import { useOrders, useUpdateOrderStatus, useDeleteOrder, usePlanRequests, useUpdatePlanRequestStatus, useDeletePlanRequest, useRenewOrder } from "../../lib/useConvex";
 import { withErrorHandler } from "../../lib/mutationHandler";
 import { Id } from "../../../convex/_generated/dataModel";
 import { CheckCircle2, XCircle, Trash2, ShoppingBag, Clock } from "lucide-react";
@@ -36,15 +36,20 @@ export default function OrdersPanel() {
   const { orders, status, loadMore } = useOrders() || { orders: [], status: "Exhausted" as const, loadMore: () => {} };
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
+  const renewOrder = useRenewOrder();
 
   const requests = usePlanRequests() ?? [];
   const updateRequestStatus = useUpdatePlanRequestStatus();
   const deleteRequest = useDeletePlanRequest();
 
+  // Only show pending requests in the requests panel; approved/rejected are archived
+  const pendingRequests = requests.filter(r => r.status === "pending");
+
   const [tab, setTab]     = useState<TabType>("All");
   const [activateTarget, setActivateTarget] = useState<OrderData | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [renewTarget, setRenewTarget] = useState<OrderData | null>(null);
   
   // Plan Request actions
   const [approveReqTarget, setApproveReqTarget] = useState<PlanRequestData | null>(null);
@@ -84,6 +89,14 @@ export default function OrdersPanel() {
       await deleteOrder({ id: deleteTarget as Id<"orders"> });
       setDeleteTarget(null);
     }, setActionLoading, { showSuccessToast: true, successMessage: "Order deleted" });
+  };
+
+  const handleRenew = async () => {
+    if (!renewTarget) return;
+    await withErrorHandler(async () => {
+      await renewOrder({ id: renewTarget.id as Id<"orders"> });
+      setRenewTarget(null);
+    }, setActionLoading, { showSuccessToast: true, successMessage: "Plan renewed — expiry extended 30 days" });
   };
 
   const handleApproveRequest = async () => {
@@ -129,6 +142,11 @@ export default function OrdersPanel() {
           {o.status === "Pending" && (
             <Button size="sm" variant="secondary" onClick={() => setActivateTarget(o)} disabled={actionLoading}>
               <CheckCircle2 size={13} /> Activate
+            </Button>
+          )}
+          {o.status === "Active" && (
+            <Button size="sm" variant="secondary" onClick={() => setRenewTarget(o)} disabled={actionLoading}>
+              <CheckCircle2 size={13} /> Renew
             </Button>
           )}
           {o.status !== "Cancelled" && (
@@ -207,13 +225,14 @@ export default function OrdersPanel() {
         <StatsCard label="Cancelled" value={String(cancelledOrders)} icon={<ShoppingBag size={15}/>} iconColor="text-red-400" />
       </div>
 
-      {requests.length > 0 && (
+      {pendingRequests.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Clock size={16} className="text-amber-400" />
-            <h2 className="text-sm font-semibold text-white">Client Plan Requests</h2>
+            <h2 className="text-sm font-semibold text-white">Pending Client Requests</h2>
+            <span className="ml-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">{pendingRequests.length}</span>
           </div>
-          <DataTable columns={reqCols} data={requests} rowKey={r => r._id} />
+          <DataTable columns={reqCols} data={pendingRequests} rowKey={r => r._id} />
         </div>
       )}
 
@@ -285,7 +304,7 @@ export default function OrdersPanel() {
         onConfirm={handleApproveRequest}
         loading={actionLoading}
         title="Approve Plan Request?"
-        description={`Approve the request for ${approveReqTarget?.clientName} to ${approveReqTarget?.type} their plan? NOTE: You must also manually update their actual plan status from the Orders or Users panel if required.`}
+        description={`Approving will immediately ${approveReqTarget?.type === "cancel" ? "cancel" : "activate"} the plan for ${approveReqTarget?.clientName}${approveReqTarget?.planName ? ` (${approveReqTarget.planName})` : ""}. Their account status and an order record will be updated automatically.`}
         confirmLabel="Approve"
       />
 
@@ -296,8 +315,19 @@ export default function OrdersPanel() {
         onConfirm={handleRejectRequest}
         loading={actionLoading}
         title="Reject Plan Request?"
-        description={`Reject the request for ${approveReqTarget?.clientName}?`}
+        description={`Reject the request from ${rejectReqTarget?.clientName}? Their plan status will remain unchanged.`}
         confirmLabel="Reject"
+      />
+
+      {/* Renew confirmation */}
+      <ConfirmDialog
+        open={!!renewTarget}
+        onClose={() => setRenewTarget(null)}
+        onConfirm={handleRenew}
+        loading={actionLoading}
+        title="Renew Plan?"
+        description={`This will extend ${renewTarget?.clientName}'s ${renewTarget?.plan} plan by 30 days from today and set their status to Active.`}
+        confirmLabel="Renew Plan"
       />
     </div>
   );

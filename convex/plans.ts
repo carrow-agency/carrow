@@ -14,6 +14,18 @@ export const list = query({
   },
 });
 
+/**
+ * Admin-only: returns ALL plans including hidden ones.
+ */
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const isAdmin = await requireAdmin(ctx);
+    if (!isAdmin) throw new Error("Admin access required");
+    return await ctx.db.query("plans").order("desc").take(100);
+  },
+});
+
 export const create = mutation({
   args: {
     name: v.string(),

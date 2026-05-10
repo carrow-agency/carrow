@@ -5,7 +5,7 @@ import { Modal } from "./components/Modal";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Input, Textarea } from "./components/Input";
 import { Toggle } from "./components/Toggle";
-import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from "../../lib/useConvex";
+import { usePlans, useAdminPlans, useCreatePlan, useUpdatePlan, useDeletePlan } from "../../lib/useConvex";
 import { withErrorHandler } from "../../lib/mutationHandler";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Check, Plus, Pencil, Trash2, X, Eye, EyeOff } from "lucide-react";
@@ -23,7 +23,7 @@ interface PlanData {
 const EMPTY_FORM = { name: "", price: "", tagline: "", isPopular: false, visibility: true };
 
 export default function PlansPanel() {
-  const plans = usePlans() ?? [];
+  const plans = useAdminPlans() ?? [];
   const createPlan = useCreatePlan();
   const updatePlan = useUpdatePlan();
   const deletePlan = useDeletePlan();
@@ -102,10 +102,17 @@ export default function PlansPanel() {
           <div
             key={p.id}
             className={`relative flex flex-col rounded-xl border bg-admin-surface p-6 transition-colors ${
-              p.isPopular ? "border-white/30" : "border-admin-border"
+              p.visibility === false
+                ? "border-admin-border opacity-50"
+                : p.isPopular ? "border-white/30" : "border-admin-border"
             }`}
           >
-            {p.isPopular && (
+            {p.visibility === false && (
+              <span className="absolute left-5 top-5 flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-amber-400">
+                <EyeOff size={9} /> Hidden
+              </span>
+            )}
+            {p.isPopular && p.visibility !== false && (
               <span className="absolute right-5 top-5 rounded-full border border-white/20 bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-admin-bg">
                 Popular
               </span>

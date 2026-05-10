@@ -87,9 +87,20 @@ export const updateStatus = mutation({
     if (args.status === "Active") {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 30);
+      // Also look up planId by plan name if user doesn't have it set
+      const user = await ctx.db.get(order.clientId);
+      let planId = user?.planId;
+      if (!planId && order.plan) {
+        const plan = await ctx.db
+          .query("plans")
+          .filter((q) => q.eq(q.field("name"), order.plan))
+          .first();
+        if (plan) planId = plan._id;
+      }
       await ctx.db.patch(order.clientId, {
         planStatus: "active",
         planExpiry: expiryDate.toISOString().split("T")[0],
+        ...(planId ? { planId } : {}),
       });
     } else if (args.status === "Cancelled") {
       await ctx.db.patch(order.clientId, {
@@ -132,6 +143,40 @@ export const remove = mutation({
       targetId: args.id,
       targetType: "orders",
       metadata: JSON.stringify({ clientName: order.clientName, plan: order.plan }),
+      createdAt: new Date().toISOString(),
+    });
+
+    return { success: true };
+  },
+});
+
+/**
+ * Renew an order — extends plan expiry by 30 days and re-activates if needed.
+ */
+export const renew = mutation({
+  args: { id: v.id("orders") },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminUser(ctx);
+    const order = await ctx.db.get(args.id);
+    if (!order) throw new Error("Order not found");
+
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+    const newExpiry = expiryDate.toISOString().split("T")[0] || "2024-01-01";
+
+    await ctx.db.patch(args.id, { status: "Active" });
+    await ctx.db.patch(order.clientId, {
+      planStatus: "active",
+      planExpiry: newExpiry,
+    });
+
+    await ctx.db.insert("auditLogs", {
+      adminId: admin._id,
+      adminName: admin.name ?? "Admin",
+      action: "order.renew",
+      targetId: args.id,
+      targetType: "orders",
+      metadata: JSON.stringify({ clientName: order.clientName, plan: order.plan, newExpiry }),
       createdAt: new Date().toISOString(),
     });
 

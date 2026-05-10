@@ -6,7 +6,7 @@ import { Button } from "./components/Button";
 import { Modal } from "./components/Modal";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Input, Select } from "./components/Input";
-import { useUsers, usePlans, useUpdateUser, useDeleteUser } from "../../lib/useConvex";
+import { useUsers, usePlans, useAdminPlans, useUpdateUser, useDeleteUser } from "../../lib/useConvex";
 import { withErrorHandler } from "../../lib/mutationHandler";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Plus, Filter, Shield, User as UserIcon } from "lucide-react";
@@ -26,7 +26,7 @@ interface UserData {
 
 export default function UsersPanel() {
   const { users, status, loadMore } = useUsers();
-  const plans = usePlans();
+  const plans = useAdminPlans();
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
 

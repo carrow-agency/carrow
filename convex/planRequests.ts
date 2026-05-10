@@ -74,6 +74,7 @@ export const create = mutation({
 
 /**
  * Update a request status. Admin only. Writes to audit log.
+ * When approved: automatically activates/cancels/renews the user's plan.
  */
 export const updateStatus = mutation({
   args: {
@@ -86,6 +87,65 @@ export const updateStatus = mutation({
     if (!request) throw new Error("Plan request not found");
 
     await ctx.db.patch(args.id, { status: args.status });
+
+    if (args.status === "approved") {
+      const user = await ctx.db.get(request.userId);
+      if (!user) throw new Error("User not found");
+
+      const requestType = request.type.toLowerCase();
+
+      if (requestType === "cancel" || requestType === "cancellation") {
+        // Cancel plan: clear user's plan fields + cancel active/pending orders
+        await ctx.db.patch(request.userId, {
+          planStatus: "none",
+          planId: undefined,
+          planExpiry: undefined,
+        });
+        const userOrders = await ctx.db
+          .query("orders")
+          .withIndex("by_clientId_and_date", (q) => q.eq("clientId", request.userId))
+          .collect();
+        for (const order of userOrders) {
+          if (order.status === "Active" || order.status === "Pending") {
+            await ctx.db.patch(order._id, { status: "Cancelled" });
+          }
+        }
+      } else if (requestType === "renew" || requestType === "renewal") {
+        // Renew: extend expiry 30 days from today, ensure active
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        await ctx.db.patch(request.userId, {
+          planStatus: "active",
+          planExpiry: expiryDate.toISOString().split("T")[0],
+        });
+      } else {
+        // activate / upgrade / new → find plan by name, activate user, create Active order
+        let planId = user.planId;
+        if (request.planName) {
+          const plan = await ctx.db
+            .query("plans")
+            .filter((q) => q.eq(q.field("name"), request.planName))
+            .first();
+          if (plan) planId = plan._id;
+        }
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        await ctx.db.patch(request.userId, {
+          planStatus: "active",
+          ...(planId ? { planId } : {}),
+          planExpiry: expiryDate.toISOString().split("T")[0],
+        });
+        // Auto-create an Active order so it shows in Orders panel
+        await ctx.db.insert("orders", {
+          clientId: request.userId,
+          clientName: request.clientName ?? user.name ?? "Unknown",
+          clientEmail: request.clientEmail ?? user.email ?? "No email",
+          plan: request.planName ?? "Custom Plan",
+          date: new Date().toISOString().split("T")[0] || "2024-01-01",
+          status: "Active",
+        });
+      }
+    }
 
     // Audit trail
     await ctx.db.insert("auditLogs", {

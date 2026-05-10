@@ -17,6 +17,21 @@ export function usePlans() {
   }));
 }
 
+/** Admin-only: returns ALL plans including hidden ones. */
+export function useAdminPlans() {
+  const plans = useQuery(api.plans.listAll);
+  if (!plans) return null;
+  return plans.map(p => ({
+    id: p._id,
+    name: p.name,
+    price: p.price ?? "",
+    features: p.features,
+    isPopular: p.isPopular ?? false,
+    visibility: p.visibility ?? true,
+    tagline: p.tagline ?? "",
+  }));
+}
+
 export function useWorks() {
   const { results, status, loadMore } = usePaginatedQuery(api.works.list, {}, { initialNumItems: 50 });
   return {
@@ -189,6 +204,10 @@ export function useUpdatePlan() {
 
 export function useDeletePlan() {
   return useMutation(api.plans.remove);
+}
+
+export function useRenewOrder() {
+  return useMutation(api.orders.renew);
 }
 
 export function useCreateWork() {
