@@ -9,6 +9,7 @@ interface Service {
   title: string;
   desc: string;
   bullets: string[];
+  image: string;
 }
 
 export default function Services() {
@@ -22,27 +23,32 @@ export default function Services() {
     {
       title: 'Brand Strategy & Identity',
       desc: 'We define who you are, why you matter, and how you sound. Before creating any visuals or campaigns, we build a solid strategic foundation that ensures every piece of content serves a larger purpose.',
-      bullets: ['Audience & Market Research', 'Brand Positioning & Voice', 'Visual Identity Systems', 'Brand Guidelines']
+      bullets: ['Audience & Market Research', 'Brand Positioning & Voice', 'Visual Identity Systems', 'Brand Guidelines'],
+      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Social Media Marketing',
       desc: 'Content that stops the scroll, starts conversations, and builds communities. We manage your social presence end-to-end so you don\'t have to worry about what to post next.',
-      bullets: ['Content Strategy & Calendars', 'Platform Management (IG, TikTok, LinkedIn)', 'Community Engagement', 'Analytics & Growth Reporting']
+      bullets: ['Content Strategy & Calendars', 'Platform Management (IG, TikTok, LinkedIn)', 'Community Engagement', 'Analytics & Growth Reporting'],
+      image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Content Creation & Video',
       desc: 'High-end visuals, short-form video, and compelling copy. In a world of infinite content, we create assets that demand attention and clearly communicate your value.',
-      bullets: ['Short-form Video (Reels/TikTok)', 'Photography & Art Direction', 'Copywriting & Storytelling', 'Graphic Design']
+      bullets: ['Short-form Video (Reels/TikTok)', 'Photography & Art Direction', 'Copywriting & Storytelling', 'Graphic Design'],
+      image: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Campaign Direction & Ads',
       desc: 'Creative campaigns built to convert, not just to impress. We blend striking creative with data-driven media buying to acquire customers profitably at scale.',
-      bullets: ['Creative Concepting', 'Meta & Google Ads Management', 'Campaign Analytics & Optimization', 'A/B Testing']
+      bullets: ['Creative Concepting', 'Meta & Google Ads Management', 'Campaign Analytics & Optimization', 'A/B Testing'],
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Influencer Marketing',
       desc: 'We put your brand in the right hands. Forget vanity metrics; we partner with creators who actually have influence and align with your brand ethos.',
-      bullets: ['Creator Discovery & Vetting', 'Campaign Briefs & Strategy', 'Relationship Management', 'Performance Tracking']
+      bullets: ['Creator Discovery & Vetting', 'Campaign Briefs & Strategy', 'Relationship Management', 'Performance Tracking'],
+      image: 'https://images.unsplash.com/photo-1606770347238-77fbe25e4685?auto=format&fit=crop&q=80&w=800'
     }
   ];
 
@@ -63,9 +69,14 @@ export default function Services() {
              <div key={i} className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-16`}>
                 <div className="w-full md:w-1/2">
                    <FadeIn delay={0.1}>
-                     <div className="w-full aspect-[4/3] bg-brand-black rounded-[20px] relative overflow-hidden flex items-center justify-center">
-                        <div className="noise-overlay opacity-20"></div>
-                        <span className="font-serif font-bold text-[40px] md:text-[64px] text-brand-white opacity-10">{i+1 < 10 ? '0' : ''}{i+1}</span>
+                     <div className="w-full aspect-[4/3] rounded-[20px] relative overflow-hidden group bg-brand-off-white">
+                        <img 
+                          src={svc.image} 
+                          alt={svc.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-brand-black/0 group-hover:bg-brand-black/5 transition-colors duration-500"></div>
                      </div>
                    </FadeIn>
                 </div>
