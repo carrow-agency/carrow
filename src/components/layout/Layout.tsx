@@ -20,16 +20,24 @@ function Navbar() {
   const [navVisible, setNavVisible] = useState(true);
 
   useEffect(() => {
+    let ticking = false;
+    
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 20);
-      
-      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-        setNavVisible(false);
-      } else {
-        setNavVisible(true);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          setScrolled(currentScrollY > 20);
+          
+          if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+            setNavVisible(false);
+          } else {
+            setNavVisible(true);
+          }
+          lastScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
       }
-      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });

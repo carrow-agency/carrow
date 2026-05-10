@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest, useMonthlyReportsByUser, useWorkMediaBatch } from '../lib/useConvex';
+import { useCurrentUserFromConvex, useAuthFunctions, usePlans, useSettings, useMyOrders, useMyWorks, useMyFiles, useCreatePlanRequest, useMonthlyReportsByUser, useWorkMediaBatch, useUpdateUser } from '../lib/useConvex';
 import { useAppStore } from '../lib/store';
 import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { MonthlyReportViewer } from '../components/reports/MonthlyReportViewer';
 import { Select } from './admin/components/Input';
+import { toast } from 'sonner';
 
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
@@ -63,6 +64,10 @@ export default function Account() {
   const [selectedPlan, setSelectedPlan] = useState('');
   const [requesting, setRequesting] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
+
+  const [updateName, setUpdateName] = useState(currentUser?.name || "");
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
+  const updateUser = useUpdateUser();
 
   const myWorks = useMyWorks();
   const myFiles = useMyFiles();
@@ -458,7 +463,8 @@ export default function Account() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                   <input
                     type="text"
-                    defaultValue={currentUser.name}
+                    value={updateName}
+                    onChange={(e) => setUpdateName(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                   />
                 </div>
@@ -466,13 +472,29 @@ export default function Account() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                   <input
                     type="email"
-                    defaultValue={currentUser.email}
+                    value={currentUser.email}
                     disabled
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   />
                   <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
                 </div>
-                <Button className="mt-4">Save Changes</Button>
+                <Button 
+                  className="mt-4" 
+                  disabled={isUpdatingUser || updateName === currentUser.name}
+                  onClick={async () => {
+                    try {
+                      setIsUpdatingUser(true);
+                      await updateUser({ id: currentUser.id, name: updateName });
+                      toast.success("Profile updated successfully");
+                    } catch (e: any) {
+                      toast.error("Failed to update profile");
+                    } finally {
+                      setIsUpdatingUser(false);
+                    }
+                  }}
+                >
+                  {isUpdatingUser ? "Saving..." : "Save Changes"}
+                </Button>
               </div>
             </div>
           )}

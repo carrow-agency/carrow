@@ -196,6 +196,7 @@ export default function PlanDetail() {
                     key={star} 
                     type="button" 
                     onClick={() => setRating(star)}
+                    aria-label={`Rate ${star} out of 5 stars`}
                     className={`focus:outline-none transition-colors ${rating >= star ? 'text-brand-black' : 'text-gray-300'}`}
                   >
                     <Star size={24} fill={rating >= star ? "currentColor" : "none"} />
