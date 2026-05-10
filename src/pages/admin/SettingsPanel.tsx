@@ -20,6 +20,7 @@ import {
   Camera,
   AlertTriangle,
   Loader2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "../../lib/generated/api";
@@ -31,7 +32,11 @@ import {
   useCreateTeamMember,
   useUpdateTeamMember,
   useDeleteTeamMember,
+  useClearSettings,
 } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { ConfirmDialog } from "./components/ConfirmDialog";
+import { Id } from "../../../convex/_generated/dataModel";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -318,6 +323,7 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 export default function SettingsPanel() {
   const settings = useSettings();
   const updateSettings = useUpdateSettings();
+  const clearSettings = useClearSettings();
   const teamMembers = useTeamMembers();
   const createMember = useCreateTeamMember();
   const updateMember = useUpdateTeamMember();
@@ -327,6 +333,8 @@ export default function SettingsPanel() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [drawerMember, setDrawerMember] = useState<TeamMember | null>(null);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   const [general, setGeneral] = useState({
     siteName: "", tagline: "", email: "", whatsapp: "",
@@ -354,29 +362,36 @@ export default function SettingsPanel() {
   }, [settings]);
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
+    await withErrorHandler(async () => {
       await updateSettings({ general, home });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-    } catch (e) { console.error(e); }
-    setSaving(false);
+    }, setSaving, { showSuccessToast: true, successMessage: "Settings saved" });
   };
 
   const handleSaveMember = async (m: TeamMember) => {
-    try {
+    await withErrorHandler(async () => {
       if (m._id) {
-        await updateMember({ id: m._id as any, name: m.name, role: m.role, tag: m.tag, bio: m.bio, image: m.image });
+        await updateMember({ id: m._id as Id<"teamMembers">, name: m.name, role: m.role, tag: m.tag, bio: m.bio, image: m.image });
       } else {
         await createMember({ name: m.name, role: m.role, tag: m.tag, bio: m.bio, image: m.image, order: teamMembers.length });
       }
-    } catch (e) { console.error(e); }
-    setDrawerMember(null);
+      setDrawerMember(null);
+    }, undefined, { showSuccessToast: true, successMessage: m._id ? "Team member updated" : "Team member added" });
   };
 
   const handleDeleteMember = async (id: string) => {
     if (!confirm("Remove this team member?")) return;
-    await deleteMember({ id: id as any });
+    await withErrorHandler(async () => {
+      await deleteMember({ id: id as Id<"teamMembers"> });
+    }, undefined, { showSuccessToast: true, successMessage: "Team member removed" });
+  };
+
+  const handleClearSettings = async () => {
+    await withErrorHandler(async () => {
+      await clearSettings({ confirmationToken: "CLEAR" });
+      setConfirmClearOpen(false);
+    }, setClearing, { showSuccessToast: true, successMessage: "All settings cleared and reset" });
   };
 
   const g = (k: keyof typeof general) => (v: string) => setGeneral(p => ({ ...p, [k]: v }));
@@ -575,11 +590,13 @@ export default function SettingsPanel() {
                         title: "Clear all settings",
                         desc: "Resets site name, social links, and homepage copy to defaults. Client data is unaffected.",
                         label: "Clear settings",
+                        onClick: () => setConfirmClearOpen(true)
                       },
                       {
                         title: "Purge error logs",
                         desc: "Permanently deletes all logged errors. Cannot be undone.",
                         label: "Purge logs",
+                        onClick: () => alert("Purge logs coming soon")
                       },
                     ].map(action => (
                       <div key={action.title} className="flex items-center justify-between p-5 bg-[#0c0c0c] border border-[#1a1a1a] rounded-xl">
@@ -587,7 +604,10 @@ export default function SettingsPanel() {
                           <p className="text-sm font-medium text-white">{action.title}</p>
                           <p className="text-xs text-[#444] mt-0.5 max-w-xs">{action.desc}</p>
                         </div>
-                        <button className="flex-shrink-0 ml-6 px-4 py-2 rounded-lg border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors">
+                        <button 
+                          onClick={action.onClick}
+                          className="flex-shrink-0 ml-6 px-4 py-2 rounded-lg border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition-colors"
+                        >
                           {action.label}
                         </button>
                       </div>
@@ -610,6 +630,17 @@ export default function SettingsPanel() {
           />
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={confirmClearOpen}
+        onClose={() => setConfirmClearOpen(false)}
+        onConfirm={handleClearSettings}
+        loading={clearing}
+        title="Clear All Settings?"
+        description="This will reset your site name, tagline, email, social links, and homepage configuration to default values. Your database, plans, users, and portfolio works will not be affected."
+        confirmLabel="Clear Settings"
+        requireTypedConfirmation="CLEAR"
+      />
     </div>
   );
 }

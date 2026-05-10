@@ -15,6 +15,8 @@ import {
   useAddWorkMedia,
   useRemoveWorkMedia,
 } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { Id } from "../../../convex/_generated/dataModel";
 import {
   Plus,
   Pencil,
@@ -105,14 +107,14 @@ function WorkMediaStrip({ workId }: { workId: string }) {
 
   const handleAdd = useCallback(
     async (storageId: string, type: string) => {
-      await addMedia({ workId: workId as any, storageId, type, order: media.length });
+      await addMedia({ workId: workId as Id<"works">, storageId, type, order: media.length });
     },
     [workId, addMedia, media.length]
   );
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {(media as any[]).map((m) => (
+      {media.map((m) => (
         <div key={m._id} className="group relative w-12 h-12 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#2a2a2a]">
           {m.url && m.type?.startsWith("image") ? (
             <img src={m.url} alt="" className="w-full h-full object-cover" />
@@ -447,24 +449,28 @@ export default function PortfolioPanel() {
   const handleOpenEdit = (w: any) => { setEditingWork(w); setModalOpen(true); };
 
   const handleSave = async (data: any) => {
-    if (editingWork) {
-      await updateWork({ id: editingWork.id as any, ...data });
-    } else {
-      await createWork({ ...data, isPrivate: mode === "client" });
-    }
-    setModalOpen(false);
+    await withErrorHandler(async () => {
+      if (editingWork) {
+        await updateWork({ id: editingWork.id as Id<"works">, ...data });
+      } else {
+        await createWork({ ...data, isPrivate: mode === "client" });
+      }
+      setModalOpen(false);
+    }, undefined, { showSuccessToast: true, successMessage: editingWork ? "Work updated" : "Work created" });
   };
 
   const handleTogglePublish = async (w: any, published: boolean) => {
-    await updateWork({ id: w.id as any, published });
+    await withErrorHandler(async () => {
+      await updateWork({ id: w.id as Id<"works">, published });
+    }, undefined, { showSuccessToast: true, successMessage: `Work ${published ? 'published' : 'hidden'}` });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    await deleteWork({ id: deleteTarget.id as any });
-    setDeleting(false);
-    setDeleteTarget(null);
+    await withErrorHandler(async () => {
+      await deleteWork({ id: deleteTarget.id as Id<"works"> });
+      setDeleteTarget(null);
+    }, setDeleting, { showSuccessToast: true, successMessage: "Work deleted" });
   };
 
   return (

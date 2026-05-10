@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopbar } from "./AdminTopbar";
-import Dashboard from "./Dashboard";
-import UsersPanel from "./UsersPanel";
-import OrdersPanel from "./OrdersPanel";
-import PlansPanel from "./PlansPanel";
-import PortfolioPanel from "./PortfolioPanel";
-import FilesPanel from "./FilesPanel";
-import SettingsPanel from "./SettingsPanel";
-import ErrorsPanel from "./ErrorsPanel";
+import { PanelSkeleton } from "./components/PanelSkeleton";
+
+const Dashboard = lazy(() => import("./Dashboard"));
+const UsersPanel = lazy(() => import("./UsersPanel"));
+const OrdersPanel = lazy(() => import("./OrdersPanel"));
+const PlansPanel = lazy(() => import("./PlansPanel"));
+const PortfolioPanel = lazy(() => import("./PortfolioPanel"));
+const FilesPanel = lazy(() => import("./FilesPanel"));
+const SettingsPanel = lazy(() => import("./SettingsPanel"));
+const ErrorsPanel = lazy(() => import("./ErrorsPanel"));
+const AuditLogsPanel = lazy(() => import("./AuditLogsPanel"));
 
 export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,16 +24,19 @@ export default function Admin() {
         <AdminTopbar onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-5 md:p-8">
           <div className="mx-auto max-w-6xl">
-            <Routes>
-              <Route index          element={<Dashboard />} />
-              <Route path="users"     element={<UsersPanel />} />
-              <Route path="orders"    element={<OrdersPanel />} />
-              <Route path="plans"     element={<PlansPanel />} />
-              <Route path="portfolio" element={<PortfolioPanel />} />
-              <Route path="files"     element={<FilesPanel />} />
-              <Route path="settings"  element={<SettingsPanel />} />
-              <Route path="errors"    element={<ErrorsPanel />} />
-            </Routes>
+            <Suspense fallback={<PanelSkeleton />}>
+              <Routes>
+                <Route index          element={<Dashboard />} />
+                <Route path="users"     element={<UsersPanel />} />
+                <Route path="orders"    element={<OrdersPanel />} />
+                <Route path="plans"     element={<PlansPanel />} />
+                <Route path="portfolio" element={<PortfolioPanel />} />
+                <Route path="files"     element={<FilesPanel />} />
+                <Route path="settings"  element={<SettingsPanel />} />
+                <Route path="errors"    element={<ErrorsPanel />} />
+                <Route path="audit"     element={<AuditLogsPanel />} />
+              </Routes>
+            </Suspense>
           </div>
         </main>
       </div>

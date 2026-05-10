@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "./Button";
 
@@ -11,11 +11,18 @@ interface Props {
   scope?: string[];          // list of things that will be deleted
   confirmLabel?: string;
   loading?: boolean;
+  requireTypedConfirmation?: string;
 }
 
 export function ConfirmDialog({
-  open, onClose, onConfirm, title, description, scope, confirmLabel = "Delete", loading = false
+  open, onClose, onConfirm, title, description, scope, confirmLabel = "Delete", loading = false, requireTypedConfirmation
 }: Props) {
+  const [typedValue, setTypedValue] = useState("");
+
+  useEffect(() => {
+    if (open) setTypedValue("");
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -28,6 +35,8 @@ export function ConfirmDialog({
   }, [open, onClose]);
 
   if (!open) return null;
+
+  const isConfirmed = !requireTypedConfirmation || typedValue === requireTypedConfirmation;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -62,12 +71,28 @@ export function ConfirmDialog({
               </ul>
             </div>
           )}
+          
+          {requireTypedConfirmation && (
+            <div className="mt-4 space-y-2">
+              <label className="text-xs font-medium text-admin-muted block">
+                Type <span className="font-mono text-white bg-white/10 px-1 py-0.5 rounded select-all">{requireTypedConfirmation}</span> to confirm
+              </label>
+              <input 
+                type="text"
+                value={typedValue}
+                onChange={(e) => setTypedValue(e.target.value)}
+                className="w-full bg-admin-surface2 border border-admin-border rounded-lg px-3 py-2 text-sm text-white placeholder-admin-muted focus:outline-none focus:border-admin-danger/50 focus:ring-1 focus:ring-admin-danger/50 font-mono transition-all"
+                placeholder={requireTypedConfirmation}
+                autoComplete="off"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-admin-border px-6 py-4">
           <Button variant="ghost" onClick={onClose} disabled={loading}>Cancel</Button>
-          <Button variant="danger" onClick={onConfirm} disabled={loading}>
-            {loading ? "Deleting..." : confirmLabel}
+          <Button variant="danger" onClick={onConfirm} disabled={loading || !isConfirmed}>
+            {loading ? "Confirming..." : confirmLabel}
           </Button>
         </div>
       </div>

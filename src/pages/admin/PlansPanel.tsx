@@ -6,6 +6,8 @@ import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Input, Textarea } from "./components/Input";
 import { Toggle } from "./components/Toggle";
 import { usePlans, useCreatePlan, useUpdatePlan, useDeletePlan } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { Id } from "../../../convex/_generated/dataModel";
 import { Check, Plus, Pencil, Trash2, X, Eye, EyeOff } from "lucide-react";
 
 interface PlanData {
@@ -54,8 +56,7 @@ export default function PlansPanel() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) return;
-    setSaving(true);
-    try {
+    await withErrorHandler(async () => {
       const payload = {
         name: formData.name,
         price: formData.price,
@@ -67,25 +68,24 @@ export default function PlansPanel() {
       if (editingId === "new") {
         await createPlan(payload);
       } else {
-        await updatePlan({ id: editingId as any, ...payload });
+        await updatePlan({ id: editingId as Id<"plans">, ...payload });
       }
       setEditingId(null);
-    } catch (e) { console.error(e); }
-    setSaving(false);
+    }, setSaving, { showSuccessToast: true, successMessage: editingId === "new" ? "Plan created" : "Plan updated" });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try { await deletePlan({ id: deleteTarget.id as any }); }
-    catch (e) { console.error(e); }
-    setDeleting(false);
-    setDeleteTarget(null);
+    await withErrorHandler(async () => {
+      await deletePlan({ id: deleteTarget.id as Id<"plans"> });
+      setDeleteTarget(null);
+    }, setDeleting, { showSuccessToast: true, successMessage: "Plan deleted" });
   };
 
   const handleToggleVisibility = async (plan: PlanData, visible: boolean) => {
-    try { await updatePlan({ id: plan.id as any, visibility: visible }); }
-    catch (e) { console.error(e); }
+    await withErrorHandler(async () => {
+      await updatePlan({ id: plan.id as Id<"plans">, visibility: visible });
+    }, undefined, { showSuccessToast: true, successMessage: `Plan marked as ${visible ? 'public' : 'hidden'}` });
   };
 
   return (

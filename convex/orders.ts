@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, requireAuth } from "./access";
-
+import { requireAdmin, requireAuth, requireAdminUser } from "./access";
 import { paginationOptsValidator } from "convex/server";
 
 export const list = query({
@@ -78,22 +77,16 @@ export const updateStatus = mutation({
     status: v.union(v.literal("Pending"), v.literal("Active"), v.literal("Cancelled")),
   },
   handler: async (ctx, args) => {
-    const isAdmin = await requireAdmin(ctx);
-    if (!isAdmin) {
-      throw new Error("Admin access required");
-    }
-    
+    const admin = await requireAdminUser(ctx);
+
     const order = await ctx.db.get(args.id);
-    if (!order) {
-      throw new Error("Order not found");
-    }
-    
+    if (!order) throw new Error("Order not found");
+
     await ctx.db.patch(args.id, { status: args.status });
 
     if (args.status === "Active") {
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 30);
-
       await ctx.db.patch(order.clientId, {
         planStatus: "active",
         planExpiry: expiryDate.toISOString().split("T")[0],
@@ -104,23 +97,44 @@ export const updateStatus = mutation({
         planExpiry: undefined,
       });
     }
+
+    // Audit trail
+    await ctx.db.insert("auditLogs", {
+      adminId: admin._id,
+      adminName: admin.name ?? "Admin",
+      action: `order.${args.status.toLowerCase()}`,
+      targetId: args.id,
+      targetType: "orders",
+      metadata: JSON.stringify({
+        clientName: order.clientName,
+        plan: order.plan,
+        previousStatus: order.status,
+      }),
+      createdAt: new Date().toISOString(),
+    });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id("orders") },
   handler: async (ctx, args) => {
-    const isAdmin = await requireAdmin(ctx);
-    if (!isAdmin) {
-      throw new Error("Admin access required");
-    }
-    
+    const admin = await requireAdminUser(ctx);
+
     const order = await ctx.db.get(args.id);
-    if (!order) {
-      throw new Error("Order not found");
-    }
-    
+    if (!order) throw new Error("Order not found");
+
     await ctx.db.delete(args.id);
+
+    await ctx.db.insert("auditLogs", {
+      adminId: admin._id,
+      adminName: admin.name ?? "Admin",
+      action: "order.delete",
+      targetId: args.id,
+      targetType: "orders",
+      metadata: JSON.stringify({ clientName: order.clientName, plan: order.plan }),
+      createdAt: new Date().toISOString(),
+    });
+
     return { success: true };
   },
 });

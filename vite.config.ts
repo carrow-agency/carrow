@@ -37,11 +37,18 @@ build: {
       sourcemap: false,
       minify: true,
       rollupOptions: {
+        treeshake: { preset: 'recommended' },
         output: {
           manualChunks: {
             'react-vendor': ['react', 'react-dom'],
             'motion': ['framer-motion'],
             'convex': ['convex'],
+            'lucide': ['lucide-react'],
+            'charts': ['recharts'],
+            'admin': [
+              './src/pages/admin/AdminSidebar',
+              './src/pages/admin/AdminTopbar',
+            ],
           },
         },
       },

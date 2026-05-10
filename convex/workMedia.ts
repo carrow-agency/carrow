@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./access";
+import { Id } from "./_generated/dataModel";
 
 // List all media for a given work entry
 export const listByWork = query({
@@ -14,7 +15,7 @@ export const listByWork = query({
 
     return await Promise.all(
       media.map(async (m) => {
-        const url = await ctx.storage.getUrl(m.storageId as any);
+        const url = await ctx.storage.getUrl(m.storageId as Id<"_storage">);
         return { ...m, url: url ?? m.url };
       })
     );
@@ -34,7 +35,7 @@ export const listByWorks = query({
           .take(100);
         const resolved = await Promise.all(
           media.map(async (m) => {
-            const url = await ctx.storage.getUrl(m.storageId as any);
+            const url = await ctx.storage.getUrl(m.storageId as Id<"_storage">);
             return { ...m, url: url ?? m.url };
           })
         );
@@ -74,7 +75,7 @@ export const removeMedia = mutation({
     if (!isAdmin) throw new Error("Admin access required");
     const media = await ctx.db.get(id);
     if (media) {
-      try { await ctx.storage.delete(media.storageId as any); } catch {}
+      try { await ctx.storage.delete(media.storageId as Id<"_storage">); } catch {}
     }
     await ctx.db.delete(id);
   },

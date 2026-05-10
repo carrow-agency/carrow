@@ -75,7 +75,7 @@ export default function Account() {
   // Flatten: cover + all workMedia for each work
   const allMyMedia = useMemo(() => {
     const items: { id: string; url: string; title: string; category: string }[] = [];
-    for (const w of (myWorks ?? []) as any[]) {
+    for (const w of (myWorks ?? [])) {
       if (w.url) items.push({ id: `cover-${w._id}`, url: w.url, title: w.title, category: w.category });
       const extras = workMediaMap?.[w._id] ?? [];
       for (const m of extras) {

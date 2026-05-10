@@ -71,3 +71,21 @@ export const update = mutation({
     return createdId;
   },
 });
+
+export const clearSettings = mutation({
+  args: {
+    confirmationToken: v.string(),
+  },
+  handler: async (ctx, { confirmationToken }) => {
+    const isAdmin = await requireAdmin(ctx);
+    if (!isAdmin) throw new Error("Admin access required");
+    if (confirmationToken !== "CLEAR") {
+      throw new Error("Invalid confirmation token");
+    }
+
+    const settings = await ctx.db.query("settings").first();
+    if (settings) {
+      await ctx.db.delete(settings._id);
+    }
+  },
+});

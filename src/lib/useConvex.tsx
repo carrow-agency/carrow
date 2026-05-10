@@ -1,6 +1,7 @@
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { api } from "./generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 
 export function usePlans() {
   const plans = useQuery(api.plans.list);
@@ -109,6 +110,10 @@ export function useUpdateSettings() {
   return useMutation(api.settings.update);
 }
 
+export function useClearSettings() {
+  return useMutation(api.settings.clearSettings);
+}
+
 export function useTeamMembers() {
   return useQuery(api.teamMembers.list) ?? [];
 }
@@ -126,15 +131,14 @@ export function useDeleteTeamMember() {
 }
 
 export function useWorkMediaByWork(workId?: string) {
-  return useQuery(api.workMedia.listByWork, workId ? { workId: workId as any } : "skip") ?? [];
+  return useQuery(api.workMedia.listByWork, workId ? { workId: workId as Id<"works"> } : "skip") ?? [];
 }
 
 export function useWorkMediaBatch(workIds: string[]) {
-  // only call when we actually have IDs to avoid unnecessary queries
   return useQuery(
     api.workMedia.listByWorks,
-    workIds.length > 0 ? { workIds: workIds as any[] } : "skip"
-  ) as Record<string, any[]> | undefined;
+    workIds.length > 0 ? { workIds: workIds as Id<"works">[] } : "skip"
+  ) as Record<string, Array<{ _id: Id<"workMedia">; storageId: string; url?: string; type: string; caption?: string; order?: number }>> | undefined;
 }
 
 export function useAddWorkMedia() {
@@ -153,7 +157,7 @@ export function useMyFiles() {
 export function useClientFiles(userId?: string, fileLabel?: string) {
   const files = useQuery(
     api.files.getClientFiles,
-    userId ? { userId: userId as any, fileLabel } : "skip"
+    userId ? { userId: userId as Id<"users">, fileLabel } : "skip"
   );
   return files ?? null;
 }
@@ -229,7 +233,7 @@ export function useContracts() {
 }
 
 export function useContractsByClient(clientId?: string) {
-  return useQuery(api.contracts.getByClient, clientId ? { clientId: clientId as any } : "skip");
+  return useQuery(api.contracts.getByClient, clientId ? { clientId: clientId as Id<"users"> } : "skip");
 }
 
 export function useMyContracts() {
@@ -253,7 +257,7 @@ export function useReports() {
 }
 
 export function useReportsByClient(clientId: string) {
-  return useQuery(api.reports.getByClient, { clientId: clientId as any });
+  return useQuery(api.reports.getByClient, { clientId: clientId as Id<"users"> });
 }
 
 export function useMyReports() {
@@ -346,7 +350,7 @@ export const useCurrentUser = () => {
 };
 
 export function useWorksByClient(clientId?: string) {
-  return useQuery(api.works.getByClient, clientId ? { clientId: clientId as any } : "skip");
+  return useQuery(api.works.getByClient, clientId ? { clientId: clientId as Id<"users"> } : "skip");
 }
 
 export function useMyWorks() {
@@ -413,10 +417,14 @@ export function useCreateMonthlyReport() {
 export function useMonthlyReportsByUser(clientId?: string | null) {
   return useQuery(
     api.monthlyReports.getReportsByUser,
-    clientId ? { clientId: clientId as any } : "skip"
+    clientId ? { clientId: clientId as Id<"users"> } : "skip"
   );
 }
 
 export function useDeleteMonthlyReport() {
   return useMutation(api.monthlyReports.deleteReport);
+}
+
+export function useAuditLogs(limit?: number) {
+  return useQuery(api.auditLogs.list, limit ? { limit } : {});
 }

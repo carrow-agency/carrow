@@ -9,8 +9,6 @@ import './index.css';
 // Convex URL must come from environment variable in production
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
 
-console.log('[Carrow] Convex URL:', convexUrl);
-
 if (!convexUrl) {
   console.error('[Carrow] ERROR: VITE_CONVEX_URL is not set!');
 }
@@ -31,5 +29,3 @@ root.render(
     </ConvexAuthProvider>
   </StrictMode>
 );
-
-console.log('[Carrow] App rendered');

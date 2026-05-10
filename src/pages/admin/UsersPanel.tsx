@@ -7,6 +7,8 @@ import { Modal } from "./components/Modal";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Input, Select } from "./components/Input";
 import { useUsers, usePlans, useUpdateUser, useDeleteUser } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { Id } from "../../../convex/_generated/dataModel";
 import { Plus, Filter, Shield, User as UserIcon } from "lucide-react";
 
 interface UserData {
@@ -58,27 +60,23 @@ export default function UsersPanel() {
 
   const handleSave = async () => {
     if (!open) return;
-    setSaving(true);
-    try {
+    await withErrorHandler(async () => {
       await updateUser({
-        id: open.id as any,
+        id: open.id as Id<"users">,
         name: formData.name,
         phone: formData.phone,
       });
       setEditing(false);
       setOpen(null);
-    } catch (e) { console.error(e); }
-    setSaving(false);
+    }, setSaving, { showSuccessToast: true, successMessage: "User updated successfully" });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await deleteUser({ id: deleteTarget.id as any });
+    await withErrorHandler(async () => {
+      await deleteUser({ id: deleteTarget.id as Id<"users"> });
       setDeleteTarget(null);
-    } catch (e) { console.error(e); }
-    setDeleting(false);
+    }, setDeleting, { showSuccessToast: true, successMessage: "User deleted successfully" });
   };
 
   const cols: Column<UserData>[] = [
@@ -105,7 +103,7 @@ export default function UsersPanel() {
     },
     { key: "phone",  header: "Phone",  render: u => <span className="font-mono text-xs text-admin-muted">{u.phone || "—"}</span> },
     { key: "plan",   header: "Plan",   render: u => <span className="text-sm text-white/80">{u.planName}</span> },
-    { key: "status", header: "Status", render: u => <StatusBadge status={u.status as any} /> },
+    { key: "status", header: "Status", render: u => <StatusBadge status={u.status as "Active" | "Pending" | "None" | "Cancelled"} /> },
     { key: "joined", header: "Joined", render: u => <span className="text-xs text-admin-muted">{u.registered || "—"}</span> },
     {
       key: "actions", header: "", align: "right",

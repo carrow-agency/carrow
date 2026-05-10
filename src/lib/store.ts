@@ -11,17 +11,19 @@ export interface PlanData {
   tagline?: string;
 }
 
-export interface UserAccount {
+export interface ClientUser {
   id: string;
   name: string;
   email: string;
-  passwordHash: string;
   role: 'user' | 'admin';
   planId: string | null;
   planStatus: 'none' | 'pending' | 'active';
   phone?: string;
   registered?: string;
 }
+
+// Legacy alias — kept to avoid widespread refactor until full Convex migration completes
+export type UserAccount = ClientUser;
 
 export interface WorkImage {
   id: string;
@@ -73,8 +75,6 @@ interface AppState {
   setUsers: (users: UserAccount[]) => void;
   setOrders: (orders: Order[]) => void;
   
-  login: (email: string, password: string) => { success: boolean; error?: string };
-  signup: (name: string, email: string, password: string) => { success: boolean; error?: string };
   logout: () => void;
   requestPlan: (planId: string) => void;
   addToCart: (item: { planName: string; price: string; addedAt: number; userId: string | null }) => void;
@@ -96,16 +96,6 @@ const defaultWorks: WorkImage[] = [];
 const defaultSettings: AppSettings = {
   general: { siteName: 'Carrow', tagline: 'We Build Brands That Stand Out', email: 'hello@carrow.com', whatsapp: '+919999999999' },
   home: { h1: 'Digital Marketing Studio.', h2: 'Scaling ambitious brands.', cta1: 'View Services', cta2: 'Our Work' }
-};
-
-const hashSync = (str: string): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString(16);
 };
 
 export const useAppStore = create<AppState>()(
@@ -134,39 +124,6 @@ export const useAppStore = create<AppState>()(
       setUsers: (users) => set({ users }),
       setOrders: (orders) => set({ orders }),
 
-      login: (email: string, password: string) => {
-        const hashedInput = hashSync(password + 'carrow-salt-2024');
-        const user = get().users.find(u => u.email === email);
-        if (!user) {
-          return { success: false, error: 'No account found with this email.' };
-        }
-        if (user.passwordHash !== hashedInput) {
-          return { success: false, error: 'Incorrect password. Please try again.' };
-        }
-        set({ currentUser: user });
-        return { success: true };
-      },
-      
-      signup: (name: string, email: string, password: string) => {
-        const existingUser = get().users.find(u => u.email === email);
-        if (existingUser) {
-          return { success: false, error: 'An account with this email already exists.' };
-        }
-        const hashedPassword = hashSync(password + 'carrow-salt-2024');
-        const newUser: UserAccount = {
-          id: `user-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
-          name,
-          email,
-          passwordHash: hashedPassword,
-          role: 'user',
-          planId: null,
-          planStatus: 'none',
-          registered: new Date().toISOString().split('T')[0]
-        };
-        set(state => ({ users: [...state.users, newUser], currentUser: newUser }));
-        return { success: true };
-      },
-      
       logout: () => set({ currentUser: null, cart: [] }),
 
       addToCart: (item) => set((state) => {

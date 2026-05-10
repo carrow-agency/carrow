@@ -29,7 +29,7 @@ export default function Dashboard() {
 
   const activeClients   = users?.filter(u => u.planStatus === "active").length ?? 0;
   const pendingOrders   = orders?.filter(o => o.status === "Pending").length ?? 0;
-  const publishedWorks  = works?.filter(w => (w as any).published !== false).length ?? 0;
+  const publishedWorks  = works?.filter(w => w.published !== false).length ?? 0;
 
   const now = new Date();
   const thisMonth = now.toISOString().slice(0, 7);

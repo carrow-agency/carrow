@@ -5,8 +5,10 @@ import { StatusBadge } from "./components/StatusBadge";
 import { StatsCard } from "./components/StatsCard";
 import { Button } from "./components/Button";
 import { ConfirmDialog } from "./components/ConfirmDialog";
-import { useOrders, useUpdateOrderStatus, useDeleteOrder } from "../../lib/useConvex";
-import { CheckCircle2, XCircle, Trash2, ShoppingBag } from "lucide-react";
+import { useOrders, useUpdateOrderStatus, useDeleteOrder, usePlanRequests, useUpdatePlanRequestStatus, useDeletePlanRequest } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { Id } from "../../../convex/_generated/dataModel";
+import { CheckCircle2, XCircle, Trash2, ShoppingBag, Clock } from "lucide-react";
 
 interface OrderData {
   id: string;
@@ -17,6 +19,17 @@ interface OrderData {
   status: "Pending" | "Active" | "Cancelled";
 }
 
+interface PlanRequestData {
+  _id: string;
+  clientName?: string;
+  clientEmail?: string;
+  type: string;
+  planName?: string;
+  previousPlan?: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
 type TabType = "All" | "Pending" | "Active" | "Cancelled";
 
 export default function OrdersPanel() {
@@ -24,10 +37,19 @@ export default function OrdersPanel() {
   const updateOrderStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteOrder();
 
+  const requests = usePlanRequests() ?? [];
+  const updateRequestStatus = useUpdatePlanRequestStatus();
+  const deleteRequest = useDeletePlanRequest();
+
   const [tab, setTab]     = useState<TabType>("All");
   const [activateTarget, setActivateTarget] = useState<OrderData | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  
+  // Plan Request actions
+  const [approveReqTarget, setApproveReqTarget] = useState<PlanRequestData | null>(null);
+  const [rejectReqTarget, setRejectReqTarget] = useState<PlanRequestData | null>(null);
+  
   const [actionLoading, setActionLoading] = useState(false);
 
   const data = useMemo(
@@ -42,29 +64,49 @@ export default function OrdersPanel() {
 
   const handleActivate = async () => {
     if (!activateTarget) return;
-    setActionLoading(true);
-    try { await updateOrderStatus({ id: activateTarget.id as any, status: "Active" }); }
-    catch (e) { console.error(e); }
-    setActionLoading(false);
-    setActivateTarget(null);
+    await withErrorHandler(async () => {
+      await updateOrderStatus({ id: activateTarget.id as Id<"orders">, status: "Active" });
+      setActivateTarget(null);
+    }, setActionLoading, { showSuccessToast: true, successMessage: "Order activated successfully" });
   };
 
   const handleCancel = async () => {
     if (!cancelTarget) return;
-    setActionLoading(true);
-    try { await updateOrderStatus({ id: cancelTarget as any, status: "Cancelled" }); }
-    catch (e) { console.error(e); }
-    setActionLoading(false);
-    setCancelTarget(null);
+    await withErrorHandler(async () => {
+      await updateOrderStatus({ id: cancelTarget as Id<"orders">, status: "Cancelled" });
+      setCancelTarget(null);
+    }, setActionLoading, { showSuccessToast: true, successMessage: "Order cancelled" });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setActionLoading(true);
-    try { await deleteOrder({ id: deleteTarget as any }); }
-    catch (e) { console.error(e); }
-    setActionLoading(false);
-    setDeleteTarget(null);
+    await withErrorHandler(async () => {
+      await deleteOrder({ id: deleteTarget as Id<"orders"> });
+      setDeleteTarget(null);
+    }, setActionLoading, { showSuccessToast: true, successMessage: "Order deleted" });
+  };
+
+  const handleApproveRequest = async () => {
+    if (!approveReqTarget) return;
+    await withErrorHandler(async () => {
+      await updateRequestStatus({ id: approveReqTarget._id as Id<"planRequests">, status: "approved" });
+      setApproveReqTarget(null);
+    }, setActionLoading, { showSuccessToast: true, successMessage: "Plan request approved" });
+  };
+
+  const handleRejectRequest = async () => {
+    if (!rejectReqTarget) return;
+    await withErrorHandler(async () => {
+      await updateRequestStatus({ id: rejectReqTarget._id as Id<"planRequests">, status: "rejected" });
+      setRejectReqTarget(null);
+    }, setActionLoading, { showSuccessToast: true, successMessage: "Plan request rejected" });
+  };
+
+  const handleDeleteRequest = async (id: string) => {
+    if (!confirm("Delete this request record permanently?")) return;
+    await withErrorHandler(async () => {
+      await deleteRequest({ id: id as Id<"planRequests"> });
+    }, undefined, { showSuccessToast: true, successMessage: "Plan request deleted" });
   };
 
   const cols: Column<OrderData>[] = [
@@ -102,6 +144,54 @@ export default function OrdersPanel() {
     },
   ];
 
+  const reqCols: Column<PlanRequestData>[] = [
+    {
+      key: "client", header: "Client",
+      render: r => (
+        <div>
+          <p className="text-sm font-medium text-white">{r.clientName}</p>
+          <p className="text-xs text-admin-muted">{r.clientEmail}</p>
+        </div>
+      ),
+    },
+    { key: "type", header: "Request Type", render: r => <span className="text-sm font-medium text-white capitalize">{r.type}</span> },
+    { key: "details", header: "Details", render: r => (
+      <span className="text-xs text-admin-muted">
+        {r.previousPlan && r.planName ? `${r.previousPlan} → ${r.planName}` : (r.planName || r.previousPlan || "N/A")}
+      </span>
+    )},
+    { key: "date", header: "Date", render: r => <span className="text-xs text-admin-muted">{r.createdAt?.slice(0, 10)}</span> },
+    { key: "status", header: "Status", render: r => (
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+          r.status === "approved" ? "bg-green-500/10 text-green-400" :
+          r.status === "rejected" ? "bg-red-500/10 text-red-400" :
+          "bg-amber-500/10 text-amber-400"
+        }`}>
+          {r.status}
+        </span>
+    )},
+    {
+      key: "actions", header: "", align: "right",
+      render: r => (
+        <div className="flex justify-end gap-1.5">
+          {r.status === "pending" && (
+            <>
+              <Button size="sm" variant="secondary" onClick={() => setApproveReqTarget(r)} disabled={actionLoading}>
+                <CheckCircle2 size={13} /> Approve
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setRejectReqTarget(r)} disabled={actionLoading} title="Reject Request">
+                <XCircle size={13} />
+              </Button>
+            </>
+          )}
+          <Button size="sm" variant="danger" onClick={() => handleDeleteRequest(r._id)} title="Delete Request Record">
+            <Trash2 size={13} />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -117,7 +207,19 @@ export default function OrdersPanel() {
         <StatsCard label="Cancelled" value={String(cancelledOrders)} icon={<ShoppingBag size={15}/>} iconColor="text-red-400" />
       </div>
 
-      <div className="flex items-center gap-2">
+      {requests.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-amber-400" />
+            <h2 className="text-sm font-semibold text-white">Client Plan Requests</h2>
+          </div>
+          <DataTable columns={reqCols} data={requests} rowKey={r => r._id} />
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-white">All Orders</h2>
+        <div className="flex items-center gap-2">
         {(["All","Pending","Active","Cancelled"] as TabType[]).map(t => (
           <button
             key={t}
@@ -136,11 +238,12 @@ export default function OrdersPanel() {
       <DataTable columns={cols} data={data} rowKey={o => o.id} />
 
       {status === "CanLoadMore" && (
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-4">
           <Button variant="secondary" onClick={() => loadMore(50)}>Load more</Button>
         </div>
       )}
-      {status === "LoadingMore" && <p className="text-center text-sm text-admin-muted">Loading…</p>}
+      {status === "LoadingMore" && <p className="text-center text-sm text-admin-muted mt-4">Loading…</p>}
+      </div>
 
       {/* Activate confirmation */}
       <ConfirmDialog
@@ -173,6 +276,28 @@ export default function OrdersPanel() {
         title="Delete this order?"
         description="The order record will be permanently removed. The client's plan status will not be changed."
         confirmLabel="Delete"
+      />
+
+      {/* Approve Request confirmation */}
+      <ConfirmDialog
+        open={!!approveReqTarget}
+        onClose={() => setApproveReqTarget(null)}
+        onConfirm={handleApproveRequest}
+        loading={actionLoading}
+        title="Approve Plan Request?"
+        description={`Approve the request for ${approveReqTarget?.clientName} to ${approveReqTarget?.type} their plan? NOTE: You must also manually update their actual plan status from the Orders or Users panel if required.`}
+        confirmLabel="Approve"
+      />
+
+      {/* Reject Request confirmation */}
+      <ConfirmDialog
+        open={!!rejectReqTarget}
+        onClose={() => setRejectReqTarget(null)}
+        onConfirm={handleRejectRequest}
+        loading={actionLoading}
+        title="Reject Plan Request?"
+        description={`Reject the request for ${approveReqTarget?.clientName}?`}
+        confirmLabel="Reject"
       />
     </div>
   );

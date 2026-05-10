@@ -19,6 +19,7 @@ export default defineSchema({
     planExpiry: v.optional(v.string()),
     registered: v.optional(v.string()),
     role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
+    deletedAt: v.optional(v.number()), // soft-delete timestamp (ms epoch)
   })
     .index("email", ["email"])
     .index("phone", ["phone"]),
@@ -182,6 +183,9 @@ export default defineSchema({
 
   planRequests: defineTable({
     userId: v.id("users"),
+    // Denormalized snapshot at creation time — avoids N+1 joins on queries
+    clientName: v.optional(v.string()),
+    clientEmail: v.optional(v.string()),
     type: v.string(),
     planName: v.optional(v.string()),
     previousPlan: v.optional(v.string()),
@@ -209,4 +213,18 @@ export default defineSchema({
     attempts: v.number(),
     lastAttempt: v.number(),
   }).index("by_identifier", ["identifier"]),
+
+  // Immutable audit trail — records every significant admin action
+  auditLogs: defineTable({
+    adminId: v.id("users"),
+    adminName: v.string(),
+    action: v.string(),          // e.g. "order.activate", "plan.delete", "user.delete"
+    targetId: v.optional(v.string()),   // stringified ID of affected record
+    targetType: v.optional(v.string()), // table name e.g. "orders", "users"
+    metadata: v.optional(v.string()),   // JSON stringified extra context
+    createdAt: v.string(),
+  })
+    .index("by_adminId", ["adminId"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_action", ["action"]),
 });

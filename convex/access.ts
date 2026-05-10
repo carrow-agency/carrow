@@ -55,3 +55,15 @@ export async function requireAdminUser(ctx: Ctx): Promise<Doc<"users">> {
   }
   return user;
 }
+
+/**
+ * Requires that the caller is either an admin OR the target user themselves.
+ * Eliminates repeated inline `isAdmin || isSelf` patterns.
+ */
+export async function requireAdminOrSelf(ctx: Ctx, targetUserId: Id<"users">): Promise<void> {
+  const user = await getUserFromCtx(ctx);
+  if (!user) throw new Error("Authentication required");
+  if (user.role === "admin") return;
+  if (user._id === targetUserId) return;
+  throw new Error("Access denied: must be admin or the target user");
+}

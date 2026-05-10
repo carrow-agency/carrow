@@ -8,6 +8,8 @@ import {
   useMonthlyReportsByUser,
   useDeleteMonthlyReport,
 } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { Id } from "../../../convex/_generated/dataModel";
 import {
   BarChart2,
   FolderOpen,
@@ -73,7 +75,9 @@ export default function FilesPanel() {
 
   const handleDeleteReport = async (id: string) => {
     if (!confirm("Delete this monthly analysis report? This cannot be undone.")) return;
-    await deleteMonthlyReport({ id: id as any });
+    await withErrorHandler(async () => {
+      await deleteMonthlyReport({ id: id as Id<"monthlyReports"> });
+    }, undefined, { showSuccessToast: true, successMessage: "Report deleted" });
   };
 
   return (

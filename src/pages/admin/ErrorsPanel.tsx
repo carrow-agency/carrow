@@ -5,6 +5,8 @@ import { Button } from "./components/Button";
 import { StatsCard } from "./components/StatsCard";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { useErrorLogs, useErrorStats, useResolveError, useDeleteError } from "../../lib/useConvex";
+import { withErrorHandler } from "../../lib/mutationHandler";
+import { Id } from "../../../convex/_generated/dataModel";
 import { AlertCircle, CheckCircle, Trash2, RefreshCw, Server, Monitor } from "lucide-react";
 
 interface ErrorData {
@@ -40,19 +42,17 @@ export default function ErrorsPanel() {
   }, [errorLogs, tab]);
 
   const handleResolve = async (id: string) => {
-    setResolving(id);
-    try { await resolveError({ id: id as any }); }
-    catch (e) { console.error(e); }
-    setResolving(null);
+    await withErrorHandler(async () => {
+      await resolveError({ id: id as Id<"errorLogs"> });
+    }, (loading) => setResolving(loading ? id : null), { showSuccessToast: true, successMessage: "Error resolved" });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try { await deleteError({ id: deleteTarget.id as any }); }
-    catch (e) { console.error(e); }
-    setDeleting(false);
-    setDeleteTarget(null);
+    await withErrorHandler(async () => {
+      await deleteError({ id: deleteTarget.id as Id<"errorLogs"> });
+      setDeleteTarget(null);
+    }, setDeleting, { showSuccessToast: true, successMessage: "Error log deleted" });
   };
 
   const cols: Column<ErrorData>[] = [

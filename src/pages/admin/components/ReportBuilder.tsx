@@ -4,6 +4,7 @@ import {
   X, ChevronRight, ChevronLeft, Check, Plus, Trash2, Upload, Loader2,
 } from "lucide-react";
 import { useCreateMonthlyReport, useGenerateUploadUrl } from "../../../lib/useConvex";
+import { Id } from "../../../../convex/_generated/dataModel";
 import { toWebP } from "../../../lib/toWebP";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -98,13 +99,13 @@ export function ReportBuilder({ clientId, clientName, onClose }: Props) {
     setError("");
     try {
       await createReport({
-        clientId: clientId as any,
+        clientId: clientId as Id<"users">,
         monthYear: monthYear.trim(),
         kpiCards: kpi,
         contentType: ct,
         engagement: eng,
-        topReels: reels.map(r => ({ thumbnailStorageId: r.storageId as any ?? undefined, views: r.stat, date: r.date, caption: r.caption || undefined })),
-        topPosts: posts.map(p => ({ thumbnailStorageId: p.storageId as any ?? undefined, viewsOrReach: p.stat, date: p.date, caption: p.caption || undefined })),
+        topReels: reels.map(r => ({ thumbnailStorageId: r.storageId as Id<"_storage"> ?? undefined, views: r.stat, date: r.date, caption: r.caption || undefined })),
+        topPosts: posts.map(p => ({ thumbnailStorageId: p.storageId as Id<"_storage"> ?? undefined, viewsOrReach: p.stat, date: p.date, caption: p.caption || undefined })),
         strategicInsights: ins,
         previousMonth: hasPrev ? prev : undefined,
       });
@@ -131,8 +132,8 @@ export function ReportBuilder({ clientId, clientName, onClose }: Props) {
             <p className="text-[11px] font-bold uppercase tracking-widest text-white/30 mb-1">
               {clientName ? `Report · ${clientName}` : "Monthly Analysis"}
             </p>
-            <h2 className="text-2xl font-bold text-white">{STEPS[step].title}</h2>
-            <p className="text-sm text-white/40 mt-1">{STEPS[step].sub}</p>
+            <h2 className="text-2xl font-bold text-white">{STEPS[step]?.title}</h2>
+            <p className="text-sm text-white/40 mt-1">{STEPS[step]?.sub}</p>
           </div>
           <button onClick={onClose} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-all mt-1">
             <X size={16} />
@@ -324,9 +325,9 @@ function MediaSection({
             aspectRatio={aspectRatio}
             onThumb={async f => {
               const r = await uploadThumb(f);
-              if (r) setItems(p => { const n = [...p]; n[i] = { ...n[i], ...r }; return n; });
+              if (r) setItems(p => { const n = [...p]; n[i] = { ...n[i], ...r } as MediaItem; return n; });
             }}
-            onChange={field => setItems(p => { const n = [...p]; n[i] = { ...n[i], ...field }; return n; })}
+            onChange={field => setItems(p => { const n = [...p]; n[i] = { ...n[i], ...field } as MediaItem; return n; })}
             onRemove={items.length > 1 ? () => setItems(p => p.filter((_, idx) => idx !== i)) : undefined}
           />
         ))}
