@@ -28,7 +28,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-brand-white">
+    <div className="bg-brand-white overflow-x-hidden w-full max-w-[100vw]">
       <Hero navigateToHash={navigateToHash} />
       
       <div className="h-px w-full bg-brand-border"></div>
