@@ -25,6 +25,7 @@ import type * as reset from "../reset.js";
 import type * as seed from "../seed.js";
 import type * as sentry from "../sentry.js";
 import type * as settings from "../settings.js";
+import type * as teamMembers from "../teamMembers.js";
 import type * as users from "../users.js";
 import type * as works from "../works.js";
 
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   sentry: typeof sentry;
   settings: typeof settings;
+  teamMembers: typeof teamMembers;
   users: typeof users;
   works: typeof works;
 }>;

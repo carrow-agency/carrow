@@ -17,6 +17,9 @@ export const update = mutation({
       tagline: v.optional(v.string()),
       email: v.optional(v.string()),
       whatsapp: v.optional(v.string()),
+      instagram: v.optional(v.string()),
+      facebook: v.optional(v.string()),
+      youtube: v.optional(v.string()),
     })),
     home: v.optional(v.object({
       h1: v.string(),

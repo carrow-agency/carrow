@@ -109,6 +109,22 @@ export function useUpdateSettings() {
   return useMutation(api.settings.update);
 }
 
+export function useTeamMembers() {
+  return useQuery(api.teamMembers.list) ?? [];
+}
+
+export function useCreateTeamMember() {
+  return useMutation(api.teamMembers.create);
+}
+
+export function useUpdateTeamMember() {
+  return useMutation(api.teamMembers.update);
+}
+
+export function useDeleteTeamMember() {
+  return useMutation(api.teamMembers.remove);
+}
+
 export function useMyFiles() {
   const files = useQuery(api.files.getClientFiles, {});
   return files ?? null;

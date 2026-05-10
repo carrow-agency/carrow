@@ -78,6 +78,15 @@ export default defineSchema({
     })),
   }),
 
+  teamMembers: defineTable({
+    name: v.string(),
+    role: v.string(),
+    tag: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    image: v.optional(v.string()),
+    order: v.optional(v.number()),
+  }).index("by_order", ["order"]),
+
   // fileLabel: semantic category set by admin ("Contract" | "Report" | "Media")
   // type: the actual MIME type of the file
   clientFiles: defineTable({
