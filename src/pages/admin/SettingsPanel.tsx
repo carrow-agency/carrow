@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings,
@@ -17,9 +17,12 @@ import {
   X,
   ChevronRight,
   GripVertical,
-  ImageIcon,
+  Camera,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "../../lib/generated/api";
 import {
   useSettings,
   useUpdateSettings,
@@ -44,11 +47,6 @@ interface TeamMember {
 }
 
 const EMPTY_MEMBER: TeamMember = { name: "", role: "", tag: "team", bio: "", image: "" };
-
-const MEMBER_TAGS = [
-  "founder", "co-founder", "designer", "developer", "strategist",
-  "writer", "marketer", "manager", "director", "intern", "advisor", "team",
-];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -185,7 +183,34 @@ function MemberDrawer({ member, onSave, onClose }: {
   member: TeamMember; onSave: (m: TeamMember) => void; onClose: () => void;
 }) {
   const [form, setForm] = useState<TeamMember>(member);
-  const set = (k: keyof TeamMember) => (v: string) => setForm(prev => ({ ...prev, [k]: v }));
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+
+  const handlePhotoClick = () => fileRef.current?.click();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const uploadUrl = await generateUploadUrl();
+      const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": file.type }, body: file });
+      const { storageId } = await res.json();
+      // Build a direct storage URL for preview
+      const convexUrl = uploadUrl.split("/api/storage/")[0];
+      const previewUrl = `${convexUrl}/api/storage/${storageId}`;
+      setForm(prev => ({ ...prev, image: previewUrl }));
+    } catch (err) { console.error(err); }
+    setUploading(false);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(form);
+    setSaving(false);
+  };
 
   return (
     <motion.div
@@ -193,77 +218,82 @@ function MemberDrawer({ member, onSave, onClose }: {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} />
       <motion.div
-        initial={{ scale: 0.96, y: 8 }}
+        initial={{ scale: 0.95, y: 10 }}
         animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.96, y: 8 }}
-        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-md bg-[#0d0d0d] border border-[#1e1e1e] rounded-2xl p-6 shadow-2xl z-10"
+        exit={{ scale: 0.95, y: 10 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-sm bg-[#0d0d0d] border border-[#1c1c1c] rounded-2xl p-6 shadow-2xl z-10"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-base font-semibold text-white">
-            {form._id ? "Edit member" : "Add member"}
-          </h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center text-[#555] hover:text-white hover:bg-[#1a1a1a] transition-colors">
-            <X size={16} />
+        {/* Header */}
+        <div className="flex items-center justify-between mb-7">
+          <p className="text-sm font-semibold text-white">{form._id ? "Edit member" : "Add member"}</p>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg flex items-center justify-center text-[#444] hover:text-white hover:bg-[#1a1a1a] transition-colors">
+            <X size={14} />
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <div className="w-16 h-16 rounded-xl bg-[#111] border border-[#1e1e1e] flex-shrink-0 overflow-hidden">
-              {form.image ? (
-                <img src={form.image} alt="" className="w-full h-full object-cover" />
+        {/* Photo upload — center stage */}
+        <div className="flex flex-col items-center mb-7">
+          <button
+            type="button"
+            onClick={handlePhotoClick}
+            className="relative w-24 h-24 rounded-full bg-[#111] border-2 border-dashed border-[#222] overflow-hidden group hover:border-[#333] transition-colors"
+          >
+            {form.image ? (
+              <img src={form.image} alt="" className="w-full h-full object-cover" />
+            ) : null}
+            <div className={`absolute inset-0 flex flex-col items-center justify-center gap-1 transition-opacity ${
+              form.image ? "opacity-0 group-hover:opacity-100 bg-black/60" : "opacity-100"
+            }`}>
+              {uploading ? (
+                <Loader2 size={18} className="text-white animate-spin" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[#333]">
-                  <ImageIcon size={20} />
-                </div>
+                <>
+                  <Camera size={18} className="text-[#555] group-hover:text-white transition-colors" />
+                  {!form.image && <span className="text-[10px] text-[#444]">Upload</span>}
+                </>
               )}
             </div>
-            <AdminInput value={form.image} onChange={set("image")} placeholder="https://..." label="Avatar URL" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <AdminInput label="Full name" value={form.name} onChange={set("name")} placeholder="Jane Doe" />
-            <AdminInput label="Role" value={form.role} onChange={set("role")} placeholder="Creative Director" />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-[#555] uppercase tracking-wider">Tag</label>
-            <div className="flex flex-wrap gap-2">
-              {MEMBER_TAGS.map(t => (
-                <button
-                  key={t}
-                  onClick={() => set("tag")(t)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
-                    form.tag === t
-                      ? "bg-white text-black border-white"
-                      : "bg-transparent text-[#555] border-[#222] hover:border-[#333] hover:text-white"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <AdminTextarea label="Bio" value={form.bio} onChange={set("bio")} placeholder="Short bio..." />
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <p className="mt-2.5 text-xs text-[#444]">Click to upload photo</p>
         </div>
 
-        <div className="flex gap-3 mt-6">
-          <button onClick={onClose} className="flex-1 h-10 rounded-lg border border-[#1e1e1e] text-sm text-[#555] hover:text-white hover:border-[#333] transition-colors">
+        {/* Fields */}
+        <div className="space-y-3">
+          <AdminInput
+            label="Full name"
+            value={form.name}
+            onChange={v => setForm(p => ({ ...p, name: v }))}
+            placeholder="Jane Doe"
+          />
+          <AdminInput
+            label="Role"
+            value={form.role}
+            onChange={v => setForm(p => ({ ...p, role: v }))}
+            placeholder="Creative Director"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2.5 mt-7">
+          <button
+            onClick={onClose}
+            className="flex-1 h-10 rounded-xl border border-[#1c1c1c] text-sm text-[#555] hover:text-white hover:border-[#2a2a2a] transition-colors"
+          >
             Cancel
           </button>
           <button
-            onClick={() => onSave(form)}
-            disabled={!form.name || !form.role}
-            className="flex-1 h-10 rounded-lg bg-white text-black text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40"
+            onClick={handleSave}
+            disabled={!form.name || !form.role || saving || uploading}
+            className="flex-1 h-10 rounded-xl bg-white text-black text-sm font-semibold transition-all active:scale-[0.97] disabled:opacity-40 flex items-center justify-center gap-2"
           >
-            {form._id ? "Save changes" : "Add member"}
+            {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+            {form._id ? "Save" : "Add"}
           </button>
         </div>
       </motion.div>
