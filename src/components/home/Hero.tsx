@@ -35,8 +35,8 @@ export default function Hero({ navigateToHash }: HeroProps) {
           /> deserves better tools.
         </div>
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <Button variant="outline" size="lg" onClick={() => navigate('/work')} className="rounded-full px-8 py-6 font-sans font-semibold text-[14px] bg-brand-white text-brand-black border-brand-black hover:bg-brand-black hover:text-brand-white transition-colors w-full sm:w-auto">See Our Work</Button>
-          <Button size="lg" onClick={() => navigateToHash('#plans')} className="rounded-full px-8 py-6 font-sans font-semibold text-[14px] bg-brand-black text-brand-white hover:bg-transparent hover:text-brand-black border hover:border-brand-black transition-colors w-full sm:w-auto">Start Your Brand</Button>
+          <Button variant="outline" size="lg" onClick={() => navigate('/work')} className="rounded-full px-8 py-6 font-sans font-semibold text-[14px] bg-brand-white text-brand-black border-brand-black hover:bg-brand-black hover:text-brand-white transition-all duration-300 ease-out active:scale-[0.98] w-full sm:w-auto">See Our Work</Button>
+          <Button size="lg" onClick={() => navigateToHash('#plans')} className="rounded-full px-8 py-6 font-sans font-semibold text-[14px] bg-brand-black text-brand-white hover:bg-transparent hover:text-brand-black border hover:border-brand-black transition-all duration-300 ease-out active:scale-[0.98] w-full sm:w-auto">Start Your Brand</Button>
         </div>
         <div className="font-sans text-[11px] sm:text-[12px] text-brand-mid-grey tracking-wide">
           150+ Brands &nbsp;·&nbsp; 98% Retention &nbsp;·&nbsp; 10M+ Reach

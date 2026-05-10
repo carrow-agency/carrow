@@ -132,8 +132,8 @@ export default function Home() {
             <h2 className="font-serif font-bold text-[32px] md:text-[72px] leading-tight mb-6">Your Brand Deserves to Be Remembered.</h2>
             <p className="font-sans text-[17px] text-brand-mid-grey mb-12">Join the brands that chose bold.</p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button onClick={() => navigateToHash('#plans')} className="bg-brand-white text-brand-black rounded-full px-[48px] py-[18px] font-sans font-semibold text-[16px] hover:bg-transparent hover:text-brand-white hover:border-brand-white border border-transparent transition-colors">Get Started</button>
-              <button onClick={() => navigate('/work')} className="bg-transparent text-brand-white rounded-full px-[48px] py-[18px] font-sans font-semibold text-[16px] border border-brand-white hover:bg-brand-white hover:text-brand-black transition-colors">See Our Work</button>
+              <button onClick={() => navigateToHash('#plans')} className="bg-brand-white text-brand-black rounded-full px-[48px] py-[18px] font-sans font-semibold text-[16px] hover:bg-transparent hover:text-brand-white hover:border-brand-white border border-transparent transition-all duration-300 ease-out active:scale-[0.98]">Get Started</button>
+              <button onClick={() => navigate('/work')} className="bg-transparent text-brand-white rounded-full px-[48px] py-[18px] font-sans font-semibold text-[16px] border border-brand-white hover:bg-brand-white hover:text-brand-black transition-all duration-300 ease-out active:scale-[0.98]">See Our Work</button>
             </div>
           </FadeIn>
         </div>
