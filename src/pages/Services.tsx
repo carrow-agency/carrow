@@ -36,7 +36,7 @@ export default function Services() {
       title: 'Content Creation & Video',
       desc: 'High-end visuals, short-form video, and compelling copy. In a world of infinite content, we create assets that demand attention and clearly communicate your value.',
       bullets: ['Short-form Video (Reels/TikTok)', 'Photography & Art Direction', 'Copywriting & Storytelling', 'Graphic Design'],
-      image: 'https://images.unsplash.com/photo-1574717024453-354056afd6bf?auto=format&fit=crop&q=80&w=800'
+      image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=800'
     },
     {
       title: 'Campaign Direction & Ads',
