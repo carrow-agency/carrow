@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import FadeIn from '../common/FadeIn';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const faqs = [
   { q: 'What services does Carrow offer?', a: 'We offer brand strategy, social media marketing, content creation, campaign direction, and influencer marketing — everything a growing brand needs.' },
@@ -31,13 +32,23 @@ export default function FAQ() {
               >
                 <div className="w-full py-[28px] flex justify-between items-center bg-transparent cursor-pointer">
                   <span className="font-sans font-semibold text-[18px] text-brand-black text-left">{f.q}</span>
-                  <div className={`transform transition-transform duration-300 text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
+                  <div className={`transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
                     <Plus size={24} />
                   </div>
                 </div>
-                <div style={{ height: openFaq === i ? 'auto' : 0 }} className="overflow-hidden transition-all duration-300 ease-in-out">
-                  <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
-                </div>
+                <AnimatePresence initial={false}>
+                  {openFaq === i && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </FadeIn>
           ))}
