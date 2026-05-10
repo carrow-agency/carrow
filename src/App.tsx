@@ -25,6 +25,8 @@ function ScrollToTop() {
     if (!hash) {
       window.scrollTo(0, 0);
     }
+    // Reset chunk load error reload count on successful navigation
+    sessionStorage.removeItem('chunk_reload_count');
   }, [pathname, hash]);
   return null;
 }

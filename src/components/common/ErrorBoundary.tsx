@@ -22,6 +22,21 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    const isChunkLoadError = 
+      error.name === 'ChunkLoadError' || 
+      error.message.includes('dynamically imported module') ||
+      error.message.includes('importing a module') ||
+      error.message.includes('Failed to fetch');
+
+    if (isChunkLoadError) {
+      const reloadCount = parseInt(sessionStorage.getItem('chunk_reload_count') || '0', 10);
+      if (reloadCount < 2) {
+        sessionStorage.setItem('chunk_reload_count', (reloadCount + 1).toString());
+        window.location.reload();
+        return;
+      }
+    }
   }
 
   override render() {
