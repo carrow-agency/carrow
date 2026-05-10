@@ -364,23 +364,28 @@ export default function Account() {
           {/* MY WORKS TAB */}
           {activeTab === 'works' && (
             <div>
+              <p className="text-sm text-gray-500 mb-6">Media files your account manager has uploaded for you.</p>
               {myWorks && myWorks.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {myWorks.map(work => (
-                    <div key={work._id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                      <div className="aspect-video bg-gray-100">
+                    <div key={work._id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                      <div className="aspect-video bg-gray-100 relative overflow-hidden">
                         <img src={work.url} alt={work.title} className="w-full h-full object-cover" />
+                        <span className="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider bg-black/60 text-white px-2 py-1 rounded-full backdrop-blur">
+                          {work.category}
+                        </span>
                       </div>
                       <div className="p-4">
-                        <h4 className="font-semibold text-gray-900">{work.title}</h4>
-                        <p className="text-sm text-gray-500">{work.category}</p>
+                        <h4 className="font-semibold text-gray-900 text-sm">{work.title}</h4>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="bg-white p-8 rounded-xl border border-gray-200 text-center">
-                  <p className="text-gray-500">No works uploaded yet.</p>
+                <div className="bg-white p-12 rounded-2xl border border-gray-200 text-center">
+                  <FolderOpen size={28} className="mx-auto text-gray-300 mb-3" />
+                  <p className="text-sm font-medium text-gray-500">No media uploaded yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Media files from your account manager will appear here.</p>
                 </div>
               )}
             </div>
@@ -388,7 +393,7 @@ export default function Account() {
 
           {/* FILES TAB */}
           {activeTab === 'files' && (
-            <div className="space-y-10">
+            <div className="space-y-8">
 
               {/* Monthly Analysis Reports */}
               <div>
@@ -410,10 +415,8 @@ export default function Account() {
                         <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                           <FolderOpen size={26} />
                         </div>
-                        <div className="text-center">
-                          <p className="font-bold text-gray-900 text-sm">{report.monthYear}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{new Date(report._creationTime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
-                        </div>
+                        {/* Only show monthYear once — no duplicate date below */}
+                        <p className="font-bold text-gray-900 text-sm text-center">{report.monthYear}</p>
                       </button>
                     ))}
                   </div>
@@ -426,66 +429,59 @@ export default function Account() {
                 )}
               </div>
 
-              {/* Documents & Media */}
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Documents & Media</h3>
-                {filesLoading ? (
-                  <div className="space-y-3">
-                    {[1,2,3].map(i => (
-                      <div key={i} className="h-16 rounded-xl border border-gray-200 bg-gray-100 animate-pulse" />
-                    ))}
-                  </div>
-                ) : myFiles && myFiles.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {myFiles.map(file => {
-                      const isImage = file.type.startsWith('image/');
-                      const label = (file as any).fileLabel ?? (isImage ? 'Media' : 'Document');
-                      return (
-                        <div key={file._id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 hover:shadow-sm transition-shadow">
-                          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
-                            {isImage && file.url ? (
-                              <img src={file.url} alt={file.name} className="w-full h-full object-cover" />
-                            ) : label === 'Contract' ? (
-                              <FileText size={20} className="text-blue-500" />
-                            ) : label === 'Report' ? (
-                              <BarChart3 size={20} className="text-green-500" />
-                            ) : (
-                              <FolderOpen size={20} className="text-gray-400" />
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-gray-900 text-sm truncate">{file.name}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{label}</span>
-                              {file.size && <span className="text-xs text-gray-400">{(file.size / 1024 / 1024).toFixed(1)} MB</span>}
-                              <span className="text-xs text-gray-300">·</span>
-                              <span className="text-xs text-gray-400">{new Date(file._creationTime).toLocaleDateString()}</span>
+              {/* Documents only (contracts + reports — NO media/images) */}
+              {(() => {
+                const docsOnly = (myFiles ?? []).filter(f => {
+                  const label = (f as any).fileLabel;
+                  return label === 'Contract' || label === 'Report';
+                });
+                return (
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Documents</h3>
+                    {filesLoading ? (
+                      <div className="space-y-3">
+                        {[1,2,3].map(i => <div key={i} className="h-16 rounded-xl border border-gray-200 bg-gray-100 animate-pulse" />)}
+                      </div>
+                    ) : docsOnly.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {docsOnly.map(file => {
+                          const label = (file as any).fileLabel ?? 'Document';
+                          return (
+                            <div key={file._id} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 hover:shadow-sm transition-shadow">
+                              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                                {label === 'Contract' ? (
+                                  <FileText size={20} className="text-blue-500" />
+                                ) : (
+                                  <BarChart3 size={20} className="text-green-500" />
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-gray-900 text-sm truncate">{file.name}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{label}</span>
+                                  {file.size && <span className="text-xs text-gray-400">{(file.size / 1024 / 1024).toFixed(1)} MB</span>}
+                                </div>
+                              </div>
+                              {file.url && (
+                                <a href={file.url} target="_blank" rel="noopener noreferrer" download={file.name}
+                                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-gray-800 transition-colors">
+                                  <Download size={13} />Download
+                                </a>
+                              )}
                             </div>
-                          </div>
-                          {file.url && (
-                            <a
-                              href={file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              download={file.name}
-                              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white rounded-lg text-xs font-semibold hover:bg-gray-800 transition-colors"
-                            >
-                              <Download size={13} />
-                              Download
-                            </a>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                        <FileText size={24} className="mx-auto text-gray-300 mb-2" />
+                        <p className="text-sm font-medium text-gray-500">No documents yet</p>
+                        <p className="text-xs text-gray-400 mt-1">Contracts and reports shared by your account manager will appear here.</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                    <FolderOpen size={24} className="mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm font-medium text-gray-500">No files uploaded yet</p>
-                    <p className="text-xs text-gray-400 mt-1">Files shared by your account manager will appear here.</p>
-                  </div>
-                )}
-              </div>
+                );
+              })()}
 
             </div>
           )}

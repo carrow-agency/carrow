@@ -44,15 +44,26 @@ export default defineSchema({
   }).index("by_visibility", ["visibility"]),
 
   works: defineTable({
-    url: v.string(),
+    url: v.string(),           // cover/thumbnail storageId or URL
     title: v.string(),
     category: v.string(),
     client: v.optional(v.string()),
-    clientId: v.optional(v.id("users")),
+    clientId: v.optional(v.id("users")),  // set → private (user-only), unset → public portfolio
+    isPrivate: v.optional(v.boolean()),   // true = only visible in that user's dashboard
     published: v.optional(v.boolean()),
   })
     .index("by_published", ["published"])
     .index("by_clientId", ["clientId"]),
+
+  // Additional media files per portfolio project (multi-media per work)
+  workMedia: defineTable({
+    workId: v.id("works"),
+    storageId: v.string(),      // Convex storageId
+    url: v.optional(v.string()), // resolved URL (cached)
+    type: v.string(),            // MIME type
+    caption: v.optional(v.string()),
+    order: v.optional(v.number()),
+  }).index("by_workId", ["workId"]),
 
   settings: defineTable({
     general: v.object({

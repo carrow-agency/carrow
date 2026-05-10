@@ -27,6 +27,7 @@ import type * as sentry from "../sentry.js";
 import type * as settings from "../settings.js";
 import type * as teamMembers from "../teamMembers.js";
 import type * as users from "../users.js";
+import type * as workMedia from "../workMedia.js";
 import type * as works from "../works.js";
 
 import type {
@@ -55,6 +56,7 @@ declare const fullApi: ApiFromModules<{
   settings: typeof settings;
   teamMembers: typeof teamMembers;
   users: typeof users;
+  workMedia: typeof workMedia;
   works: typeof works;
 }>;
 

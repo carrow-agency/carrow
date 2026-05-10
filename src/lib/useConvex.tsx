@@ -125,6 +125,18 @@ export function useDeleteTeamMember() {
   return useMutation(api.teamMembers.remove);
 }
 
+export function useWorkMediaByWork(workId?: string) {
+  return useQuery(api.workMedia.listByWork, workId ? { workId: workId as any } : "skip") ?? [];
+}
+
+export function useAddWorkMedia() {
+  return useMutation(api.workMedia.addMedia);
+}
+
+export function useRemoveWorkMedia() {
+  return useMutation(api.workMedia.removeMedia);
+}
+
 export function useMyFiles() {
   const files = useQuery(api.files.getClientFiles, {});
   return files ?? null;

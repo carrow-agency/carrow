@@ -7,14 +7,18 @@ import { paginationOptsValidator } from "convex/server";
 export const list = query({
   args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
+    // Public portfolio: only published + NOT private (no clientId/isPrivate)
     const works = await ctx.db
       .query("works")
       .withIndex("by_published", (q) => q.eq("published", true))
       .order("desc")
       .paginate(args.paginationOpts);
-      
+
+    // Filter out private (client-only) works
+    const publicWorks = works.page.filter((w) => !w.isPrivate && !w.clientId);
+
     const pageWithUrls = await Promise.all(
-      works.page.map(async (work) => {
+      publicWorks.map(async (work) => {
         let resolvedUrl = work.url;
         if (work.url && !work.url.startsWith("http")) {
           resolvedUrl = await ctx.storage.getUrl(work.url) || work.url;
@@ -108,27 +112,23 @@ export const create = mutation({
     category: v.string(),
     client: v.optional(v.string()),
     clientId: v.optional(v.id("users")),
+    isPrivate: v.optional(v.boolean()),
     published: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
-    if (!isAdmin) {
-      throw new Error("Admin access required");
-    }
-
-    if (!args.url || !args.title || !args.category) {
-      throw new Error("URL, title, and category are required");
-    }
-
-    const workId = await ctx.db.insert("works", {
+    if (!isAdmin) throw new Error("Admin access required");
+    if (!args.url || !args.title || !args.category) throw new Error("URL, title, and category are required");
+    return await ctx.db.insert("works", {
       url: args.url,
       title: args.title,
       category: args.category,
       client: args.client,
       clientId: args.clientId,
+      // if clientId is set, always mark as private
+      isPrivate: args.clientId ? true : (args.isPrivate ?? false),
       published: args.published ?? true,
     });
-    return workId;
   },
 });
 
@@ -140,32 +140,29 @@ export const update = mutation({
     category: v.optional(v.string()),
     client: v.optional(v.string()),
     clientId: v.optional(v.id("users")),
+    isPrivate: v.optional(v.boolean()),
     published: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
-    if (!isAdmin) {
-      throw new Error("Admin access required");
-    }
+    if (!isAdmin) throw new Error("Admin access required");
 
     const { id, ...updates } = args;
-    
-    // If we're updating the URL (media), check if we need to delete the old one
+
     if (updates.url !== undefined) {
       const existing = await ctx.db.get(id);
       if (existing && existing.url && !existing.url.startsWith("http") && existing.url !== updates.url) {
-        // Delete the old storage file
-        try {
-          await ctx.storage.delete(existing.url as any);
-        } catch (e) {
-          console.error("Failed to delete old portfolio media", e);
-        }
+        try { await ctx.storage.delete(existing.url as any); } catch (e) { console.error(e); }
       }
     }
 
     const actualUpdates: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(updates)) {
       if (value !== undefined) actualUpdates[key] = value;
+    }
+    // auto-set isPrivate when clientId changes
+    if (updates.clientId !== undefined) {
+      actualUpdates.isPrivate = !!updates.clientId;
     }
     if (Object.keys(actualUpdates).length > 0) {
       await ctx.db.patch(id, actualUpdates);
