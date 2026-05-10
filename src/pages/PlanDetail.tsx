@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { ArrowLeft, Check, Plus, Star } from 'lucide-react';
 import { useContext, useState, useEffect } from 'react';
@@ -7,6 +7,9 @@ import React from 'react';
 
 import { useAppStore } from '../lib/store';
 import { useCurrentUserFromConvex, usePlans as useConvexPlans, useSettings } from '../lib/useConvex';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import { toast } from 'sonner';
 
 interface FadeInProps {
   children: React.ReactNode;
@@ -55,6 +58,10 @@ export default function PlanDetail() {
   
   // Find plan from Convex (case insensitive)
   const convexPlan = plans.find(p => p.name.toLowerCase() === (planId || 'basic').toLowerCase()) || plans[0];
+
+  const planReviews = useQuery(api.planReviews.getApprovedForPlan, convexPlan?.id ? { planId: convexPlan.id } : "skip");
+  const submitReview = useMutation(api.planReviews.submitReview);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const plan = {
     ...convexPlan,
@@ -152,26 +159,28 @@ export default function PlanDetail() {
             <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16 text-center">What Brands Say About {plan.name}.</h2>
         </FadeIn>
         <div className="grid md:grid-cols-3 gap-8">
-          {[
-            { a: 'Sarah J.', c: 'Tech Startup', r: `We started with the ${plan.name} plan and it completely transformed our online presence. Best decision we made this year.`, s: 5 },
-            { a: 'David M.', c: 'E-commerce Brand', r: `The communication is incredible. They actually understand our brand voice. The ${plan.name} plan offers insane value.`, s: 5 },
-            { a: 'Elena R.', c: 'B2B Services', r: `No fluff, just results. If you are on the fence about the ${plan.name} plan, just do it. The onboarding was seamless.`, s: 5 },
-          ].map((rev, i) => (
-             <FadeIn key={i} delay={i * 0.1}>
-               <div className="bg-brand-white rounded-[24px] p-8 shadow-sm border border-brand-border h-full flex flex-col justify-between">
-                 <div>
-                   <div className="flex gap-1 mb-6 text-brand-black">
-                     {[...Array(rev.s)].map((_, j) => <span key={j}>★</span>)}
+          {planReviews === undefined ? (
+            <div className="col-span-3 text-center py-12 text-brand-mid-grey font-sans">Loading reviews...</div>
+          ) : planReviews.length === 0 ? (
+            <div className="col-span-3 text-center py-12 text-brand-mid-grey font-sans">No reviews yet for this plan. Be the first to leave one!</div>
+          ) : (
+            planReviews.map((rev: any, i: number) => (
+               <FadeIn key={rev._id} delay={i * 0.1}>
+                 <div className="bg-brand-white rounded-[24px] p-8 shadow-sm border border-brand-border h-full flex flex-col justify-between">
+                   <div>
+                     <div className="flex gap-1 mb-6 text-brand-black">
+                       {[...Array(rev.rating)].map((_, j) => <span key={j}>★</span>)}
+                     </div>
+                     <p className="font-sans text-[16px] text-brand-dark-grey leading-[1.7] mb-8">"{rev.reviewText}"</p>
                    </div>
-                   <p className="font-sans text-[16px] text-brand-dark-grey leading-[1.7] mb-8">"{rev.r}"</p>
+                   <div>
+                     <div className="font-sans font-bold text-[15px] text-brand-black">{rev.userName}</div>
+                     <div className="font-sans text-[13px] text-brand-mid-grey">Verified Client</div>
+                   </div>
                  </div>
-                 <div>
-                   <div className="font-sans font-bold text-[15px] text-brand-black">{rev.a}</div>
-                   <div className="font-sans text-[13px] text-brand-mid-grey">{rev.c}</div>
-                 </div>
-               </div>
-             </FadeIn>
-          ))}
+               </FadeIn>
+            ))
+          )}
         </div>
 
         {/* Leave a suggestion box */}
@@ -198,10 +207,15 @@ export default function PlanDetail() {
                 <div className="text-center py-8">
                   <div className="text-green-600 text-4xl mb-4">✓</div>
                   <p className="font-sans text-lg text-brand-black font-semibold">Thank you for your review!</p>
-                  <p className="font-sans text-sm text-brand-mid-grey mt-2">Your feedback helps us improve.</p>
+                  <p className="font-sans text-sm text-brand-mid-grey mt-2">Your review is pending approval.</p>
+                </div>
+              ) : !currentUser ? (
+                <div className="text-center py-8">
+                  <p className="font-sans text-[15px] text-brand-mid-grey mb-4">You must be logged in to leave a review.</p>
+                  <button onClick={() => navigate('/login')} className="bg-brand-black text-brand-white rounded-full px-6 py-2.5 font-sans font-semibold text-[13px] hover:bg-brand-dark-grey transition-all">Log In</button>
                 </div>
               ) : (
-              <form onSubmit={(e) => {
+              <form onSubmit={async (e) => {
                 e.preventDefault();
                 if (rating === 0) {
                   setReviewError("Please select a rating");
@@ -211,10 +225,19 @@ export default function PlanDetail() {
                   setReviewError("Please write at least 10 characters");
                   return;
                 }
-                setReviewError("");
-                setReviewSubmitted(true);
-                setRating(0);
-                setReviewText("");
+                try {
+                  setIsSubmittingReview(true);
+                  setReviewError("");
+                  await submitReview({ planId: convexPlan!.id, planName: plan.name || "Unknown Plan", rating, reviewText });
+                  setReviewSubmitted(true);
+                  setRating(0);
+                  setReviewText("");
+                  toast.success("Review submitted for approval!");
+                } catch (err: any) {
+                  setReviewError(err.message || "Failed to submit review");
+                } finally {
+                  setIsSubmittingReview(false);
+                }
               }}>
                 <div className="mb-4">
                   <textarea 
@@ -223,12 +246,13 @@ export default function PlanDetail() {
                     onChange={(e) => setReviewText(e.target.value)}
                     className="w-full bg-brand-off-white border border-brand-border rounded-[12px] p-4 font-sans text-[14px] text-brand-black focus:outline-none focus:border-brand-black transition-colors min-h-[100px] resize-none"
                     required
+                    disabled={isSubmittingReview}
                   ></textarea>
                   {reviewError && <p className="text-red-500 text-sm mt-2">{reviewError}</p>}
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-brand-black text-brand-white rounded-full px-6 py-3 font-sans font-semibold text-[13px] hover:bg-brand-dark-grey transition-all duration-300 ease-out active:scale-[0.98] w-full sm:w-auto">
-                    Submit Review
+                  <button disabled={isSubmittingReview} type="submit" className="bg-brand-black text-brand-white rounded-full px-6 py-3 font-sans font-semibold text-[13px] hover:bg-brand-dark-grey transition-all duration-300 ease-out active:scale-[0.98] w-full sm:w-auto disabled:opacity-50">
+                    {isSubmittingReview ? "Submitting..." : "Submit Review"}
                   </button>
                 </div>
               </form>
@@ -256,8 +280,13 @@ export default function PlanDetail() {
               { n: '03', t: 'We Begin on WhatsApp', d: 'We connect instantly to onboard your brand.' }
             ].map((step, i) => (
                <FadeIn key={i} delay={i * 0.1} className="relative">
-                  <div className="absolute left-0 top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10 hidden md:block" style={{ marginLeft: i === 0 ? '0' : i === 1 ? '-59px' : '-59px' }}></div>
-                  <div className="md:hidden absolute left-0 top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10"></div>
+                  {/* The dot is centered over the vertical line (which is at left: 7px on mobile, 31px on md). 
+                      Dot width is 20px, so left offset is -3px on mobile, -41px on md relative to the pl-8/pl-16 text wrapper? 
+                      Actually, wrapper has pl-8 (32px) on mobile, so left-[7px] line means the line is 25px to the left of the text.
+                      To center a 20px dot on the line, we place it at absolute left: -25px - 10px = -35px.
+                      Instead, let's just make the left value match the line precisely. */}
+                  <div className="absolute top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10 hidden md:block" style={{ left: '-41px' }}></div>
+                  <div className="md:hidden absolute top-1.5 w-[20px] h-[20px] rounded-full bg-brand-black border-[4px] border-brand-white z-10" style={{ left: '-25px' }}></div>
                   <div className="font-sans font-semibold text-[12px] uppercase text-brand-white mb-2">{step.n}</div>
                   <h3 className="font-serif font-semibold text-[28px] text-brand-white mb-2">{step.t}</h3>
                   <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8]">{step.d}</p>
@@ -278,14 +307,30 @@ export default function PlanDetail() {
           <div className="space-y-0 text-left">
             {plan.faqs.map((f: PlanFaq, i: number) => (
               <FadeIn key={i} delay={i * 0.05} className="border-b border-brand-border">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full py-[28px] flex justify-between items-center bg-transparent group text-left transition-colors hover:bg-brand-off-white/50 px-4 -mx-4 rounded-xl">
-                  <span className="font-sans font-semibold text-[18px] text-brand-black w-[90%]">{f.q}</span>
-                  <div className={`transform transition-transform duration-300 text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
-                    <Plus size={24} />
+                <div 
+                  onMouseEnter={() => setOpenFaq(i)}
+                  onMouseLeave={() => setOpenFaq(null)}
+                  className="w-full group"
+                >
+                  <div className="w-full py-[28px] flex justify-between items-center bg-transparent cursor-pointer rounded-xl">
+                    <span className="font-sans font-semibold text-[18px] text-brand-black text-left">{f.q}</span>
+                    <div className={`transform transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
+                      <Plus size={24} />
+                    </div>
                   </div>
-                </button>
-                <div style={{ height: openFaq === i ? 'auto' : 0 }} className="overflow-hidden transition-all duration-300 ease-in-out px-4 -mx-4">
-                  <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
+                  <AnimatePresence initial={false}>
+                    {openFaq === i && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </FadeIn>
             ))}

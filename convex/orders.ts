@@ -104,7 +104,7 @@ export const updateStatus = mutation({
       });
     } else if (args.status === "Cancelled") {
       await ctx.db.patch(order.clientId, {
-        planStatus: "none",
+        planStatus: "cancelled",
         planExpiry: undefined,
       });
     }

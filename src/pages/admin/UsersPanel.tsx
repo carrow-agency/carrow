@@ -17,7 +17,7 @@ interface UserData {
   email: string;
   phone: string;
   planId: string | null;
-  planStatus: "none" | "pending" | "active";
+  planStatus: "none" | "pending" | "active" | "cancelled";
   registered: string;
   role: string;
   planName: string;
@@ -43,7 +43,7 @@ export default function UsersPanel() {
     return users.map(u => ({
       ...u,
       planName: plans?.find(p => p.id === u.planId)?.name ?? "—",
-      status: u.planStatus === "active" ? "Active" : u.planStatus === "pending" ? "Pending" : "None",
+      status: u.planStatus === "active" ? "Active" : u.planStatus === "pending" ? "Pending" : u.planStatus === "cancelled" ? "Cancelled" : "None",
     }));
   }, [users, plans]);
 

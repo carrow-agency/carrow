@@ -9,6 +9,7 @@ import PlansPanel from "./admin/PlansPanel";
 import PortfolioPanel from "./admin/PortfolioPanel";
 import FilesPanel from "./admin/FilesPanel";
 import SettingsPanel from "./admin/SettingsPanel";
+import { ReviewsPanel } from "./admin/ReviewsPanel";
 
 export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,6 +29,7 @@ export default function Admin() {
               <Route path="portfolio" element={<PortfolioPanel />} />
               <Route path="files" element={<FilesPanel />} />
               <Route path="settings" element={<SettingsPanel />} />
+              <Route path="reviews" element={<ReviewsPanel />} />
             </Routes>
           </div>
         </main>

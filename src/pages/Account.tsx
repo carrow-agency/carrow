@@ -229,10 +229,12 @@ export default function Account() {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 currentUser.planStatus === 'active' ? 'bg-green-100 text-green-700' :
                 currentUser.planStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                currentUser.planStatus === 'cancelled' ? 'bg-red-100 text-red-700' :
                 'bg-gray-100 text-gray-600'
               }`}>
                 {currentUser.planStatus === 'active' ? 'Active' : 
-                 currentUser.planStatus === 'pending' ? 'Pending' : 'No Plan'}
+                 currentUser.planStatus === 'pending' ? 'Pending' : 
+                 currentUser.planStatus === 'cancelled' ? 'Cancelled' : 'No Plan'}
               </span>
             </div>
           </div>

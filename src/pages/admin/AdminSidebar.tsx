@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutGrid, Users, ShoppingBag, Layers, Image,
-  FolderOpen, Settings, AlertCircle, X, LogOut, Shield,
+  FolderOpen, Settings, AlertCircle, X, LogOut, Shield, Star
 } from "lucide-react";
 import { useCurrentUserFromConvex, useAuthFunctions } from "../../lib/useConvex";
 
@@ -15,6 +15,7 @@ const items = [
   { to: "/admin/settings",  label: "Settings",   icon: Settings },
   { to: "/admin/errors",    label: "Error Logs", icon: AlertCircle },
   { to: "/admin/audit",     label: "Audit Logs", icon: Shield },
+  { to: "/admin/reviews",   label: "Reviews",    icon: Star },
 ];
 
 interface Props {

@@ -15,7 +15,7 @@ export default defineSchema({
     isAnonymous: v.optional(v.boolean()),
     passwordHash: v.optional(v.string()),
     planId: v.optional(v.id("plans")),
-    planStatus: v.optional(v.union(v.literal("none"), v.literal("pending"), v.literal("active"))),
+    planStatus: v.optional(v.union(v.literal("none"), v.literal("pending"), v.literal("active"), v.literal("cancelled"))),
     planExpiry: v.optional(v.string()),
     registered: v.optional(v.string()),
     role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
@@ -43,6 +43,20 @@ export default defineSchema({
     visibility: v.optional(v.boolean()),
     tagline: v.optional(v.string()),
   }).index("by_visibility", ["visibility"]),
+
+  planReviews: defineTable({
+    planId: v.id("plans"),
+    planName: v.string(),
+    userId: v.id("users"),
+    userName: v.string(),
+    rating: v.number(),
+    reviewText: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    createdAt: v.string(),
+  })
+    .index("by_planId_and_status", ["planId", "status"])
+    .index("by_status", ["status"])
+    .index("by_userId", ["userId"]),
 
   works: defineTable({
     url: v.string(),           // cover/thumbnail storageId or URL
