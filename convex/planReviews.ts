@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { requireAdminUser } from "./access";
+import { requireAdminUser, getCurrentUser } from "./access";
 
 // Public query to fetch approved reviews for a specific plan
 export const getApprovedForPlan = query({
@@ -25,19 +25,9 @@ export const submitReview = mutation({
     reviewText: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("You must be logged in to submit a review.");
-    }
-    
-    // Attempt to match auth identity to our users table
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
+    const user = await getCurrentUser(ctx);
     if (!user) {
-      throw new Error("User not found in system.");
+      throw new Error("You must be logged in to submit a review.");
     }
 
     await ctx.db.insert("planReviews", {
