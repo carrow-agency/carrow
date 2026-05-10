@@ -3,6 +3,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import Layout from './components/layout/Layout';
 import { useEffect, Suspense, lazy } from 'react';
 import { useCurrentUser, useCurrentUserFromConvex } from './lib/useConvex';
+import { Toaster } from 'sonner';
 
 const Home = lazy(() => import('./pages/Home'));
 const PlanDetail = lazy(() => import('./pages/PlanDetail'));
@@ -103,6 +104,20 @@ const Loading = () => (
 export default function App() {
   return (
     <ErrorBoundary>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--color-admin-surface2, #111)',
+            color: '#fff',
+            border: '1px solid var(--color-admin-border, #1c1c1c)',
+            borderRadius: '0.75rem',
+            padding: '16px',
+            fontFamily: 'inherit',
+          },
+          className: 'shadow-2xl backdrop-blur-xl',
+        }}
+      />
       <BrowserRouter>
         <ScrollToTop />
         <ScrollToHash />

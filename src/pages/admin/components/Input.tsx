@@ -40,20 +40,56 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   );
 });
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
+import * as RadixSelect from "@radix-ui/react-select";
+import { ChevronDown, Check } from "lucide-react";
+
+interface SelectOption {
+  label: string;
+  value: string;
 }
 
-export function Select({ label, children, className = "", ...rest }: SelectProps) {
+interface CustomSelectProps {
+  label?: string;
+  value?: string;
+  onChange?: (val: string) => void;
+  options: SelectOption[];
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+}
+
+export function Select({ label, value, onChange, options, placeholder = "Select...", className = "", disabled }: CustomSelectProps) {
   return (
-    <label className="block">
+    <div className="block">
       {label && <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-admin-muted">{label}</span>}
-      <select
-        className={`h-10 w-full appearance-none rounded-lg border border-admin-border bg-admin-surface2 px-3.5 text-sm text-white outline-none transition-colors focus:border-white/30 disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
-        {...rest}
-      >
-        {children}
-      </select>
-    </label>
+      <RadixSelect.Root value={value} onValueChange={onChange} disabled={disabled}>
+        <RadixSelect.Trigger className={`flex h-10 w-full items-center justify-between rounded-lg border border-admin-border bg-admin-surface2 px-3.5 text-sm text-white outline-none transition-colors hover:bg-admin-surface focus:border-white/30 data-[state=open]:border-white/30 disabled:opacity-40 disabled:cursor-not-allowed ${className}`}>
+          <RadixSelect.Value placeholder={placeholder} />
+          <RadixSelect.Icon>
+            <ChevronDown size={14} className="text-admin-muted" />
+          </RadixSelect.Icon>
+        </RadixSelect.Trigger>
+        <RadixSelect.Portal>
+          <RadixSelect.Content position="popper" sideOffset={4} className="z-[100] w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-admin-border bg-admin-surface2 shadow-xl backdrop-blur-xl animate-in fade-in-80 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+            <RadixSelect.Viewport className="p-1">
+              {options.map((opt) => (
+                <RadixSelect.Item
+                  key={opt.value}
+                  value={opt.value}
+                  className="relative flex cursor-pointer select-none items-center rounded-md py-2 pl-8 pr-2 text-sm text-admin-muted outline-none hover:bg-white/5 hover:text-white focus:bg-white/5 focus:text-white data-[state=checked]:text-white data-[state=checked]:font-medium transition-colors"
+                >
+                  <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                    <RadixSelect.ItemIndicator>
+                      <Check size={14} />
+                    </RadixSelect.ItemIndicator>
+                  </span>
+                  <RadixSelect.ItemText>{opt.label}</RadixSelect.ItemText>
+                </RadixSelect.Item>
+              ))}
+            </RadixSelect.Viewport>
+          </RadixSelect.Content>
+        </RadixSelect.Portal>
+      </RadixSelect.Root>
+    </div>
   );
 }

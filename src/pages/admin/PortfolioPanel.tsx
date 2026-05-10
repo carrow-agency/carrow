@@ -4,6 +4,7 @@ import { PageHeader } from "./components/PageHeader";
 import { Button } from "./components/Button";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { Toggle } from "./components/Toggle";
+import { Select } from "./components/Input";
 import {
   useWorksAll,
   useCreateWork,
@@ -355,13 +356,13 @@ function WorkModal({
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-[#555] uppercase tracking-wider">Category</label>
-              <select
+              <Select
                 value={form.category}
-                onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                className="w-full h-10 rounded-lg bg-[#111] border border-[#1c1c1c] text-sm text-white outline-none focus:border-[#2a2a2a] px-3.5 transition-colors appearance-none"
-              >
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+                onChange={val => setForm(p => ({ ...p, category: val }))}
+                options={CATEGORIES.map(c => ({ label: c, value: c }))}
+                placeholder="Select category…"
+                className="w-full"
+              />
             </div>
             {mode === "public" ? (
               <div className="space-y-1.5">
@@ -376,14 +377,13 @@ function WorkModal({
             ) : (
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-[#555] uppercase tracking-wider">Client <span className="text-red-400">*</span></label>
-                <select
+                <Select
                   value={form.clientId}
-                  onChange={e => setForm(p => ({ ...p, clientId: e.target.value }))}
-                  className="w-full h-10 rounded-lg bg-[#111] border border-[#1c1c1c] text-sm text-white outline-none focus:border-[#2a2a2a] px-3.5 transition-colors appearance-none"
-                >
-                  <option value="">Select client…</option>
-                  {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
-                </select>
+                  onChange={val => setForm(p => ({ ...p, clientId: val }))}
+                  options={users.map(u => ({ label: `${u.name} (${u.email})`, value: u.id }))}
+                  placeholder="Select client…"
+                  className="w-full"
+                />
               </div>
             )}
           </div>

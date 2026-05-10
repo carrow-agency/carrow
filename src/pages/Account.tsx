@@ -5,6 +5,7 @@ import { useAppStore } from '../lib/store';
 import { User, FileText, BarChart3, Settings, LogOut, Clock, CheckCircle2, Download, Package, FolderOpen } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { MonthlyReportViewer } from '../components/reports/MonthlyReportViewer';
+import { Select } from './admin/components/Input';
 
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
@@ -346,16 +347,13 @@ export default function Account() {
                           {requestType === 'renewal' ? 'Request Plan Renewal' : 'Select Plan to Upgrade'}
                         </p>
                         {requestType === 'upgrade' && (
-                          <select
+                          <Select
                             value={selectedPlan}
-                            onChange={(e) => setSelectedPlan(e.target.value)}
-                            className="w-full mb-3 px-3 py-2 border border-gray-300 rounded-lg"
-                          >
-                            <option value="">Select a plan...</option>
-                            {otherPlans.map(plan => (
-                              <option key={plan.id} value={plan.name}>{plan.name}</option>
-                            ))}
-                          </select>
+                            onChange={(val) => setSelectedPlan(val)}
+                            options={otherPlans.map(plan => ({ label: plan.name, value: plan.name }))}
+                            placeholder="Select a plan..."
+                            className="mb-3 w-full"
+                          />
                         )}
                         <div className="flex gap-2">
                           <Button size="sm" onClick={handleRequest} disabled={requesting}>
