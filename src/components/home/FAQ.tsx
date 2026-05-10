@@ -24,14 +24,20 @@ export default function FAQ() {
         <div className="space-y-0 text-left">
           {faqs.map((f, i) => (
             <FadeIn key={i} delay={i * 0.05} className="border-b border-brand-border">
-              <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full py-[28px] flex justify-between items-center bg-transparent group">
-                <span className="font-sans font-semibold text-[18px] text-brand-black text-left">{f.q}</span>
-                <div className={`transform transition-transform duration-300 text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
-                  <Plus size={24} />
+              <div 
+                onMouseEnter={() => setOpenFaq(i)}
+                onMouseLeave={() => setOpenFaq(null)}
+                className="w-full group"
+              >
+                <div className="w-full py-[28px] flex justify-between items-center bg-transparent cursor-pointer">
+                  <span className="font-sans font-semibold text-[18px] text-brand-black text-left">{f.q}</span>
+                  <div className={`transform transition-transform duration-300 text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
+                    <Plus size={24} />
+                  </div>
                 </div>
-              </button>
-              <div style={{ height: openFaq === i ? 'auto' : 0 }} className="overflow-hidden transition-all duration-300 ease-in-out">
-                <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
+                <div style={{ height: openFaq === i ? 'auto' : 0 }} className="overflow-hidden transition-all duration-300 ease-in-out">
+                  <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
+                </div>
               </div>
             </FadeIn>
           ))}

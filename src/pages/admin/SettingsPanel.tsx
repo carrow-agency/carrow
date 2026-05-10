@@ -14,7 +14,7 @@ export default function SettingsPanel() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(false);
 
-  const [general, setGeneral] = useState({ siteName: "", tagline: "", email: "", whatsapp: "" });
+  const [general, setGeneral] = useState({ siteName: "", tagline: "", email: "", whatsapp: "", instagram: "", facebook: "", youtube: "" });
   const [home, setHome]       = useState({ h1: "", h2: "", cta1: "", cta2: "" });
   const [about, setAbout]     = useState({ founderName: "", founderRole: "", founderBio: "", founderImage: "" });
 
@@ -25,6 +25,9 @@ export default function SettingsPanel() {
       tagline:  settings.general?.tagline  || "",
       email:    settings.general?.email    || "",
       whatsapp: settings.general?.whatsapp || "",
+      instagram: settings.general?.instagram || "",
+      facebook: settings.general?.facebook || "",
+      youtube: settings.general?.youtube || "",
     });
     setHome({
       h1:   settings.home?.h1   || "",
@@ -89,6 +92,9 @@ export default function SettingsPanel() {
               <Input label="Tagline"         value={general.tagline}  onChange={e => setGeneral({...general, tagline: e.target.value})} />
               <Input label="Contact email"   value={general.email}    onChange={e => setGeneral({...general, email: e.target.value})} type="email" />
               <Input label="WhatsApp number" value={general.whatsapp} onChange={e => setGeneral({...general, whatsapp: e.target.value})} placeholder="+1234567890" />
+              <Input label="Instagram URL"   value={general.instagram} onChange={e => setGeneral({...general, instagram: e.target.value})} placeholder="https://instagram.com/..." />
+              <Input label="Facebook URL"    value={general.facebook} onChange={e => setGeneral({...general, facebook: e.target.value})} placeholder="https://facebook.com/..." />
+              <Input label="YouTube URL"     value={general.youtube} onChange={e => setGeneral({...general, youtube: e.target.value})} placeholder="https://youtube.com/..." />
             </div>
           )}
 

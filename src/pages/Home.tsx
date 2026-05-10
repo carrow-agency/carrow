@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../lib/store';
 import React from 'react';
-import { usePlans } from '../lib/useConvex';
+import { usePlans, useWorks } from '../lib/useConvex';
 
 // Components
 import FadeIn from '../components/common/FadeIn';
@@ -20,6 +20,9 @@ export default function Home() {
   const navigate = useNavigate();
   const store = useAppStore();
   const plans = usePlans() ?? [];
+  const { works } = useWorks() || { works: [] };
+  const clientsFromDb = Array.from(new Set(works.map(w => w.client).filter(Boolean)));
+  const marqueeClients = clientsFromDb.length > 0 ? clientsFromDb : ['Emis', 'Rumis', 'Shawok', 'Croustile', 'Smash Foundation'];
   const whatsappNumber = store.settings?.general?.whatsapp || store.whatsappNumber;
 
   const navigateToHash = (hash: string) => {
@@ -67,9 +70,9 @@ export default function Home() {
               <h2 className="font-serif font-bold text-[32px] md:text-[56px] text-brand-black mb-16">Brands Who Trust Us.</h2>
             </FadeIn>
             
-            <div className="flex flex-col md:flex-row justify-center items-center gap-4 md:-space-x-12 mb-[100px]">
+            <div className="flex flex-col md:flex-row justify-center items-center md:-space-x-8 mb-[100px]">
               {['Rumis', 'Shawok', 'Croustile'].map((brand, i) => (
-                <span key={i} className="font-serif font-bold text-[36px] sm:text-[48px] md:text-[120px] text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none cursor-pointer whitespace-nowrap">{brand}{i < 2 ? '\u00A0' : ''}</span>
+                <span key={i} className="font-serif font-bold text-[48px] md:text-[140px] tracking-tighter mix-blend-multiply text-brand-black opacity-[0.08] hover:opacity-100 transition-opacity duration-300 select-none cursor-pointer whitespace-nowrap">{brand}</span>
               ))}
             </div>
          </div>
@@ -80,8 +83,8 @@ export default function Home() {
              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
              className="flex whitespace-nowrap gap-16 px-8"
            >
-             {Array(4).fill(['Emis', 'Rumis', 'Shawok', 'Croustile', 'Smash Foundation']).flat().map((b, i) => (
-                <span key={i} className="font-sans font-bold text-[18px] text-brand-black">{b}</span>
+             {Array(10).fill(marqueeClients).flat().map((b, i) => (
+                <span key={i} className="font-sans font-bold text-[18px] text-brand-black">{b as string}</span>
              ))}
            </motion.div>
         </div>

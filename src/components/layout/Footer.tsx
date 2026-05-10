@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Instagram, Youtube, MessageCircle } from 'lucide-react';
+import { Instagram, Youtube, MessageCircle, Facebook } from 'lucide-react';
 import { useSettings } from '../../lib/useConvex';
 import { useAppStore } from '../../lib/store';
 
@@ -23,33 +23,50 @@ export default function Footer() {
             <h2 className="font-serif font-bold text-[28px] text-brand-white mb-2">Carrow</h2>
             <p className="font-sans italic text-[15px] text-brand-mid-grey mb-8">We build brands that stand out.</p>
             <div className="flex gap-4">
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Instagram"
-                className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-colors hover:border-brand-white hover:text-brand-white text-brand-mid-grey"
-              >
-                <Instagram size={18} />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="YouTube"
-                className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-colors hover:border-brand-white hover:text-brand-white text-brand-mid-grey"
-              >
-                <Youtube size={18} />
-              </a>
-              <a
-                href={`https://wa.me/${waNumber}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="WhatsApp"
-                className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-colors hover:border-brand-white hover:text-brand-white text-brand-mid-grey"
-              >
-                <MessageCircle size={18} />
-              </a>
+              {settings?.general?.instagram && (
+                <a
+                  href={settings.general.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-all duration-300 hover:border-brand-white hover:text-brand-white text-brand-mid-grey hover:bg-brand-white/10"
+                >
+                  <Instagram size={18} />
+                </a>
+              )}
+              {settings?.general?.youtube && (
+                <a
+                  href={settings.general.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                  className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-all duration-300 hover:border-brand-white hover:text-brand-white text-brand-mid-grey hover:bg-brand-white/10"
+                >
+                  <Youtube size={18} />
+                </a>
+              )}
+              {settings?.general?.facebook && (
+                <a
+                  href={settings.general.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-all duration-300 hover:border-brand-white hover:text-brand-white text-brand-mid-grey hover:bg-brand-white/10"
+                >
+                  <Facebook size={18} />
+                </a>
+              )}
+              {waNumber && (
+                <a
+                  href={`https://wa.me/${waNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="WhatsApp"
+                  className="w-10 h-10 border border-brand-dark-grey rounded-full flex items-center justify-center transition-all duration-300 hover:border-brand-white hover:text-brand-white text-brand-mid-grey hover:bg-brand-white/10"
+                >
+                  <MessageCircle size={18} />
+                </a>
+              )}
             </div>
           </div>
 

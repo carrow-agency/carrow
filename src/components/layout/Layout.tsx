@@ -54,12 +54,11 @@ function Navbar() {
   };
 
   const navItems = [
+    { name: 'Home', path: '/', type: 'link' },
     { name: 'Work', path: '/work', type: 'link' },
     { name: 'Services', path: '/services', type: 'link' },
-    { name: 'Process', path: '#process', type: 'hash' },
     { name: 'Clients', path: '#brands', type: 'hash' },
     { name: 'Plans', path: '#plans', type: 'hash' },
-    { name: 'FAQ', path: '#faq', type: 'hash' },
     { name: 'About', path: '/brands', type: 'link' },
   ];
 
@@ -94,7 +93,7 @@ function Navbar() {
             ) : (
               <div className="flex items-center gap-6">
                 <Link to={auth.role === 'admin' ? '/admin' : '/account'} className={`text-sm font-medium cursor-pointer transition-colors ${scrolled ? 'text-brand-dark-grey hover:text-brand-black' : 'text-brand-white/50 hover:text-brand-white'}`}>
-                  {auth.role === 'admin' ? 'Admin Panel' : 'My Account'}
+                  {auth.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
                 </Link>
                 <button className="relative" onClick={() => navigate('/checkout')}>
                   <ShoppingBag size={20} className={scrolled ? 'text-brand-black' : 'text-brand-white'} />
@@ -168,7 +167,7 @@ function Navbar() {
                     onClick={() => setMobileMenuOpen(false)} 
                     className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg transition-all duration-300 ease-out active:scale-[0.98]"
                   >
-                    {auth.role === 'admin' ? 'Admin Panel' : 'My Account'}
+                    {auth.role === 'admin' ? 'Admin Panel' : 'Dashboard'}
                   </Link>
                 )}
               </div>
