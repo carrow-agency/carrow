@@ -1,21 +1,9 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { Check, X } from "lucide-react";
-import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function ReviewsPanel() {
   const reviews = useQuery(api.planReviews.listAllAdmin);
-  const updateStatus = useMutation(api.planReviews.updateStatus);
-
-  const handleUpdate = async (id: any, status: "approved" | "rejected") => {
-    try {
-      await updateStatus({ id, status });
-      toast.success(`Review ${status} successfully`);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update review status");
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -25,7 +13,7 @@ export function ReviewsPanel() {
             Plan Reviews
           </h2>
           <p className="text-sm text-admin-muted mt-1">
-            Manage client reviews for subscription plans.
+            View client reviews for subscription plans.
           </p>
         </div>
       </div>
@@ -48,8 +36,6 @@ export function ReviewsPanel() {
                   <th className="px-4 py-3 font-medium">Plan</th>
                   <th className="px-4 py-3 font-medium">Rating</th>
                   <th className="px-4 py-3 font-medium">Review</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -77,39 +63,6 @@ export function ReviewsPanel() {
                       </td>
                       <td className="px-4 py-3 text-admin-muted max-w-xs truncate">
                         {rev.reviewText}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                            rev.status === "approved"
-                              ? "bg-green-500/10 text-green-500"
-                              : rev.status === "rejected"
-                              ? "bg-red-500/10 text-red-500"
-                              : "bg-yellow-500/10 text-yellow-500"
-                          }`}
-                        >
-                          {rev.status.charAt(0).toUpperCase() + rev.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            onClick={() => handleUpdate(rev._id, "approved")}
-                            disabled={rev.status === "approved"}
-                            className="p-1.5 text-admin-muted hover:text-green-500 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50"
-                            title="Approve"
-                          >
-                            <Check size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleUpdate(rev._id, "rejected")}
-                            disabled={rev.status === "rejected"}
-                            className="p-1.5 text-admin-muted hover:text-red-500 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-50"
-                            title="Reject"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
                       </td>
                     </motion.tr>
                   ))}

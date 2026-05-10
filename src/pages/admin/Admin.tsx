@@ -11,6 +11,7 @@ const PlansPanel = lazy(() => import("./PlansPanel"));
 const PortfolioPanel = lazy(() => import("./PortfolioPanel"));
 const FilesPanel = lazy(() => import("./FilesPanel"));
 const SettingsPanel = lazy(() => import("./SettingsPanel"));
+const ReviewsPanel = lazy(() => import("./ReviewsPanel").then(m => ({ default: m.ReviewsPanel })));
 
 export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,6 +32,7 @@ export default function Admin() {
                 <Route path="portfolio" element={<PortfolioPanel />} />
                 <Route path="files"     element={<FilesPanel />} />
                 <Route path="settings"  element={<SettingsPanel />} />
+                <Route path="reviews"   element={<ReviewsPanel />} />
               </Routes>
             </Suspense>
           </div>
