@@ -98,7 +98,7 @@ export default function PlanDetail() {
       {/* Hero */}
       <section className="py-16 md:py-[120px] px-6 md:px-12 max-w-[1280px] mx-auto text-center border-b border-brand-border">
         <FadeIn>
-          <button onClick={() => navigate('/#plans')} className="font-sans font-medium text-[14px] text-brand-mid-grey flex items-center justify-center mx-auto mb-8 hover:text-brand-black transition-colors gap-2">
+          <button onClick={() => navigate('/#plans')} className="font-sans font-medium text-[14px] text-brand-mid-grey flex items-center justify-center mx-auto mb-8 hover:text-brand-black transition-all duration-300 ease-out active:scale-[0.98] gap-2">
             <ArrowLeft size={16} /> Plans
           </button>
           
@@ -114,7 +114,7 @@ export default function PlanDetail() {
           
           <button 
             onClick={handleAddToCart}
-            className={`rounded-full px-[56px] py-[18px] font-sans font-semibold text-[16px] transition-all w-full md:w-auto ${
+            className={`rounded-full px-[56px] py-[18px] font-sans font-semibold text-[16px] transition-all duration-300 ease-out active:scale-[0.98] w-full md:w-auto ${
               added ? 'bg-green-600 border-green-600 text-white' : 'bg-brand-black border-brand-black text-brand-white hover:bg-transparent hover:text-brand-black'
             } border`}
           >
@@ -227,7 +227,7 @@ export default function PlanDetail() {
                   {reviewError && <p className="text-red-500 text-sm mt-2">{reviewError}</p>}
                 </div>
                 <div className="flex justify-end">
-                  <button type="submit" className="bg-brand-black text-brand-white rounded-full px-6 py-3 font-sans font-semibold text-[13px] hover:bg-brand-dark-grey transition-colors w-full sm:w-auto">
+                  <button type="submit" className="bg-brand-black text-brand-white rounded-full px-6 py-3 font-sans font-semibold text-[13px] hover:bg-brand-dark-grey transition-all duration-300 ease-out active:scale-[0.98] w-full sm:w-auto">
                     Submit Review
                   </button>
                 </div>
@@ -278,13 +278,13 @@ export default function PlanDetail() {
           <div className="space-y-0 text-left">
             {plan.faqs.map((f: PlanFaq, i: number) => (
               <FadeIn key={i} delay={i * 0.05} className="border-b border-brand-border">
-                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full py-[28px] flex justify-between items-center bg-transparent group text-left">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full py-[28px] flex justify-between items-center bg-transparent group text-left transition-colors hover:bg-brand-off-white/50 px-4 -mx-4 rounded-xl">
                   <span className="font-sans font-semibold text-[18px] text-brand-black w-[90%]">{f.q}</span>
                   <div className={`transform transition-transform duration-300 text-brand-black ${openFaq === i ? 'rotate-45' : 'rotate-0'}`}>
                     <Plus size={24} />
                   </div>
                 </button>
-                <div style={{ height: openFaq === i ? 'auto' : 0 }} className="overflow-hidden transition-all duration-300 ease-in-out">
+                <div style={{ height: openFaq === i ? 'auto' : 0 }} className="overflow-hidden transition-all duration-300 ease-in-out px-4 -mx-4">
                   <p className="font-sans text-[16px] text-brand-mid-grey leading-[1.8] pb-[28px] pt-2">{f.a}</p>
                 </div>
               </FadeIn>
@@ -301,7 +301,7 @@ export default function PlanDetail() {
             <p className="font-sans text-[17px] text-brand-mid-grey mb-12">No contracts. No hidden fees. Just results.</p>
             <button 
               onClick={handleAddToCart}
-              className={`bg-brand-white text-brand-black rounded-full px-[64px] py-[20px] font-sans font-bold text-[16px] hover:bg-opacity-90 transition-colors mb-8 ${added ? 'bg-green-500 text-white' : ''}`}
+              className={`bg-brand-white text-brand-black rounded-full px-[64px] py-[20px] font-sans font-bold text-[16px] hover:bg-opacity-90 transition-all duration-300 ease-out active:scale-[0.98] mb-8 ${added ? 'bg-green-500 text-white' : ''}`}
             >
                {added ? '✓ Added to Cart' : `Add to Cart — ${plan.name}`}
             </button>

@@ -66,7 +66,7 @@ export default function OurWork() {
       
       <section className="py-16 md:py-[120px] bg-brand-black text-brand-white text-center">
         <h2 className="font-serif font-bold text-[28px] md:text-[48px] mb-8">Want your brand here?</h2>
-        <button onClick={() => navigate('/#plans')} className="bg-brand-white text-brand-black rounded-full px-[48px] py-[18px] font-sans font-bold text-[16px] hover:bg-opacity-90 transition-colors">Start Your Project</button>
+        <button onClick={() => navigate('/#plans')} className="bg-brand-white text-brand-black rounded-full px-[48px] py-[18px] font-sans font-bold text-[16px] hover:bg-opacity-90 transition-all duration-300 ease-out active:scale-[0.98]">Start Your Project</button>
       </section>
     </div>
   );

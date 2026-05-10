@@ -103,7 +103,7 @@ export default function Services() {
       <section className="py-16 md:py-[140px] bg-brand-off-white text-center">
         <FadeIn>
           <h2 className="font-serif font-bold text-[28px] md:text-[48px] text-brand-black mb-8">Ready to transform your brand?</h2>
-          <button onClick={() => navigate('/#plans')} className="bg-brand-black text-brand-white rounded-full px-[48px] py-[18px] font-sans font-bold text-[16px] hover:bg-transparent hover:text-brand-black border border-brand-black transition-colors">See Our Plans</button>
+          <button onClick={() => navigate('/#plans')} className="bg-brand-black text-brand-white rounded-full px-[48px] py-[18px] font-sans font-bold text-[16px] hover:bg-transparent hover:text-brand-black border border-brand-black transition-all duration-300 ease-out active:scale-[0.98]">See Our Plans</button>
         </FadeIn>
       </section>
     </div>

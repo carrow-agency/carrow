@@ -106,7 +106,7 @@ function Navbar() {
                 </button>
               </div>
             )}
-            <button onClick={() => navigateToHash('#plans')} className={`text-[14px] font-semibold rounded-full px-6 py-2.5 transition-colors border tracking-[0.05em] ${scrolled ? 'bg-brand-white text-brand-black border-brand-black hover:bg-transparent hover:text-brand-black' : 'bg-brand-black text-brand-white border-brand-black hover:bg-brand-white hover:text-brand-black'}`}>
+            <button onClick={() => navigateToHash('#plans')} className={`text-[14px] font-semibold rounded-full px-6 py-2.5 transition-all duration-300 ease-out active:scale-[0.98] border tracking-[0.05em] ${scrolled ? 'bg-brand-white text-brand-black border-brand-black hover:bg-transparent hover:text-brand-black' : 'bg-brand-black text-brand-white border-brand-black hover:bg-brand-white hover:text-brand-black'}`}>
               Get Started
             </button>
           </div>
@@ -158,7 +158,7 @@ function Navbar() {
                 {!auth || auth === undefined ? (
                   <button 
                     onClick={() => { setMobileMenuOpen(false); navigate('/login'); }} 
-                    className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg"
+                    className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg transition-all duration-300 ease-out active:scale-[0.98]"
                   >
                     Login
                   </button>
@@ -166,7 +166,7 @@ function Navbar() {
                   <Link 
                     to={auth.role === 'admin' ? '/admin' : '/account'} 
                     onClick={() => setMobileMenuOpen(false)} 
-                    className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg"
+                    className="bg-brand-white text-brand-black px-8 py-3 rounded-full font-sans font-semibold text-lg transition-all duration-300 ease-out active:scale-[0.98]"
                   >
                     {auth.role === 'admin' ? 'Admin Panel' : 'My Account'}
                   </Link>
