@@ -313,7 +313,8 @@ function MemberDrawer({ member, onSave, onClose }: {
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "general", label: "General", icon: <Globe size={15} /> },
-  { id: "content", label: "Site Content", icon: <LayoutTemplate size={15} /> },
+  { id: "content", label: "Home Page", icon: <LayoutTemplate size={15} /> },
+  { id: "about", label: "About Page", icon: <Users size={15} /> },
   { id: "team", label: "Team", icon: <Users size={15} /> },
   { id: "danger", label: "Danger Zone", icon: <AlertTriangle size={15} /> },
 ];
@@ -328,19 +329,25 @@ export default function SettingsPanel() {
   const createMember = useCreateTeamMember();
   const updateMember = useUpdateTeamMember();
   const deleteMember = useDeleteTeamMember();
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
-  const [tab, setTab] = useState<Tab>("general");
+  const [tab, setTab] = useState<Tab | "about">("general");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [drawerMember, setDrawerMember] = useState<TeamMember | null>(null);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [uploadingAboutImage, setUploadingAboutImage] = useState(false);
+  const aboutImageRef = useRef<HTMLInputElement>(null);
 
   const [general, setGeneral] = useState({
     siteName: "", tagline: "", email: "", whatsapp: "",
     instagram: "", facebook: "", youtube: "",
   });
   const [home, setHome] = useState({ h1: "", h2: "", cta1: "", cta2: "" });
+  const [about, setAbout] = useState({
+    founderName: "", founderRole: "", founderBio: "", founderImage: ""
+  });
 
   useEffect(() => {
     if (!settings) return;
@@ -359,11 +366,17 @@ export default function SettingsPanel() {
       cta1: settings.home?.cta1 || "",
       cta2: settings.home?.cta2 || "",
     });
+    setAbout({
+      founderName: settings.aboutPage?.founderName || "",
+      founderRole: settings.aboutPage?.founderRole || "",
+      founderBio: settings.aboutPage?.founderBio || "",
+      founderImage: settings.aboutPage?.founderImage || "",
+    });
   }, [settings]);
 
   const handleSave = async () => {
     await withErrorHandler(async () => {
-      await updateSettings({ general, home });
+      await updateSettings({ general, home, aboutPage: about });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     }, setSaving, { showSuccessToast: true, successMessage: "Settings saved" });
@@ -528,6 +541,55 @@ export default function SettingsPanel() {
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  <SaveBar saving={saving} saved={saved} onSave={handleSave} />
+                </div>
+              )}
+
+              {/* ── ABOUT TAB ─────────────────────────────────────────── */}
+              {tab === "about" && (
+                <div>
+                  <div className="mb-6">
+                    <h2 className="text-base font-semibold text-white">About Page</h2>
+                    <p className="text-xs text-[#444] mt-0.5">Manage the storytelling and founder profile.</p>
+                  </div>
+
+                  <div className="bg-[#0c0c0c] border border-[#161616] rounded-2xl px-6 divide-y divide-[#111]">
+                    <FieldGroup label="Founder Profile" hint="Core leadership info shown at the bottom.">
+                      <div className="flex items-center gap-6 mb-6">
+                        <button
+                          type="button"
+                          onClick={() => aboutImageRef.current?.click()}
+                          className="relative w-20 h-20 rounded-full bg-[#111] border border-[#222] overflow-hidden group hover:border-[#333] transition-colors"
+                        >
+                          {about.founderImage ? (
+                            <img src={about.founderImage} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#333] group-hover:text-[#555]">
+                              <Camera size={20} />
+                            </div>
+                          )}
+                          {uploadingAboutImage && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <Loader2 size={16} className="text-white animate-spin" />
+                            </div>
+                          )}
+                        </button>
+                        <input ref={aboutImageRef} type="file" accept="image/*" className="hidden" onChange={handleAboutImageUpload} />
+                        <div>
+                          <p className="text-sm font-medium text-white">Profile Photo</p>
+                          <p className="text-xs text-[#444] mt-0.5">Recommended: 400x400px</p>
+                        </div>
+                      </div>
+
+                      <AdminInput value={about.founderName} onChange={a("founderName")} placeholder="Founder Name" label="Name" />
+                      <AdminInput value={about.founderRole} onChange={a("founderRole")} placeholder="e.g. Founder & Creative Director" label="Role" />
+                    </FieldGroup>
+
+                    <FieldGroup label="Founder Bio" hint="The personal story or vision statement.">
+                      <AdminTextarea value={about.founderBio} onChange={a("founderBio")} placeholder="Tell your story..." />
+                    </FieldGroup>
                   </div>
 
                   <SaveBar saving={saving} saved={saved} onSave={handleSave} />

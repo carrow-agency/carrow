@@ -48,4 +48,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       },
     }),
   ],
+  signIn: {
+    maxFailedAttempsPerHour: 5,
+  },
 });
