@@ -39,16 +39,17 @@ build: {
       rollupOptions: {
         treeshake: { preset: 'recommended' },
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            'motion': ['framer-motion'],
-            'convex': ['convex'],
-            'lucide': ['lucide-react'],
-            'charts': ['recharts'],
-            'admin': [
-              './src/pages/admin/AdminSidebar',
-              './src/pages/admin/AdminTopbar',
-            ],
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+              if (id.includes('framer-motion')) return 'motion';
+              if (id.includes('convex')) return 'convex';
+              if (id.includes('lucide')) return 'lucide';
+              if (id.includes('recharts')) return 'charts';
+            }
+            if (id.includes('/src/pages/admin/') || id.includes('/src/pages/Admin.tsx')) {
+              return 'admin';
+            }
           },
         },
       },

@@ -17,32 +17,12 @@ export interface ClientUser {
   email: string;
   role: 'user' | 'admin';
   planId: string | null;
-  planStatus: 'none' | 'pending' | 'active';
+  planStatus: 'none' | 'pending' | 'active' | 'cancelled';
   phone?: string;
   registered?: string;
 }
 
-// Legacy alias — kept to avoid widespread refactor until full Convex migration completes
 export type UserAccount = ClientUser;
-
-export interface WorkImage {
-  id: string;
-  url: string;
-  title: string;
-  category: string;
-  client?: string;
-  published?: boolean;
-}
-
-export interface Order {
-  id: string;
-  clientId: string;
-  clientName: string;
-  clientEmail: string;
-  plan: string;
-  date: string;
-  status: 'Pending' | 'Active' | 'Cancelled';
-}
 
 interface AppSettings {
   general: { siteName: string; tagline: string; email: string; whatsapp: string; };
@@ -55,43 +35,16 @@ interface AppState {
   isAuthOpen: boolean;
   setAuthOpen: (open: boolean) => void;
   whatsappNumber: string;
-  plans: PlanData[];
-  works: WorkImage[];
   settings: AppSettings;
-  users: UserAccount[];
-  currentUser: UserAccount | null;
-  orders: Order[];
   cart: { planName: string; price: string; addedAt: number; userId: string | null; }[];
   
   setWhatsappNumber: (val: string) => void;
-  updatePlan: (id: string, data: Partial<PlanData>) => void;
-  setPopularPlan: (id: string) => void;
-  updateWorkImage: (id: string, data: Partial<WorkImage>) => void;
-  addWorkImage: (data: WorkImage) => void;
-  removeWorkImage: (id: string) => void;
   setSettings: (settings: AppSettings) => void;
-  setPlans: (plans: PlanData[]) => void;
-  setWorks: (works: WorkImage[]) => void;
-  setUsers: (users: UserAccount[]) => void;
-  setOrders: (orders: Order[]) => void;
   
-  logout: () => void;
-  requestPlan: (planId: string) => void;
   addToCart: (item: { planName: string; price: string; addedAt: number; userId: string | null }) => void;
   removeFromCart: (planName: string) => void;
   clearCart: () => void;
-  
-  activateUserPlan: (userId: string, active: boolean) => void;
-  setCurrentUser: (user: UserAccount | null) => void;
 }
-
-const defaultPlans: PlanData[] = [
-  { id: '1', name: 'Basic', features: ['Brand audit', '2 platforms', '8 content pieces', 'WhatsApp support'], visibility: true, tagline: 'For starters', price: 'Contact Us' },
-  { id: '2', name: 'Pro', features: ['Everything in Basic', '4 platforms', '20 content pieces', 'Paid ads'], isPopular: true, visibility: true, tagline: 'For growing brands', price: 'Contact Us' },
-  { id: '3', name: 'Enterprise', features: ['Everything in Pro', 'Unlimited platforms', '50+ content pieces', 'Dedicated manager'], visibility: true, tagline: 'Full dominance', price: 'Contact Us' },
-];
-
-const defaultWorks: WorkImage[] = [];
 
 const defaultSettings: AppSettings = {
   general: { siteName: 'Carrow', tagline: 'We Build Brands That Stand Out', email: 'hello@carrow.com', whatsapp: '+919999999999' },
@@ -102,74 +55,23 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       whatsappNumber: '1234567890',
-      plans: defaultPlans,
-      works: defaultWorks,
       settings: defaultSettings,
-      orders: [],
-      users: [],
-      currentUser: null,
       isAuthOpen: false,
       setAuthOpen: (val) => set({ isAuthOpen: val }),
       cart: [],
       
       setWhatsappNumber: (val) => set({ whatsappNumber: val }),
-      updatePlan: (id, data) => set((state) => ({ plans: state.plans.map(p => p.id === id ? { ...p, ...data } : p) })),
-      setPopularPlan: (id) => set((state) => ({ plans: state.plans.map(p => ({ ...p, isPopular: p.id === id })) })),
-      updateWorkImage: (id, data) => set((state) => ({ works: state.works.map(w => w.id === id ? { ...w, ...data } : w) })),
-      addWorkImage: (data) => set((state) => ({ works: [...state.works, data] })),
-      removeWorkImage: (id) => set((state) => ({ works: state.works.filter(w => w.id !== id) })),
       setSettings: (settings) => set({ settings }),
-      setPlans: (plans) => set({ plans }),
-      setWorks: (works) => set({ works }),
-      setUsers: (users) => set({ users }),
-      setOrders: (orders) => set({ orders }),
-
-      logout: () => set({ currentUser: null, cart: [] }),
 
       addToCart: (item) => set((state) => {
-        const currentUserId = state.currentUser?.id ?? null;
-        const userCart = state.cart.filter(c => c.userId === currentUserId);
-        const itemExists = userCart.some(c => c.planName === item.planName);
+        // Find existing cart (ignore user context for now, simple local cart)
+        const itemExists = state.cart.some(c => c.planName === item.planName);
         if (itemExists) return state;
         
-        const newItem = { ...item, userId: currentUserId };
-        const otherUserCarts = state.cart.filter(c => c.userId !== currentUserId);
-        return { cart: [...otherUserCarts, newItem] };
+        return { cart: [...state.cart, item] };
       }),
       removeFromCart: (planName) => set((state) => ({ cart: state.cart.filter(c => c.planName !== planName) })),
       clearCart: () => set({ cart: [] }),
-      
-      requestPlan: (planId) => set((state) => {
-        if (!state.currentUser) return state;
-        const plan = state.plans.find(p => p.id === planId);
-        if (!plan) return state;
-
-        const updatedUser: UserAccount = { ...state.currentUser, planId, planStatus: 'pending' };
-        const newOrder: Order = {
-          id: `#CR-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 9000) + 1000}`,
-          clientId: updatedUser.id,
-          clientName: updatedUser.name,
-          clientEmail: updatedUser.email,
-          plan: plan.name,
-          date: new Date().toISOString().split('T')[0] ?? '2025-01-01',
-          status: 'Pending'
-        };
-
-        return {
-          currentUser: updatedUser,
-          users: state.users.map(u => u.id === updatedUser.id ? updatedUser : u),
-          orders: [newOrder, ...state.orders]
-        };
-      }),
-      
-      activateUserPlan: (userId, active) => set((state) => {
-        const users = state.users.map(u => u.id === userId ? { ...u, planStatus: (active ? 'active' : 'none') as 'none' | 'pending' | 'active' } : u);
-        const orders = state.orders.map(o => o.clientId === userId && o.status === 'Pending' ? { ...o, status: (active ? 'Active' : 'Pending') as 'Pending' | 'Active' | 'Cancelled' } : o);
-        const currentUser = state.currentUser?.id === userId ? users.find(u => u.id === userId) || null : state.currentUser;
-        return { users, orders, currentUser };
-      }),
-      
-      setCurrentUser: (user) => set({ currentUser: user }),
     }),
     {
       name: 'carrow-storage',
