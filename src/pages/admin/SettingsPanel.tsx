@@ -52,7 +52,7 @@ interface TeamMember {
   order?: number;
 }
 
-const EMPTY_MEMBER: TeamMember = { name: "", role: "", tag: "team", bio: "", image: "" };
+const EMPTY_MEMBER: TeamMember = { name: "", role: "", tag: "", bio: "", image: "" };
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 

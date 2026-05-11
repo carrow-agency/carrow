@@ -98,10 +98,9 @@ export default function About() {
              <h2 className="font-serif font-bold text-[28px] md:text-[48px] text-brand-black mb-16 text-center">The Leadership.</h2>
           </FadeIn>
           
-          <div className="flex flex-col items-center gap-12">
+          <div className="flex flex-col items-center gap-12 md:gap-16">
             {/* Pyramid Grid */}
             {(() => {
-              // Group members into alternating rows of 3 and 2
               const rows = [];
               let i = 0;
               let isThree = true;
@@ -117,24 +116,19 @@ export default function About() {
               }
 
               return rows.map((row, rowIndex) => (
-                <div key={rowIndex} className={`flex justify-center gap-8 md:gap-16 flex-wrap`}>
+                <div key={rowIndex} className="flex justify-center gap-8 md:gap-24 w-full max-w-[1000px] flex-wrap md:flex-nowrap">
                   {row.map((member, memberIndex) => (
-                    <FadeIn key={member._id} delay={memberIndex * 0.1} className="text-center flex flex-col items-center max-w-[300px]">
+                    <FadeIn key={member._id} delay={memberIndex * 0.1} className="text-center flex flex-col items-center w-[160px] md:w-[220px]">
                       <div className="w-[160px] h-[160px] md:w-[200px] md:h-[200px] rounded-full bg-brand-black mb-6 relative overflow-hidden flex items-center justify-center shadow-lg">
                         {member.image ? (
                           <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="noise-overlay opacity-40"></div>
                         )}
-                        {member.tag && (
-                          <div className="absolute bottom-4 bg-white/90 backdrop-blur-sm text-black text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
-                            {member.tag}
-                          </div>
-                        )}
                       </div>
                       <h4 className="font-sans font-semibold text-[20px] text-brand-black mb-1">{member.name}</h4>
                       <p className="font-sans text-[14px] text-brand-mid-grey font-medium mb-3">{member.role}</p>
-                      <p className="font-sans text-[14px] text-brand-mid-grey leading-relaxed">{member.bio}</p>
+                      <p className="font-sans text-[14px] text-brand-mid-grey leading-relaxed px-2">{member.bio}</p>
                     </FadeIn>
                   ))}
                 </div>
