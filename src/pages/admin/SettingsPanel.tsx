@@ -136,12 +136,8 @@ function MemberCard({ member, onEdit, onDelete }: {
   member: TeamMember & { _id: string }; onEdit: () => void; onDelete: () => void;
 }) {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="group flex items-center gap-4 p-4 rounded-xl bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors"
+    <div
+      className="group flex w-full items-center gap-4 p-4 rounded-xl bg-[#0f0f0f] border border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors"
     >
       <div className="text-[#2a2a2a] group-hover:text-[#3a3a3a] cursor-grab transition-colors">
         <GripVertical size={16} />
@@ -180,7 +176,7 @@ function MemberCard({ member, onEdit, onDelete }: {
           <Trash2 size={14} />
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
