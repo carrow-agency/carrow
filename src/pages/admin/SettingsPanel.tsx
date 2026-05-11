@@ -40,7 +40,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = "general" | "content" | "about" | "team" | "danger";
+type Tab = "general" | "content" | "team" | "danger";
 
 interface TeamMember {
   _id?: string;
@@ -314,7 +314,6 @@ function MemberDrawer({ member, onSave, onClose }: {
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "general", label: "General", icon: <Globe size={15} /> },
   { id: "content", label: "Home Page", icon: <LayoutTemplate size={15} /> },
-  { id: "about", label: "About Page", icon: <Users size={15} /> },
   { id: "team", label: "Team", icon: <Users size={15} /> },
   { id: "danger", label: "Danger Zone", icon: <AlertTriangle size={15} /> },
 ];
@@ -331,23 +330,18 @@ export default function SettingsPanel() {
   const deleteMember = useDeleteTeamMember();
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
-  const [tab, setTab] = useState<Tab | "about">("general");
+  const [tab, setTab] = useState<Tab>("general");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [drawerMember, setDrawerMember] = useState<TeamMember | null>(null);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
-  const [uploadingAboutImage, setUploadingAboutImage] = useState(false);
-  const aboutImageRef = useRef<HTMLInputElement>(null);
 
   const [general, setGeneral] = useState({
     siteName: "", tagline: "", email: "", whatsapp: "",
     instagram: "", facebook: "", youtube: "",
   });
   const [home, setHome] = useState({ h1: "", h2: "", cta1: "", cta2: "" });
-  const [about, setAbout] = useState({
-    founderName: "", founderRole: "", founderBio: "", founderImage: ""
-  });
 
   useEffect(() => {
     if (!settings) return;
@@ -366,17 +360,11 @@ export default function SettingsPanel() {
       cta1: settings.home?.cta1 || "",
       cta2: settings.home?.cta2 || "",
     });
-    setAbout({
-      founderName: settings.aboutPage?.founderName || "",
-      founderRole: settings.aboutPage?.founderRole || "",
-      founderBio: settings.aboutPage?.founderBio || "",
-      founderImage: settings.aboutPage?.founderImage || "",
-    });
   }, [settings]);
 
   const handleSave = async () => {
     await withErrorHandler(async () => {
-      await updateSettings({ general, home, aboutPage: about });
+      await updateSettings({ general, home });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     }, setSaving, { showSuccessToast: true, successMessage: "Settings saved" });
@@ -407,26 +395,9 @@ export default function SettingsPanel() {
     }, setClearing, { showSuccessToast: true, successMessage: "All settings cleared and reset" });
   };
 
-  const handleAboutImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingAboutImage(true);
-    try {
-      const { blob, isConverted } = await toWebP(file);
-      const finalFile = isConverted ? new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }) : file;
-      const uploadUrl = await generateUploadUrl();
-      const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": finalFile.type }, body: finalFile });
-      const { storageId } = await res.json();
-      const convexUrl = uploadUrl.split("/api/storage/")[0];
-      const previewUrl = `${convexUrl}/api/storage/${storageId}`;
-      setAbout(prev => ({ ...prev, founderImage: previewUrl }));
-    } catch (err) { console.error(err); }
-    setUploadingAboutImage(false);
-  };
 
   const g = (k: keyof typeof general) => (v: string) => setGeneral(p => ({ ...p, [k]: v }));
   const h = (k: keyof typeof home) => (v: string) => setHome(p => ({ ...p, [k]: v }));
-  const a = (k: keyof typeof about) => (v: string) => setAbout(p => ({ ...p, [k]: v }));
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
