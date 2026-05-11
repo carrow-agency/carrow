@@ -9,6 +9,7 @@
  */
 
 import type * as access from "../access.js";
+import type * as adminSetup from "../adminSetup.js";
 import type * as auth from "../auth.js";
 import type * as contracts from "../contracts.js";
 import type * as files from "../files.js";
@@ -39,6 +40,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   access: typeof access;
+  adminSetup: typeof adminSetup;
   auth: typeof auth;
   contracts: typeof contracts;
   files: typeof files;
