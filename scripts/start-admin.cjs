@@ -29,7 +29,7 @@ const child = spawn(isWin ? 'npm.cmd' : 'npm', ['run', 'dev'], {
 setTimeout(() => {
   const url = 'http://localhost:3000/admin';
   console.log(`\n=> Opening ${url} ...`);
-  const openCmd = isWin ? `start ${url}` : os.platform() === 'darwin' ? `open ${url}` : `xdg-open ${url}`;
+  const openCmd = isWin ? `start chrome ${url}` : os.platform() === 'darwin' ? `open ${url}` : `firefox ${url}`;
   try {
     execSync(openCmd, { stdio: 'ignore' });
   } catch (e) {
