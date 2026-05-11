@@ -67,6 +67,10 @@ export function ReportBuilder({ clientId, clientName, onClose }: Props) {
   const [ins, setIns] = useState({ performanceSummary: "", bestContentType: "", growthOpportunity: "" });
 
   const uploadThumb = async (rawFile: File) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowed.includes(rawFile.type)) {
+      return null;
+    }
     const { blob, isConverted } = await toWebP(rawFile, 0.85);
     const finalMime = isConverted ? "image/webp" : rawFile.type;
 

@@ -25,10 +25,27 @@ export function UploadZone({ targetUserId, onSuccess }: Props) {
   const generateUploadUrl = useGenerateUploadUrl();
   const saveClientFile = useSaveClientFile();
 
+  const ALLOWED_MIME_TYPES = [
+    'image/jpeg',
+    'image/png', 
+    'image/gif',
+    'image/webp',
+    'video/mp4',
+    'video/webm',
+    'application/pdf',
+  ];
+
   const uploadFile = async (rawFile: File) => {
     setUploadState("uploading");
     setProgress(5);
     setErrorMessage("");
+
+    // File type validation
+    if (!ALLOWED_MIME_TYPES.includes(rawFile.type)) {
+      setErrorMessage(`Invalid file type. Allowed: images (JPG, PNG, GIF, WebP), videos (MP4, WebM), PDF.`);
+      setUploadState("error");
+      return;
+    }
 
     try {
       // Convert images to WebP (except GIFs and videos)

@@ -42,6 +42,9 @@ export const listMine = query({
 export const create = mutation({
   args: {
     planId: v.id("plans"),
+    business: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    city: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
@@ -60,6 +63,9 @@ export const create = mutation({
       clientId: userId,
       clientName: user.name ?? "Unknown",
       clientEmail: user.email,
+      business: args.business,
+      phone: args.phone,
+      city: args.city,
       plan: plan.name,
       date: new Date().toISOString().split("T")[0] || "2024-01-01",
       status: "Pending",

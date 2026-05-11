@@ -1,6 +1,7 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { Email } from "@convex-dev/auth/providers/Email";
+import { Google } from "@convex-dev/auth/providers/Google";
 import { Resend } from "resend";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
@@ -45,6 +46,20 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (password.length < 8) {
           throw new Error("Password must be at least 8 characters");
         }
+      },
+    }),
+    Google({
+      profile(params) {
+        const email = typeof params.email === "string" ? params.email.toLowerCase() : "";
+        const name = typeof params.name === "string" ? params.name : "";
+
+        return {
+          email,
+          name,
+          role: "user",
+          planStatus: "none",
+          registered: new Date().toISOString().slice(0, 10),
+        };
       },
     }),
   ],

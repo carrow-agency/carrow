@@ -73,7 +73,12 @@ export default function Checkout() {
       for (const item of cart) {
         const requestedPlan = plans.find(p => p.name === item.planName);
         if (requestedPlan?.id) {
-          await createOrder({ planId: requestedPlan.id as any });
+          await createOrder({ 
+            planId: requestedPlan.id as any,
+            business: formData.business,
+            phone: formData.phone,
+            city: formData.city,
+          });
         }
       }
 
