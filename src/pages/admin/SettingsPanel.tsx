@@ -407,6 +407,23 @@ export default function SettingsPanel() {
     }, setClearing, { showSuccessToast: true, successMessage: "All settings cleared and reset" });
   };
 
+  const handleAboutImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAboutImage(true);
+    try {
+      const { blob, isConverted } = await toWebP(file);
+      const finalFile = isConverted ? new File([blob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" }) : file;
+      const uploadUrl = await generateUploadUrl();
+      const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": finalFile.type }, body: finalFile });
+      const { storageId } = await res.json();
+      const convexUrl = uploadUrl.split("/api/storage/")[0];
+      const previewUrl = `${convexUrl}/api/storage/${storageId}`;
+      setAbout(prev => ({ ...prev, founderImage: previewUrl }));
+    } catch (err) { console.error(err); }
+    setUploadingAboutImage(false);
+  };
+
   const g = (k: keyof typeof general) => (v: string) => setGeneral(p => ({ ...p, [k]: v }));
   const h = (k: keyof typeof home) => (v: string) => setHome(p => ({ ...p, [k]: v }));
 

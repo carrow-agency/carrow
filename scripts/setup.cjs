@@ -32,7 +32,7 @@ To start the project and open the admin dashboard:
 
 Alternatively, you can run:
 \`\`\`bash
-node scripts/start-admin.js
+node scripts/start-admin.cjs
 \`\`\`
 
 ## Architecture Notes
@@ -43,13 +43,13 @@ node scripts/start-admin.js
   console.log('✅ DEPLOYMENT_GUIDE.md created.');
 
   console.log('\n[4/4] Creating desktop shortcuts / launcher scripts...');
-  const startBat = `@echo off\ncd /d "%~dp0"\necho Starting Carrow Admin...\nnode scripts/start-admin.js\npause`;
-  const startSh = `#!/bin/bash\ncd "$(dirname "$0")"\necho "Starting Carrow Admin..."\nnode scripts/start-admin.js`;
+  const startBat = `@echo off\ncd /d "%~dp0"\necho Starting Carrow Admin...\nnode scripts/start-admin.cjs\npause`;
+  const startSh = `#!/bin/bash\ncd "$(dirname "$0")"\necho "Starting Carrow Admin..."\nnode scripts/start-admin.cjs`;
   
   fs.writeFileSync(path.join(__dirname, '..', 'start-admin.bat'), startBat);
   fs.writeFileSync(path.join(__dirname, '..', 'start-admin.sh'), startSh);
   if (os.platform() !== 'win32') {
-    try { execSync('chmod +x ../start-admin.sh'); } catch(e) {}
+    try { execSync('chmod +x ./start-admin.sh'); } catch(e) {}
   }
   console.log('✅ Launcher scripts created (start-admin.bat / start-admin.sh).');
 
@@ -60,7 +60,7 @@ node scripts/start-admin.js
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   rl.question('\nDo you want to start the admin dashboard now? (y/N): ', (answer) => {
     if (answer.toLowerCase() === 'y') {
-      require('./start-admin.js');
+      require('./start-admin.cjs');
     } else {
       process.exit(0);
     }
