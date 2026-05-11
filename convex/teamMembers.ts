@@ -51,3 +51,23 @@ export const remove = mutation({
     await ctx.db.delete(id);
   },
 });
+
+export const getFileUrl = mutation({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
+  }
+});
+
+export const updateOrder = mutation({
+  args: {
+    updates: v.array(v.object({ id: v.id("teamMembers"), order: v.number() }))
+  },
+  handler: async (ctx, args) => {
+    const isAdmin = await requireAdmin(ctx);
+    if (!isAdmin) throw new Error("Admin access required");
+    for (const update of args.updates) {
+      await ctx.db.patch(update.id, { order: update.order });
+    }
+  }
+});

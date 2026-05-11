@@ -32,6 +32,7 @@ import {
   useCreateTeamMember,
   useUpdateTeamMember,
   useDeleteTeamMember,
+  useUpdateTeamMemberOrder,
   useClearSettings,
 } from "../../lib/useConvex";
 import { withErrorHandler } from "../../lib/mutationHandler";
@@ -185,8 +186,8 @@ function MemberCard({ member, onEdit, onDelete }: {
 
 // ─── Member Drawer ────────────────────────────────────────────────────────────
 
-function MemberDrawer({ member, onSave, onClose }: {
-  member: TeamMember; onSave: (m: TeamMember) => void; onClose: () => void;
+function MemberDrawer({ member, onSave, onClose, getFileUrl }: {
+  member: TeamMember; onSave: (m: TeamMember) => void; onClose: () => void; getFileUrl: any;
 }) {
   const [form, setForm] = useState<TeamMember>(member);
   const [uploading, setUploading] = useState(false);
@@ -206,10 +207,10 @@ function MemberDrawer({ member, onSave, onClose }: {
       const uploadUrl = await generateUploadUrl();
       const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": finalFile.type }, body: finalFile });
       const { storageId } = await res.json();
-      // Build a direct storage URL for preview
-      const convexUrl = uploadUrl.split("/api/storage/")[0];
-      const previewUrl = `${convexUrl}/api/storage/${storageId}`;
-      setForm(prev => ({ ...prev, image: previewUrl }));
+      const realUrl = await getFileUrl({ storageId });
+      if (realUrl) {
+        setForm(prev => ({ ...prev, image: realUrl }));
+      }
     } catch (err) { console.error(err); }
     setUploading(false);
   };
@@ -328,6 +329,8 @@ export default function SettingsPanel() {
   const createMember = useCreateTeamMember();
   const updateMember = useUpdateTeamMember();
   const deleteMember = useDeleteTeamMember();
+  const updateOrder = useUpdateTeamMemberOrder();
+  const getFileUrl = useMutation(api.teamMembers.getFileUrl);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
   const [tab, setTab] = useState<Tab>("general");
@@ -669,6 +672,7 @@ export default function SettingsPanel() {
       <AnimatePresence>
         {drawerMember !== null && (
           <MemberDrawer
+            getFileUrl={getFileUrl}
             member={drawerMember}
             onSave={handleSaveMember}
             onClose={() => setDrawerMember(null)}

@@ -103,12 +103,12 @@ export default function About() {
             {(() => {
               const rows = [];
               let i = 0;
-              let isThree = true;
+              let isTwo = true;
               while (i < teamMembers.length) {
-                const count = isThree ? 3 : 2;
+                const count = isTwo ? 2 : 3;
                 rows.push(teamMembers.slice(i, i + count));
                 i += count;
-                isThree = !isThree;
+                isTwo = !isTwo;
               }
 
               if (rows.length === 0) {

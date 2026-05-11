@@ -438,3 +438,7 @@ export function useDeleteMonthlyReport() {
   return useMutation(api.monthlyReports.deleteReport);
 }
 
+
+export function useUpdateTeamMemberOrder() {
+  return useMutation(api.teamMembers.updateOrder);
+}
