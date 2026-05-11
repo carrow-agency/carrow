@@ -14,7 +14,6 @@ import type * as contracts from "../contracts.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as init from "../init.js";
-import type * as makeAdmin from "../makeAdmin.js";
 import type * as migrate from "../migrate.js";
 import type * as monthlyReports from "../monthlyReports.js";
 import type * as orders from "../orders.js";
@@ -45,7 +44,6 @@ declare const fullApi: ApiFromModules<{
   files: typeof files;
   http: typeof http;
   init: typeof init;
-  makeAdmin: typeof makeAdmin;
   migrate: typeof migrate;
   monthlyReports: typeof monthlyReports;
   orders: typeof orders;
