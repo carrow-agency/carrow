@@ -12,6 +12,5 @@
   },
   "aiFiles": {
     "enabled": true
-  },
-  "deploy": "adamant-capybara-530"
+  }
 }

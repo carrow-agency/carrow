@@ -6,8 +6,8 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
 
-  const convexUrl = env.VITE_CONVEX_URL || 'https://mellow-dragon-917.convex.cloud';
-  const convexSiteUrl = env.VITE_CONVEX_SITE_URL || 'https://mellow-dragon-917.convex.site';
+  const convexUrl = env.VITE_CONVEX_URL || '';
+  const convexSiteUrl = env.VITE_CONVEX_SITE_URL || '';
 
   return {
     plugins: [
