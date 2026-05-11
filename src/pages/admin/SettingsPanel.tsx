@@ -40,7 +40,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = "general" | "content" | "team" | "danger";
+type Tab = "general" | "content" | "about" | "team" | "danger";
 
 interface TeamMember {
   _id?: string;
@@ -426,6 +426,7 @@ export default function SettingsPanel() {
 
   const g = (k: keyof typeof general) => (v: string) => setGeneral(p => ({ ...p, [k]: v }));
   const h = (k: keyof typeof home) => (v: string) => setHome(p => ({ ...p, [k]: v }));
+  const a = (k: keyof typeof about) => (v: string) => setAbout(p => ({ ...p, [k]: v }));
 
   return (
     <div className="min-h-screen bg-[#080808] text-white">
