@@ -24,31 +24,31 @@ export default function Services() {
       title: 'Brand Strategy & Identity',
       desc: 'We define who you are, why you matter, and how you sound. Before creating any visuals or campaigns, we build a solid strategic foundation that ensures every piece of content serves a larger purpose.',
       bullets: ['Audience & Market Research', 'Brand Positioning & Voice', 'Visual Identity Systems', 'Brand Guidelines'],
-      image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800'
+      image: '/images/brand_strategy.png'
     },
     {
       title: 'Social Media Marketing',
       desc: 'Content that stops the scroll, starts conversations, and builds communities. We manage your social presence end-to-end so you don\'t have to worry about what to post next.',
       bullets: ['Content Strategy & Calendars', 'Platform Management (IG, TikTok, LinkedIn)', 'Community Engagement', 'Analytics & Growth Reporting'],
-      image: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&q=80&w=800'
+      image: '/images/social_media.png'
     },
     {
       title: 'Content Creation & Video',
       desc: 'High-end visuals, short-form video, and compelling copy. In a world of infinite content, we create assets that demand attention and clearly communicate your value.',
       bullets: ['Short-form Video (Reels/TikTok)', 'Photography & Art Direction', 'Copywriting & Storytelling', 'Graphic Design'],
-      image: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&q=80&w=800'
+      image: '/images/content_creation.png'
     },
     {
       title: 'Campaign Direction & Ads',
       desc: 'Creative campaigns built to convert, not just to impress. We blend striking creative with data-driven media buying to acquire customers profitably at scale.',
       bullets: ['Creative Concepting', 'Meta & Google Ads Management', 'Campaign Analytics & Optimization', 'A/B Testing'],
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800'
+      image: '/images/campaign_ads.png'
     },
     {
       title: 'Influencer Marketing',
       desc: 'We put your brand in the right hands. Forget vanity metrics; we partner with creators who actually have influence and align with your brand ethos.',
       bullets: ['Creator Discovery & Vetting', 'Campaign Briefs & Strategy', 'Relationship Management', 'Performance Tracking'],
-      image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&q=80&w=800'
+      image: '/images/influencer_marketing.png'
     }
   ];
 

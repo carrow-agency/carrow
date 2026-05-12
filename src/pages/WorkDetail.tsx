@@ -85,10 +85,16 @@ export default function WorkDetail() {
           {(firstWork?.phone || firstWork?.instagram || firstWork?.location) && (
             <div className="flex flex-wrap items-center gap-6 mb-10 border-t border-[#eee] pt-8">
               {firstWork.location && (
-                <div className="flex items-center gap-2 text-brand-mid-grey">
-                  <MapPin size={18} />
-                  <span className="font-sans text-[15px]">{firstWork.location}</span>
-                </div>
+                firstWork.location.startsWith('http') ? (
+                  <a href={firstWork.location} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-brand-mid-grey hover:text-brand-black transition-colors" title="View on Maps">
+                    <MapPin size={18} />
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-2 text-brand-mid-grey">
+                    <MapPin size={18} />
+                    <span className="font-sans text-[15px]">{firstWork.location}</span>
+                  </div>
+                )
               )}
               {firstWork.phone && (
                 <a href={`tel:${firstWork.phone.replace(/\s+/g, '')}`} className="flex items-center gap-2 text-brand-mid-grey hover:text-brand-black transition-colors">
