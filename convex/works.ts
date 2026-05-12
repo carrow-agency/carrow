@@ -114,6 +114,9 @@ export const create = mutation({
     clientId: v.optional(v.id("users")),
     isPrivate: v.optional(v.boolean()),
     published: v.optional(v.boolean()),
+    phone: v.optional(v.string()),
+    instagram: v.optional(v.string()),
+    location: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);
@@ -125,9 +128,11 @@ export const create = mutation({
       category: args.category,
       client: args.client,
       clientId: args.clientId,
-      // if clientId is set, always mark as private
       isPrivate: args.clientId ? true : (args.isPrivate ?? false),
       published: args.published ?? true,
+      phone: args.phone,
+      instagram: args.instagram,
+      location: args.location,
     });
   },
 });
@@ -142,6 +147,9 @@ export const update = mutation({
     clientId: v.optional(v.id("users")),
     isPrivate: v.optional(v.boolean()),
     published: v.optional(v.boolean()),
+    phone: v.optional(v.string()),
+    instagram: v.optional(v.string()),
+    location: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const isAdmin = await requireAdmin(ctx);

@@ -247,6 +247,9 @@ function WorkModal({
     clientId: editingWork?.clientId || "",
     category: editingWork?.category || CATEGORIES[0],
     published: editingWork?.published ?? true,
+    phone: editingWork?.phone || "",
+    instagram: editingWork?.instagram || "",
+    location: editingWork?.location || "",
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,6 +281,9 @@ function WorkModal({
       clientId: mode === "client" ? form.clientId : undefined,
       category: form.category,
       published: form.published,
+      phone: form.phone,
+      instagram: form.instagram,
+      location: form.location,
       ...(storageId ? { url: storageId } : {}),
     });
     setSaving(false);
@@ -386,6 +392,37 @@ function WorkModal({
                 />
               </div>
             )}
+          </div>
+
+          {/* Optional Info */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#555] uppercase tracking-wider">Phone</label>
+              <input
+                value={form.phone}
+                onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                placeholder="+1 234..."
+                className="w-full h-10 rounded-lg bg-[#111] border border-[#1c1c1c] text-sm text-white placeholder:text-[#333] outline-none focus:border-[#2a2a2a] px-3.5 transition-colors"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#555] uppercase tracking-wider">Instagram</label>
+              <input
+                value={form.instagram}
+                onChange={e => setForm(p => ({ ...p, instagram: e.target.value }))}
+                placeholder="@username"
+                className="w-full h-10 rounded-lg bg-[#111] border border-[#1c1c1c] text-sm text-white placeholder:text-[#333] outline-none focus:border-[#2a2a2a] px-3.5 transition-colors"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-[#555] uppercase tracking-wider">Location</label>
+              <input
+                value={form.location}
+                onChange={e => setForm(p => ({ ...p, location: e.target.value }))}
+                placeholder="City, Country"
+                className="w-full h-10 rounded-lg bg-[#111] border border-[#1c1c1c] text-sm text-white placeholder:text-[#333] outline-none focus:border-[#2a2a2a] px-3.5 transition-colors"
+              />
+            </div>
           </div>
 
           {/* Publish toggle (only for public) */}

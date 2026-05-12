@@ -42,6 +42,9 @@ export function useWorks() {
       category: w.category,
       client: w.client ?? "",
       published: w.published ?? true,
+      phone: w.phone ?? "",
+      instagram: w.instagram ?? "",
+      location: w.location ?? "",
     })),
     status,
     loadMore
@@ -59,6 +62,9 @@ export function useWorksAll() {
       client: w.client ?? "",
       clientId: w.clientId ?? null,
       published: w.published ?? true,
+      phone: w.phone ?? "",
+      instagram: w.instagram ?? "",
+      location: w.location ?? "",
     })),
     status,
     loadMore

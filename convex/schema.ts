@@ -68,6 +68,9 @@ export default defineSchema({
     clientId: v.optional(v.id("users")),  // set → private (user-only), unset → public portfolio
     isPrivate: v.optional(v.boolean()),   // true = only visible in that user's dashboard
     published: v.optional(v.boolean()),
+    phone: v.optional(v.string()),
+    instagram: v.optional(v.string()),
+    location: v.optional(v.string()),
   })
     .index("by_published", ["published"])
     .index("by_clientId", ["clientId"]),

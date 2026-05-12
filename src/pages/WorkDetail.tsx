@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Phone, Instagram, MapPin } from 'lucide-react';
 import { useWorks, useWorkMediaBatch } from '../lib/useConvex';
 import FadeIn from '../components/common/FadeIn';
 
@@ -78,8 +79,32 @@ export default function WorkDetail() {
             ← Back to all brands
           </button>
           <h1 className="font-serif font-bold text-[28px] md:text-[64px] text-brand-black mb-6">
-            {clientName} Portfolio
+            {clientName}
           </h1>
+
+          {(firstWork?.phone || firstWork?.instagram || firstWork?.location) && (
+            <div className="flex flex-wrap items-center gap-6 mb-10 border-t border-[#eee] pt-8">
+              {firstWork.location && (
+                <div className="flex items-center gap-2 text-brand-mid-grey">
+                  <MapPin size={18} />
+                  <span className="font-sans text-[15px]">{firstWork.location}</span>
+                </div>
+              )}
+              {firstWork.phone && (
+                <a href={`tel:${firstWork.phone.replace(/\s+/g, '')}`} className="flex items-center gap-2 text-brand-mid-grey hover:text-brand-black transition-colors">
+                  <Phone size={18} />
+                  <span className="font-sans text-[15px]">{firstWork.phone}</span>
+                </a>
+              )}
+              {firstWork.instagram && (
+                <a href={`https://instagram.com/${firstWork.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-brand-mid-grey hover:text-brand-black transition-colors">
+                  <Instagram size={18} />
+                  <span className="font-sans text-[15px]">{firstWork.instagram}</span>
+                </a>
+              )}
+            </div>
+          )}
+
           <p className="font-sans text-[18px] text-brand-mid-grey mb-16 max-w-[600px]">
             Creative assets, media, and branding completed for {clientName}.
           </p>
