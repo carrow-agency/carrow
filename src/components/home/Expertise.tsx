@@ -9,25 +9,25 @@ const expertiseData = [
     num: '01', 
     title: 'Brand Strategy', 
     desc: 'We don’t just find your voice; we construct its architecture. Distinct, memorable, and built to dominate the digital landscape through deep audience insights and market mapping. Our strategic foundation ensures every piece of content performs.', 
-    img: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&q=80&w=1200&h=1200'
+    img: '/images/brand_strategy.png'
   },
   { 
     num: '02', 
     title: 'Social Architecture', 
     desc: 'Turning passive scrollers into passionate advocates. We handle end-to-end community building, trend capitalization, and daily algorithmic domination across all platforms. We don’t just manage channels; we build cult followings.',
-    img: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=1200&h=1200'
+    img: '/images/social_media.png'
   },
   { 
     num: '03', 
     title: 'Content Engine', 
     desc: 'Scroll-stopping assets designed for conversion. From lifestyle photography to viral short-form video, our in-house studio builds the creative that fuels your growth engine. High volume, unmatched quality.',
-    img: 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&q=80&w=1200&h=1200'
+    img: '/images/content_creation.png'
   },
   { 
     num: '04', 
     title: 'Performance Scaling', 
     desc: 'Data-backed media buying meets brilliant creative. We launch and scale paid acquisition campaigns that relentlessly drive down CPA and push lifetime value up. We play to win the algorithmic bidding wars.',
-    img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=1200&h=1200'
+    img: '/images/campaign_ads.png'
   },
 ];
 
