@@ -20,9 +20,14 @@ export function ConfirmDialog({
 }: Props) {
   const [typedValue, setTypedValue] = useState("");
 
-  useEffect(() => {
-    if (open) setTypedValue("");
-  }, [open]);
+  // Reset typed value when dialog opens/closes
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open) {
+      setTypedValue("");
+    }
+  }
 
   useEffect(() => {
     if (!open) return;

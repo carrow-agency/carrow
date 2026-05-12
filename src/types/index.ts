@@ -1,20 +1,45 @@
-export type { PlanData, UserAccount, ClientUser } from '../lib/store';
+import { Id } from "../../convex/_generated/dataModel";
 
-export interface WorkImage {
+export interface Work {
   id: string;
-  url: string;
+  _id: Id<"works">;
   title: string;
-  category: string;
   client?: string;
-  published?: boolean;
+  clientId?: string;
+  category: string;
+  url: string;
+  published: boolean;
+  phone?: string;
+  instagram?: string;
+  location?: string;
+  isPrivate?: boolean;
 }
 
-export interface Order {
+export interface User {
   id: string;
-  clientId: string;
-  clientName: string;
-  clientEmail: string;
-  plan: string;
-  date: string;
-  status: 'Pending' | 'Active' | 'Cancelled';
+  name: string;
+  email: string;
+  role: string;
+  planId?: string;
+  planStatus?: string;
+  planExpiry?: string | null;
+}
+
+export interface Setting {
+  _id: Id<"settings">;
+  general?: {
+    siteName?: string;
+    tagline?: string;
+    email?: string;
+    whatsapp?: string;
+    instagram?: string;
+    facebook?: string;
+    youtube?: string;
+  };
+  home?: {
+    h1?: string;
+    h2?: string;
+    cta1?: string;
+    cta2?: string;
+  };
 }

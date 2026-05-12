@@ -15,6 +15,7 @@ import PlansPreview from '../components/home/PlansPreview';
 import FAQ from '../components/home/FAQ';
 import ExpandOnHover from '../components/ui/expand-cards';
 import { Button } from '../components/ui/button';
+import { WHY_US_DATA, DEFAULT_MARQUEE_CLIENTS } from '../config/content';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function Home() {
   const plans = usePlans() ?? [];
   const { works } = useWorks() || { works: [] };
   const clientsFromDb = Array.from(new Set(works.map(w => w.client).filter(Boolean)));
-  const marqueeClients = clientsFromDb.length > 0 ? clientsFromDb : ['Emis', 'Rumis', 'Shawok', 'Croustile', 'Smash Foundation'];
+  const marqueeClients = clientsFromDb.length > 0 ? clientsFromDb : DEFAULT_MARQUEE_CLIENTS;
   const whatsappNumber = store.settings?.general?.whatsapp || store.whatsappNumber;
 
   const navigateToHash = (hash: string) => {
@@ -98,11 +99,7 @@ export default function Home() {
         </FadeIn>
         
         <div className="grid md:grid-cols-3 gap-6">
-          {[
-            { t: "We Don't Copy. We Create.", d: "Original brand languages built from scratch, not recycled formulas.", img: "/images/original_brands.webp" },
-            { t: "Data Without the Jargon.", d: "Every decision is insight-driven. Every result is measurable.", img: "/images/data_jargon.webp" },
-            { t: "Your Brand Is Our Brand.", d: "We work as your in-house creative team, not an outside vendor.", img: "/images/inhouse_creative.webp" },
-          ].map((item, i) => (
+          {WHY_US_DATA.map((item, i) => (
             <FadeIn key={i} delay={i * 0.15}>
               <div className="group relative bg-brand-black rounded-[24px] overflow-hidden min-h-[400px] flex flex-col justify-end p-8">
                 <div className="absolute inset-0">

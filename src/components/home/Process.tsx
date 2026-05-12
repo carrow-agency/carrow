@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import React from 'react';
 import FadeIn from '../common/FadeIn';
+import { PROCESS_STEPS } from '../../config/content';
 
 const ProcessPhase: React.FC<{ step: any, i: number, processProgress: any }> = ({ step, i, processProgress }) => {
   const opacity = useTransform(processProgress, 
@@ -50,12 +51,7 @@ export default function Process() {
   });
   const lineHeight = useTransform(smoothProgress, [0, 1], ["0%", "100%"]);
 
-  const processSteps = [
-    { n: '01', t: 'Discovery & Audit', d: 'We tear down your current positioning, analyze market gaps, and identify exact points of leverage before strategy begins.' },
-    { n: '02', t: 'Strategic Blueprint', d: 'We formulate a bold, multi-channel roadmap. Clear KPIs, distinct brand voice, and a content architecture built to convert.' },
-    { n: '03', t: 'Creative Execution', d: 'Our design and copy teams build the assets—striking, scroll-stopping, and perfectly aligned with the strategic blueprint.' },
-    { n: '04', t: 'Deployment & Scale', d: 'We launch, measure relentlessly, and iterate. We kill what doesn\'t work and pour fuel on what does.' },
-  ];
+  const processSteps = PROCESS_STEPS;
 
   return (
     <section id="process" className="py-16 md:py-[160px] bg-brand-black px-6 md:px-12 relative overflow-hidden" ref={processRef}>

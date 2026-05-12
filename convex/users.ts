@@ -7,7 +7,7 @@ export const current = query({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
     if (!user) return null;
-    const { passwordHash, ...safeUser } = user;
+    const { passwordHash: _, ...safeUser } = user;
     return safeUser;
   },
 });
@@ -26,7 +26,7 @@ export const list = query({
     return {
       ...paginatedUsers,
       page: nonAdminUsers.map(user => {
-        const { passwordHash, ...safeUser } = user;
+        const { passwordHash: _, ...safeUser } = user;
         return safeUser;
       })
     };
@@ -178,12 +178,12 @@ export const remove = mutation({
       for (const mReport of monthlyReports) {
         for (const reel of mReport.topReels) {
           if (reel.thumbnailStorageId) {
-            try { await ctx.storage.delete(reel.thumbnailStorageId); } catch {}
+            try { await ctx.storage.delete(reel.thumbnailStorageId); } catch (e) { console.warn("Failed to delete", e); }
           }
         }
         for (const post of mReport.topPosts) {
           if (post.thumbnailStorageId) {
-            try { await ctx.storage.delete(post.thumbnailStorageId); } catch {}
+            try { await ctx.storage.delete(post.thumbnailStorageId); } catch (e) { console.warn("Failed to delete", e); }
           }
         }
         await ctx.db.delete(mReport._id);
@@ -196,7 +196,7 @@ export const remove = mutation({
       for (const work of works) {
         const media = await ctx.db.query("workMedia").withIndex("by_workId", q => q.eq("workId", work._id)).collect();
         for (const m of media) {
-          try { await ctx.storage.delete(m.storageId as any); } catch { /* blob may already be gone */ }
+          try { await ctx.storage.delete(m.storageId as any); } catch (e) { console.warn("Failed to delete blob", e) }
           await ctx.db.delete(m._id);
         }
         await ctx.db.delete(work._id);

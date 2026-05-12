@@ -193,7 +193,7 @@ function MemberDrawer({ member, onSave, onClose }: {
   const handlePhotoClick = () => fileRef.current?.click();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
@@ -336,8 +336,10 @@ export default function SettingsPanel() {
   });
   const [home, setHome] = useState({ h1: "", h2: "", cta1: "", cta2: "" });
 
-  useEffect(() => {
-    if (!settings) return;
+  // Seed local form state when settings load
+  const [prevSettingsId, setPrevSettingsId] = useState<string | undefined>(settings?._id);
+  if (settings && settings._id !== prevSettingsId) {
+    setPrevSettingsId(settings._id);
     setGeneral({
       siteName: settings.general?.siteName || "",
       tagline: settings.general?.tagline || "",
@@ -353,7 +355,7 @@ export default function SettingsPanel() {
       cta1: settings.home?.cta1 || "",
       cta2: settings.home?.cta2 || "",
     });
-  }, [settings]);
+  }
 
   const handleSave = async () => {
     await withErrorHandler(async () => {

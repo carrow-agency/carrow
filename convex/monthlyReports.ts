@@ -131,12 +131,12 @@ export const deleteReport = mutation({
     if (report) {
       for (const reel of report.topReels) {
         if (reel.thumbnailStorageId) {
-          try { await ctx.storage.delete(reel.thumbnailStorageId); } catch {}
+          try { await ctx.storage.delete(reel.thumbnailStorageId); } catch (e) { console.warn("Failed to delete", e); }
         }
       }
       for (const post of report.topPosts) {
         if (post.thumbnailStorageId) {
-          try { await ctx.storage.delete(post.thumbnailStorageId); } catch {}
+          try { await ctx.storage.delete(post.thumbnailStorageId); } catch (e) { console.warn("Failed to delete", e); }
         }
       }
     }

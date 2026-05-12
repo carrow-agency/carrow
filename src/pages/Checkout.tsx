@@ -19,8 +19,10 @@ export default function Checkout() {
   const settings = useSettings();
   const navigate = useNavigate();
 
+  // Using a single initial state or derived state instead of setting it in useEffect.
+  // We can just fallback to currentUser.name in the input itself or initialize properly.
   const [formData, setFormData] = useState({
-    name: '',
+    name: currentUser?.name || '',
     business: '',
     phone: '',
     city: '',
@@ -29,12 +31,12 @@ export default function Checkout() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
 
-  // Update name from currentUser once loaded
-  React.useEffect(() => {
-    if (currentUser?.name) {
-      setFormData(prev => ({ ...prev, name: prev.name || currentUser.name }));
+  // Update formData when currentUser loads only if name is empty
+  useEffect(() => {
+    if (currentUser?.name && !formData.name) {
+      setFormData(prev => ({ ...prev, name: currentUser.name || '' }));
     }
-  }, [currentUser?.name]);
+  }, [currentUser?.name, formData.name]);
 
   if (currentUser === undefined) {
     return (

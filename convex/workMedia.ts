@@ -81,7 +81,7 @@ export const removeMedia = mutation({
     if (!isAdmin) throw new Error("Admin access required");
     const media = await ctx.db.get(id);
     if (media) {
-      try { await ctx.storage.delete(media.storageId as Id<"_storage">); } catch {}
+      try { await ctx.storage.delete(media.storageId as Id<"_storage">); } catch (e) { console.warn("Failed to delete storage blob", e); }
     }
     await ctx.db.delete(id);
   },

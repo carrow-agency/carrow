@@ -10,7 +10,17 @@ import { toast } from 'sonner';
 
 
 function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (!expiryDate) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    const diff = new Date(expiryDate).getTime() - new Date().getTime();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    return {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+      minutes: Math.floor((diff / (1000 * 60)) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+    };
+  });
 
   useEffect(() => {
     if (!expiryDate) return;
@@ -28,7 +38,6 @@ function ExpiryCountdown({ expiryDate }: { expiryDate: string | null }) {
       };
     };
 
-    setTimeLeft(calculateTimeLeft());
     const timer = setInterval(() => setTimeLeft(calculateTimeLeft()), 1000);
     return () => clearInterval(timer);
   }, [expiryDate]);
@@ -313,7 +322,7 @@ export default function Account() {
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">{activePlan.name}</h3>
                       <p className="text-gray-500">{activePlan.tagline}</p>
                     </div>
-                    <ExpiryCountdown expiryDate={currentUser.planExpiry} />
+                    <ExpiryCountdown key={currentUser.planExpiry || "none"} expiryDate={currentUser.planExpiry} />
                   </div>
 
                   <div className="border-t border-gray-200 pt-6">

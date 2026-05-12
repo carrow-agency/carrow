@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import FadeIn from '../components/common/FadeIn';
-
+import { SERVICES_DATA } from '../config/content';
 interface Service {
   title: string;
   desc: string;
@@ -19,38 +19,7 @@ export default function Services() {
     window.scrollTo(0, 0);
   }, []);
 
-  const services = [
-    {
-      title: 'Brand Strategy & Identity',
-      desc: 'We define who you are, why you matter, and how you sound. Before creating any visuals or campaigns, we build a solid strategic foundation that ensures every piece of content serves a larger purpose.',
-      bullets: ['Audience & Market Research', 'Brand Positioning & Voice', 'Visual Identity Systems', 'Brand Guidelines'],
-      image: '/images/brand_strategy.webp'
-    },
-    {
-      title: 'Social Media Marketing',
-      desc: 'Content that stops the scroll, starts conversations, and builds communities. We manage your social presence end-to-end so you don\'t have to worry about what to post next.',
-      bullets: ['Content Strategy & Calendars', 'Platform Management (IG, TikTok, LinkedIn)', 'Community Engagement', 'Analytics & Growth Reporting'],
-      image: '/images/social_media.webp'
-    },
-    {
-      title: 'Content Creation & Video',
-      desc: 'High-end visuals, short-form video, and compelling copy. In a world of infinite content, we create assets that demand attention and clearly communicate your value.',
-      bullets: ['Short-form Video (Reels/TikTok)', 'Photography & Art Direction', 'Copywriting & Storytelling', 'Graphic Design'],
-      image: '/images/content_creation.webp'
-    },
-    {
-      title: 'Campaign Direction & Ads',
-      desc: 'Creative campaigns built to convert, not just to impress. We blend striking creative with data-driven media buying to acquire customers profitably at scale.',
-      bullets: ['Creative Concepting', 'Meta & Google Ads Management', 'Campaign Analytics & Optimization', 'A/B Testing'],
-      image: '/images/campaign_ads.webp'
-    },
-    {
-      title: 'Influencer Marketing',
-      desc: 'We put your brand in the right hands. Forget vanity metrics; we partner with creators who actually have influence and align with your brand ethos.',
-      bullets: ['Creator Discovery & Vetting', 'Campaign Briefs & Strategy', 'Relationship Management', 'Performance Tracking'],
-      image: '/images/influencer_marketing.webp'
-    }
-  ];
+  const services = SERVICES_DATA;
 
   return (
     <div className="bg-brand-white min-h-screen">

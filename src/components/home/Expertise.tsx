@@ -4,32 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import FadeIn from '../common/FadeIn';
 
-const expertiseData = [
-  { 
-    num: '01', 
-    title: 'Brand Strategy', 
-    desc: 'We don’t just find your voice; we construct its architecture. Distinct, memorable, and built to dominate the digital landscape through deep audience insights and market mapping. Our strategic foundation ensures every piece of content performs.', 
-    img: '/images/brand_strategy.webp'
-  },
-  { 
-    num: '02', 
-    title: 'Social Architecture', 
-    desc: 'Turning passive scrollers into passionate advocates. We handle end-to-end community building, trend capitalization, and daily algorithmic domination across all platforms. We don’t just manage channels; we build cult followings.',
-    img: '/images/social_media.webp'
-  },
-  { 
-    num: '03', 
-    title: 'Content Engine', 
-    desc: 'Scroll-stopping assets designed for conversion. From lifestyle photography to viral short-form video, our in-house studio builds the creative that fuels your growth engine. High volume, unmatched quality.',
-    img: '/images/content_creation.webp'
-  },
-  { 
-    num: '04', 
-    title: 'Performance Scaling', 
-    desc: 'Data-backed media buying meets brilliant creative. We launch and scale paid acquisition campaigns that relentlessly drive down CPA and push lifetime value up. We play to win the algorithmic bidding wars.',
-    img: '/images/campaign_ads.webp'
-  },
-];
+import { EXPERTISE_DATA } from '../../config/content';
 
 export default function Expertise() {
   const [activeExpertise, setActiveExpertise] = useState(0);
@@ -56,7 +31,7 @@ export default function Expertise() {
       
       <div className="flex flex-col lg:flex-row gap-12 lg:gap-24 relative">
         <div className="lg:w-1/2 flex flex-col lg:pt-8 w-full border-t border-brand-border">
-          {expertiseData.map((exp, i) => (
+          {EXPERTISE_DATA.map((exp, i) => (
             <div 
               key={i}
               className="group border-b border-brand-border py-8 md:py-12 cursor-pointer relative"
@@ -102,7 +77,7 @@ export default function Expertise() {
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 className="absolute inset-0 w-full h-full"
               >
-                <img src={expertiseData[activeExpertise]?.img} alt={expertiseData[activeExpertise]?.title ?? ''} className="w-full h-full object-cover object-center" />
+                <img src={EXPERTISE_DATA[activeExpertise]?.img} alt={EXPERTISE_DATA[activeExpertise]?.title ?? ''} className="w-full h-full object-cover object-center" />
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-black/90 via-brand-black/20 to-transparent"></div>
                 
                 <div className="absolute inset-0 p-12 flex flex-col justify-end">
@@ -112,7 +87,7 @@ export default function Expertise() {
                     transition={{ delay: 0.2, duration: 0.5 }}
                     className="font-sans text-[18px] text-brand-white/90 leading-[1.8] max-w-[450px]"
                   >
-                    {expertiseData[activeExpertise]?.desc}
+                    {EXPERTISE_DATA[activeExpertise]?.desc}
                   </motion.p>
                 </div>
               </motion.div>

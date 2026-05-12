@@ -13,25 +13,28 @@ export default defineSchema({
     phone: v.optional(v.string()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-    passwordHash: v.optional(v.string()),
     planId: v.optional(v.id("plans")),
     planStatus: v.optional(v.union(v.literal("none"), v.literal("pending"), v.literal("active"), v.literal("cancelled"))),
-    planExpiry: v.optional(v.string()),
-    registered: v.optional(v.string()),
+    planExpiry: v.optional(v.number()),
     role: v.optional(v.union(v.literal("user"), v.literal("admin"))),
   })
     .index("email", ["email"])
     .index("phone", ["phone"]),
 
+  userSecrets: defineTable({
+    userId: v.id("users"),
+    passwordHash: v.string(),
+  }).index("by_user", ["userId"]),
+
   orders: defineTable({
     clientId: v.id("users"),
     clientName: v.string(),
     clientEmail: v.string(),
-    business: v.optional(v.string()),
-    phone: v.optional(v.string()),
-    city: v.optional(v.string()),
+    business: v.string(),
+    phone: v.string(),
+    city: v.string(),
     plan: v.string(),
-    date: v.string(),
+    date: v.number(),
     status: v.union(v.literal("Pending"), v.literal("Active"), v.literal("Cancelled")),
   })
     .index("by_clientId_and_date", ["clientId", "date"])

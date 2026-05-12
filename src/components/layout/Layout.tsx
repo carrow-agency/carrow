@@ -155,7 +155,14 @@ function Navbar() {
               {[{ name: 'Home', path: '/', type: 'link' }, ...navItems].map(item => (
                 <button 
                   key={item.name} 
-                  onClick={() => { setMobileMenuOpen(false); item.type === 'hash' ? navigateToHash(item.path) : navigate(item.path); }}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (item.type === "hash") {
+                      navigateToHash(item.path);
+                    } else {
+                      navigate(item.path);
+                    }
+                  }}
                   className="font-serif text-4xl"
                 >
                   {item.name}
