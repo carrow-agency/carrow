@@ -7,7 +7,7 @@ export const current = query({
   handler: async (ctx) => {
     const user = await getCurrentUser(ctx);
     if (!user) return null;
-    const { passwordHash: _, ...safeUser } = user;
+    const { ...safeUser } = user;
     return safeUser;
   },
 });
@@ -26,7 +26,7 @@ export const list = query({
     return {
       ...paginatedUsers,
       page: nonAdminUsers.map(user => {
-        const { passwordHash: _, ...safeUser } = user;
+        const { ...safeUser } = user;
         return safeUser;
       })
     };
@@ -54,7 +54,7 @@ export const getByEmail = query({
       throw new Error("Unauthorized access");
     }
     
-    const { passwordHash, ...safeUser } = targetUser;
+    const { ...safeUser } = targetUser;
     return safeUser;
   },
 });
@@ -77,7 +77,7 @@ export const getById = query({
       throw new Error("Unauthorized access");
     }
     
-    const { passwordHash, ...safeUser } = targetUser;
+    const { ...safeUser } = targetUser;
     return safeUser;
   },
 });
@@ -128,7 +128,7 @@ export const update = mutation({
     
     const updated = await ctx.db.get(id);
     if (!updated) return null;
-    const { passwordHash, ...safeUser } = updated;
+    const { ...safeUser } = updated;
     return safeUser;
   },
 });
