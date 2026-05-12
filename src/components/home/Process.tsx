@@ -91,7 +91,7 @@ export default function Process() {
                      <React.Fragment key={groupIndex}>
                        <div className="bg-[#1A1A1A] p-5 rounded-2xl border border-[#333] flex items-center gap-4 hover:border-[#555] transition-colors">
                          <div className="w-14 h-14 rounded-xl shrink-0 overflow-hidden">
-                           <img src="/images/data_driven_roi.png" className="w-full h-full object-cover" alt="Data" />
+                           <img src="/images/data_driven_roi.webp" className="w-full h-full object-cover" alt="Data" />
                          </div>
                          <div>
                            <div className="text-brand-white font-medium text-[15px] mb-0.5">Data Driven ROI</div>
@@ -101,7 +101,7 @@ export default function Process() {
                        
                        <div className="bg-[#1A1A1A] p-5 rounded-2xl border border-[#333] flex items-center gap-4 hover:border-[#555] transition-colors">
                          <div className="w-14 h-14 rounded-xl shrink-0 overflow-hidden">
-                           <img src="/images/omnichannel_growth.png" className="w-full h-full object-cover" alt="Growth" />
+                           <img src="/images/omnichannel_growth.webp" className="w-full h-full object-cover" alt="Growth" />
                          </div>
                          <div>
                            <div className="text-brand-white font-medium text-[15px] mb-0.5">Omnichannel Growth</div>

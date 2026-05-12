@@ -99,9 +99,9 @@ export default function Home() {
         
         <div className="grid md:grid-cols-3 gap-6">
           {[
-            { t: "We Don't Copy. We Create.", d: "Original brand languages built from scratch, not recycled formulas.", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=400&h=300" },
-            { t: "Data Without the Jargon.", d: "Every decision is insight-driven. Every result is measurable.", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=400&h=300" },
-            { t: "Your Brand Is Our Brand.", d: "We work as your in-house creative team, not an outside vendor.", img: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=400&h=300" },
+            { t: "We Don't Copy. We Create.", d: "Original brand languages built from scratch, not recycled formulas.", img: "/images/original_brands.webp" },
+            { t: "Data Without the Jargon.", d: "Every decision is insight-driven. Every result is measurable.", img: "/images/data_jargon.webp" },
+            { t: "Your Brand Is Our Brand.", d: "We work as your in-house creative team, not an outside vendor.", img: "/images/inhouse_creative.webp" },
           ].map((item, i) => (
             <FadeIn key={i} delay={i * 0.15}>
               <div className="group relative bg-brand-black rounded-[24px] overflow-hidden min-h-[400px] flex flex-col justify-end p-8">

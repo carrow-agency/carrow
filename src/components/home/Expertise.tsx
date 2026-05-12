@@ -9,25 +9,25 @@ const expertiseData = [
     num: '01', 
     title: 'Brand Strategy', 
     desc: 'We don’t just find your voice; we construct its architecture. Distinct, memorable, and built to dominate the digital landscape through deep audience insights and market mapping. Our strategic foundation ensures every piece of content performs.', 
-    img: '/images/brand_strategy.png'
+    img: '/images/brand_strategy.webp'
   },
   { 
     num: '02', 
     title: 'Social Architecture', 
     desc: 'Turning passive scrollers into passionate advocates. We handle end-to-end community building, trend capitalization, and daily algorithmic domination across all platforms. We don’t just manage channels; we build cult followings.',
-    img: '/images/social_media.png'
+    img: '/images/social_media.webp'
   },
   { 
     num: '03', 
     title: 'Content Engine', 
     desc: 'Scroll-stopping assets designed for conversion. From lifestyle photography to viral short-form video, our in-house studio builds the creative that fuels your growth engine. High volume, unmatched quality.',
-    img: '/images/content_creation.png'
+    img: '/images/content_creation.webp'
   },
   { 
     num: '04', 
     title: 'Performance Scaling', 
     desc: 'Data-backed media buying meets brilliant creative. We launch and scale paid acquisition campaigns that relentlessly drive down CPA and push lifetime value up. We play to win the algorithmic bidding wars.',
-    img: '/images/campaign_ads.png'
+    img: '/images/campaign_ads.webp'
   },
 ];
 
