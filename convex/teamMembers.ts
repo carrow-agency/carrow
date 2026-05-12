@@ -5,7 +5,16 @@ import { requireAdmin } from "./access";
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("teamMembers").withIndex("by_order").take(50);
+    const members = await ctx.db.query("teamMembers").withIndex("by_order").take(50);
+    return await Promise.all(
+      members.map(async (m) => {
+        if (m.image && !m.image.startsWith("http")) {
+          const url = await ctx.storage.getUrl(m.image as any);
+          return { ...m, image: url ?? "" };
+        }
+        return m;
+      })
+    );
   },
 });
 

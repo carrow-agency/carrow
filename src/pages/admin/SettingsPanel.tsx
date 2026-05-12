@@ -181,8 +181,8 @@ function MemberCard({ member, onEdit, onDelete }: {
 
 // ─── Member Drawer ────────────────────────────────────────────────────────────
 
-function MemberDrawer({ member, onSave, onClose, getFileUrl }: {
-  member: TeamMember; onSave: (m: TeamMember) => void; onClose: () => void; getFileUrl: any;
+function MemberDrawer({ member, onSave, onClose }: {
+  member: TeamMember; onSave: (m: TeamMember) => void; onClose: () => void;
 }) {
   const [form, setForm] = useState<TeamMember>(member);
   const [uploading, setUploading] = useState(false);
@@ -202,10 +202,8 @@ function MemberDrawer({ member, onSave, onClose, getFileUrl }: {
       const uploadUrl = await generateUploadUrl();
       const res = await fetch(uploadUrl, { method: "POST", headers: { "Content-Type": finalFile.type }, body: finalFile });
       const { storageId } = await res.json();
-      const realUrl = await getFileUrl({ storageId });
-      if (realUrl) {
-        setForm(prev => ({ ...prev, image: realUrl }));
-      }
+      // Store the raw storageId — list query resolves fresh URLs server-side
+      setForm(prev => ({ ...prev, image: storageId }));
     } catch (err) { console.error(err); }
     setUploading(false);
   };
@@ -324,7 +322,6 @@ export default function SettingsPanel() {
   const createMember = useCreateTeamMember();
   const updateMember = useUpdateTeamMember();
   const deleteMember = useDeleteTeamMember();
-  const getFileUrl = useMutation(api.teamMembers.getFileUrl);
 
   const [tab, setTab] = useState<Tab>("general");
   const [saving, setSaving] = useState(false);
@@ -617,7 +614,6 @@ export default function SettingsPanel() {
       <AnimatePresence>
         {drawerMember !== null && (
           <MemberDrawer
-            getFileUrl={getFileUrl}
             member={drawerMember}
             onSave={handleSaveMember}
             onClose={() => setDrawerMember(null)}
