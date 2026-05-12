@@ -43,7 +43,7 @@ export default function About() {
         <FadeIn>
            <p className="font-sans font-semibold text-[11px] uppercase tracking-[0.2em] text-brand-mid-grey mb-8">Who We Are</p>
            <h1 className="font-serif italic text-[24px] md:text-[80px] text-brand-black leading-tight max-w-[900px] mx-auto mb-8 md:mb-16">
-             "We don't just build brands. We build movements  demand attention and drive culture forward."
+             "We don't just build brands. We build movements that demand attention and drive culture forward."
            </h1>
            <p className="font-sans text-[18px] text-brand-mid-grey max-w-[600px] mx-auto">
              Carrow was founded on a simple premise: most marketing is invisible. We exist to make sure yours isn't. We are a collective of strategists, creatives, and data-obsessives.
